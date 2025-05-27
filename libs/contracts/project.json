@@ -4,10 +4,31 @@
   "sourceRoot": "libs/contracts/src",
   "projectType": "library",
   "targets": {
-    "lint": {
+    "lint-js": {
       "executor": "nx:run-commands",
       "options": {
         "command": "pnpm eslint .",
+        "cwd": "libs/contracts"
+      }
+    },
+    "lint-js-fix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm eslint . --fix",
+        "cwd": "libs/contracts"
+      }
+    },
+    "lint-sol": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "solhint 'src/**/*.sol'",
+        "cwd": "libs/contracts"
+      }
+    },
+    "lint-sol-fix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "solhint 'src/**/*.sol' --fix",
         "cwd": "libs/contracts"
       }
     }
