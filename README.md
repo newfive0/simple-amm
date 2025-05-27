@@ -35,4 +35,5 @@ For Solidity linting:
 # Run solhint to check your Solidity code
 nx lint-sol contracts      # Check your Solidity code
 nx lint-sol-fix contracts  # Automatically fix Solidity linting issues
+nx format-sol contracts    # Format Solidity code using prettier
 ```

@@ -31,6 +31,13 @@
         "command": "solhint 'src/**/*.sol' --fix",
         "cwd": "libs/contracts"
       }
+    },
+    "format-sol": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prettier --plugin=prettier-plugin-solidity --write \"src/**/*.sol\"",
+        "cwd": "libs/contracts"
+      }
     }
   },
   "tags": []
