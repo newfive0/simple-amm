@@ -3,8 +3,6 @@ import { expect } from 'chai';
 import '@nomicfoundation/hardhat-chai-matchers';
 import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 import hre from 'hardhat';
-import { Contract } from 'ethers';
-import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 
 describe('AMMPool', () => {
   // Constants for token setup
@@ -14,9 +12,7 @@ describe('AMMPool', () => {
   const SYMBOL_B = 'USDT';
   const TOTAL_SUPPLY = ethers.parseEther('1000000'); // 1M tokens
 
-  // Test constants - ETH/USDT realistic ratio (1 ETH = 2638.98 USDT)
-  // We'll use integer values for simplicity
-  const EXCHANGE_RATE = 2639; // Rounded from 2638.98
+  // Test constants - ETH/USDT realistic ratio (1 ETH = 2639 USDT)
   const INITIAL_LIQUIDITY_A = ethers.parseEther('10'); // 10 ETH
   const INITIAL_LIQUIDITY_B = ethers.parseEther('26390'); // 26390 USDT (2639 * 10)
   const SWAP_AMOUNT = ethers.parseEther('1'); // 1 ETH or equivalent in tests
@@ -88,9 +84,8 @@ describe('AMMPool', () => {
 
   describe('Adding Liquidity', () => {
     it('should add initial liquidity correctly', async () => {
-      const { ammPool, tokenA, tokenB, user1 } = await loadFixture(
-        deployPoolFixture,
-      );
+      const { ammPool, tokenA, tokenB, user1 } =
+        await loadFixture(deployPoolFixture);
 
       // Approve tokens
       await tokenA
@@ -196,11 +191,11 @@ describe('AMMPool', () => {
 
       await expect(
         ammPool.connect(user1).addLiquidity(0, INITIAL_LIQUIDITY_B),
-      ).to.be.revertedWith('Invalid amounts');
+      ).to.be.revertedWithCustomError(ammPool, 'InvalidAmounts');
 
       await expect(
         ammPool.connect(user1).addLiquidity(INITIAL_LIQUIDITY_A, 0),
-      ).to.be.revertedWith('Invalid amounts');
+      ).to.be.revertedWithCustomError(ammPool, 'InvalidAmounts');
     });
   });
 
@@ -267,16 +262,17 @@ describe('AMMPool', () => {
 
       await expect(
         ammPool.connect(user1).removeLiquidity(userLiquidity + 1n),
-      ).to.be.revertedWith('Insufficient liquidity');
+      ).to.be.revertedWithCustomError(ammPool, 'InsufficientLiquidity');
     });
 
     it('should revert when removing zero liquidity', async () => {
       const { ammPool, user1 } = await loadFixture(
         deployPoolWithLiquidityFixture,
       );
+
       await expect(
         ammPool.connect(user1).removeLiquidity(0),
-      ).to.be.revertedWith('Insufficient liquidity');
+      ).to.be.revertedWithCustomError(ammPool, 'InsufficientLiquidity');
     });
 
     it('should allow removing all liquidity', async () => {
@@ -405,7 +401,7 @@ describe('AMMPool', () => {
       );
       await expect(
         ammPool.connect(user2).swap(await tokenA.getAddress(), 0),
-      ).to.be.revertedWith('Invalid amount');
+      ).to.be.revertedWithCustomError(ammPool, 'InvalidAmount');
     });
 
     it('should revert when swapping unsupported token', async () => {
@@ -413,8 +409,9 @@ describe('AMMPool', () => {
         deployPoolWithLiquidityFixture,
       );
       const invalidToken = owner.address; // using an address that's not a token
-      await expect(ammPool.connect(user2).swap(invalidToken, SWAP_AMOUNT)).to.be
-        .rejected; // This should fail when trying to call transferFrom on non-token contract
+      await expect(
+        ammPool.connect(user2).swap(invalidToken, SWAP_AMOUNT),
+      ).to.be.revertedWithCustomError(ammPool, 'UnsupportedToken');
     });
   });
 });

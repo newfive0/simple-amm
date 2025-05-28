@@ -1,7 +1,7 @@
-import { baseConfig } from '../../eslint.config.js';
-
+// Import the base config using CommonJS import style
+import baseConfigModule from '../../eslint.config.js';
 export default [
-  ...baseConfig,
+  ...baseConfigModule,
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
