@@ -78,6 +78,12 @@ importers:
       '@types/react-dom':
         specifier: 19.0.0
         version: 19.0.0
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^8.32.1
+        version: 8.32.1(@typescript-eslint/parser@8.32.1(eslint@9.27.0(jiti@2.4.2))(typescript@5.7.3))(eslint@9.27.0(jiti@2.4.2))(typescript@5.7.3)
+      '@typescript-eslint/parser':
+        specifier: ^8.32.1
+        version: 8.32.1(eslint@9.27.0(jiti@2.4.2))(typescript@5.7.3)
       '@vitejs/plugin-react':
         specifier: ^4.2.0
         version: 4.5.0(vite@6.3.5(@types/node@20.17.50)(jiti@2.4.2)(sass@1.89.0)(terser@5.39.2)(yaml@2.8.0))
@@ -123,9 +129,6 @@ importers:
       prettier:
         specifier: ^3.5.3
         version: 3.5.3
-      prettier-plugin-solidity:
-        specifier: ^2.0.0
-        version: 2.0.0(prettier@3.5.3)
       sass:
         specifier: ^1.55.0
         version: 1.89.0
@@ -173,21 +176,15 @@ importers:
       '@types/chai':
         specifier: ^5.2.2
         version: 5.2.2
-      '@typescript-eslint/eslint-plugin':
-        specifier: ^8.32.1
-        version: 8.32.1(@typescript-eslint/parser@8.32.1(eslint@9.27.0(jiti@2.4.2))(typescript@5.7.3))(eslint@9.27.0(jiti@2.4.2))(typescript@5.7.3)
-      '@typescript-eslint/parser':
-        specifier: ^8.32.1
-        version: 8.32.1(eslint@9.27.0(jiti@2.4.2))(typescript@5.7.3)
       chai:
         specifier: ^5.2.0
         version: 5.2.0
-      eslint:
-        specifier: ^9.8.0
-        version: 9.27.0(jiti@2.4.2)
       hardhat:
         specifier: ^2.24.1
         version: 2.24.1(ts-node@10.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@types/node@22.7.5)(typescript@5.7.3))(typescript@5.7.3)
+      prettier-plugin-solidity:
+        specifier: ^2.0.0
+        version: 2.0.0(prettier@3.5.3)
       solhint:
         specifier: ^5.1.0
         version: 5.1.0(typescript@5.7.3)

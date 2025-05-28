@@ -85,16 +85,14 @@ contract AMMPool {
         uint256 amountInWithFee = (amountIn * 997) / 1000;
         amountOut = (reserveOut * amountInWithFee) / (reserveIn + amountInWithFee);
         
-        // 更新状态变量
         if (isTokenA) {
             reserveA += amountIn;
             reserveB -= amountOut;
-        } else {
+        } else {    
             reserveB += amountIn;
             reserveA -= amountOut;
         }
         
-        // 在状态更新后进行转账，遵循检查-生效-交互模式
         tokenOutContract.transfer(msg.sender, amountOut);
         
         emit Swap(msg.sender, tokenIn, amountIn, amountOut);

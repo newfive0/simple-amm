@@ -6,11 +6,9 @@
     "@nomicfoundation/hardhat-ignition": "^0.15.11",
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
     "@types/chai": "^5.2.2",
-    "@typescript-eslint/eslint-plugin": "^8.32.1",
-    "@typescript-eslint/parser": "^8.32.1",
     "chai": "^5.2.0",
-    "eslint": "^9.8.0",
     "hardhat": "^2.24.1",
+    "prettier-plugin-solidity": "^2.0.0",
     "solhint": "^5.1.0"
   },
   "dependencies": {
