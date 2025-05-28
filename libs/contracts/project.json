@@ -39,6 +39,13 @@
         "cwd": "libs/contracts"
       }
     },
+    "check-format-sol": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prettier --plugin=prettier-plugin-solidity --check \"src/**/*.sol\"",
+        "cwd": "libs/contracts"
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

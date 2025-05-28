@@ -35,14 +35,14 @@ jobs:
 
       - uses: nrwl/nx-set-shas@v4
       
-      # Run JavaScript/TypeScript linting - now with exit code 1 on errors
       - name: JavaScript/TypeScript lint
         run: pnpm exec nx lint-js contracts
       
-      # Run Solidity linting
       - name: Solidity lint
         run: pnpm exec nx lint-sol contracts
-
-      # Run contract tests using nx command
+        
+      - name: Check Solidity formatting
+        run: pnpm exec nx check-format-sol contracts
+        
       - name: Smart contract tests
         run: pnpm exec nx test contracts

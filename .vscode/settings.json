@@ -4,7 +4,6 @@
     "source.fixAll.eslint": "explicit"
   },
   "eslint.format.enable": true,
-  "prettier.enable": false,
   "eslint.enable": true,
   "eslint.validate": [
     "javascript",
@@ -13,5 +12,9 @@
     "typescriptreact"
   ],
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "eslint.experimental.useFlatConfig": true
+  "eslint.useFlatConfig": true,
+  "[solidity]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  }
 }
