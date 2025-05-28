@@ -37,3 +37,11 @@ nx lint-sol contracts      # Check your Solidity code
 nx lint-sol-fix contracts  # Automatically fix Solidity linting issues
 nx format-sol contracts    # Format Solidity code using prettier
 ```
+
+## Testing
+
+To run the Solidity smart contract tests:
+
+```sh
+nx test contracts         # Run Hardhat tests for the contracts
+```
