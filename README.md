@@ -20,6 +20,46 @@ To see all available targets to run for a project, run:
 npx nx show project frontend
 ```
 
+## Deployment
+
+### Deploy Smart Contracts
+
+The project uses Hardhat Ignition for smart contract deployment. You can deploy the AMM system (tokens and pool) using the following steps:
+
+#### 1. Start Local Hardhat Network
+```sh
+cd libs/contracts
+npx hardhat node
+```
+This will start a local Ethereum network for testing and development.
+
+#### 2. Deploy Contracts
+
+**Deploy everything (recommended):**
+```sh
+cd libs/contracts
+npx hardhat ignition deploy ignition/modules/AMMPool.ts --network localhost
+```
+
+**Deploy only tokens:**
+```sh
+cd libs/contracts
+npx hardhat ignition deploy ignition/modules/Token.ts --network localhost
+```
+
+**Deploy complete system:**
+```sh
+cd libs/contracts
+npx hardhat ignition deploy ignition/modules/DeployAll.ts --network localhost
+```
+
+After successful deployment, you'll see the contract addresses output:
+- TokenA: ERC20 token for trading pair
+- TokenB: ERC20 token for trading pair  
+- AMMPool: Automated Market Maker pool contract
+
+The deployment artifacts are saved in `libs/contracts/ignition/deployments/` for reuse.
+
 ## Linting
 
 For TypeScript/JavaScript linting:
