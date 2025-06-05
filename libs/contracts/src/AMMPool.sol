@@ -4,95 +4,108 @@ pragma solidity ^0.8.0;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
-error InvalidAmounts();
 error InsufficientLiquidity();
 error InvalidAmount();
 error UnsupportedToken();
+error InsufficientETHReserve();
+error InsufficientTokenReserve();
 
 contract AMMPool {
-    IERC20 public tokenA;
-    IERC20 public tokenB;
-    uint256 public reserveA;
-    uint256 public reserveB;
+    IERC20 public simplestToken;
+    uint256 public reserveSimplest;
+    uint256 public reserveETH;
     uint256 public totalLiquidity;
     mapping(address => uint256) public liquidity;
 
-    event LiquidityAdded(address indexed provider, uint256 amountA, uint256 amountB, uint256 liquidity);
-    event LiquidityRemoved(address indexed provider, uint256 amountA, uint256 amountB, uint256 liquidity);
+    event LiquidityAdded(address indexed provider, uint256 amountSimplest, uint256 amountETH, uint256 liquidity);
+    event LiquidityRemoved(address indexed provider, uint256 amountSimplest, uint256 amountETH, uint256 liquidity);
     event Swap(address indexed user, address tokenIn, uint256 amountIn, uint256 amountOut);
 
-    constructor(address _tokenA, address _tokenB) {
-        tokenA = IERC20(_tokenA);
-        tokenB = IERC20(_tokenB);
+    constructor(address _simplestToken) {
+        simplestToken = IERC20(_simplestToken);
     }
 
-    function addLiquidity(uint256 amountA, uint256 amountB) external returns (uint256 liquidityShare) {
+    function addLiquidity(uint256 amountSimplest) external payable returns (uint256 liquidityShare) {
         // TODO: Slippage protection
-        if (amountA <= 0 || amountB <= 0) revert InvalidAmounts();
+        if (amountSimplest <= 0 || msg.value <= 0) revert InvalidAmount();
 
-        tokenA.transferFrom(msg.sender, address(this), amountA);
-        tokenB.transferFrom(msg.sender, address(this), amountB);
+        simplestToken.transferFrom(msg.sender, address(this), amountSimplest);
 
         if (totalLiquidity == 0) {
-            liquidityShare = Math.sqrt(amountA * amountB);
+            liquidityShare = Math.sqrt(amountSimplest * msg.value);
         } else {
-            liquidityShare = min((amountA * totalLiquidity) / reserveA, (amountB * totalLiquidity) / reserveB);
+            liquidityShare = min(
+                (amountSimplest * totalLiquidity) / reserveSimplest,
+                (msg.value * totalLiquidity) / reserveETH
+            );
         }
 
         liquidity[msg.sender] += liquidityShare;
         totalLiquidity += liquidityShare;
-        reserveA += amountA;
-        reserveB += amountB;
+        reserveSimplest += amountSimplest;
+        reserveETH += msg.value;
 
-        emit LiquidityAdded(msg.sender, amountA, amountB, liquidityShare);
+        emit LiquidityAdded(msg.sender, amountSimplest, msg.value, liquidityShare);
     }
 
-    function removeLiquidity(uint256 liquidityShare) external returns (uint256 amountA, uint256 amountB) {
+    function removeLiquidity(uint256 liquidityShare) external returns (uint256 amountSimplest, uint256 amountETH) {
         // TODO: Slippage protection
         if (liquidityShare <= 0 || liquidity[msg.sender] < liquidityShare) revert InsufficientLiquidity();
 
-        amountA = (liquidityShare * reserveA) / totalLiquidity;
-        amountB = (liquidityShare * reserveB) / totalLiquidity;
+        amountSimplest = (liquidityShare * reserveSimplest) / totalLiquidity;
+        amountETH = (liquidityShare * reserveETH) / totalLiquidity;
 
         liquidity[msg.sender] -= liquidityShare;
         totalLiquidity -= liquidityShare;
-        reserveA -= amountA;
-        reserveB -= amountB;
+        reserveSimplest -= amountSimplest;
+        reserveETH -= amountETH;
 
-        tokenA.transfer(msg.sender, amountA);
-        tokenB.transfer(msg.sender, amountB);
+        simplestToken.transfer(msg.sender, amountSimplest);
+        payable(msg.sender).transfer(amountETH);
 
-        emit LiquidityRemoved(msg.sender, amountA, amountB, liquidityShare);
+        emit LiquidityRemoved(msg.sender, amountSimplest, amountETH, liquidityShare);
     }
 
-    function swap(address tokenIn, uint256 amountIn) external returns (uint256 amountOut) {
+    function swap(address tokenIn, uint256 amountIn) external payable returns (uint256 amountOut) {
         // TODO: Slippage protection
-        if (amountIn <= 0) revert InvalidAmount();
+        if (tokenIn == address(simplestToken) && amountIn <= 0) revert InvalidAmount();
+        if (tokenIn == address(0) && msg.value <= 0) revert InvalidAmount();
 
-        bool isTokenA = tokenIn == address(tokenA);
-        if (!isTokenA && tokenIn != address(tokenB)) revert UnsupportedToken();
+        bool isSimplestToken = tokenIn == address(simplestToken);
+        if (!isSimplestToken && tokenIn != address(0)) revert UnsupportedToken();
 
-        (IERC20 tokenInContract, IERC20 tokenOutContract, uint256 reserveIn, uint256 reserveOut) = isTokenA
-            ? (tokenA, tokenB, reserveA, reserveB)
-            : (tokenB, tokenA, reserveB, reserveA);
+        if (isSimplestToken) {
+            uint256 amountInWithFee = (amountIn * 997) / 1000;
+            amountOut = (reserveETH * amountInWithFee) / (reserveSimplest + amountInWithFee);
 
-        tokenInContract.transferFrom(msg.sender, address(this), amountIn);
+            if (amountOut > reserveETH) revert InsufficientETHReserve();
 
-        // 0.3% fee
-        uint256 amountInWithFee = (amountIn * 997) / 1000;
-        amountOut = (reserveOut * amountInWithFee) / (reserveIn + amountInWithFee);
-
-        if (isTokenA) {
-            reserveA += amountIn;
-            reserveB -= amountOut;
+            _swapSimplestForETH(amountIn, amountOut);
         } else {
-            reserveB += amountIn;
-            reserveA -= amountOut;
+            uint256 amountInWithFee = (msg.value * 997) / 1000;
+            amountOut = (reserveSimplest * amountInWithFee) / (reserveETH + amountInWithFee);
+
+            if (amountOut > reserveSimplest) revert InsufficientTokenReserve();
+
+            _swapETHForSimplest(amountOut);
         }
 
-        tokenOutContract.transfer(msg.sender, amountOut);
+        emit Swap(msg.sender, tokenIn, isSimplestToken ? amountIn : msg.value, amountOut);
+    }
 
-        emit Swap(msg.sender, tokenIn, amountIn, amountOut);
+    function _swapSimplestForETH(uint256 amountIn, uint256 amountOut) private {
+        reserveSimplest += amountIn;
+        reserveETH -= amountOut;
+
+        simplestToken.transferFrom(msg.sender, address(this), amountIn);
+        payable(msg.sender).transfer(amountOut);
+    }
+
+    function _swapETHForSimplest(uint256 amountOut) private {
+        reserveETH += msg.value;
+        reserveSimplest -= amountOut;
+
+        simplestToken.transfer(msg.sender, amountOut);
     }
 
     function min(uint256 a, uint256 b) private pure returns (uint256) {

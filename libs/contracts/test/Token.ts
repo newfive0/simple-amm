@@ -3,8 +3,8 @@ import { expect } from 'chai';
 import '@nomicfoundation/hardhat-chai-matchers';
 import { loadFixture } from '@nomicfoundation/hardhat-toolbox/network-helpers';
 import hre from 'hardhat';
-import { Contract } from 'ethers';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
+import type { Token } from '../typechain-types';
 
 describe('Token', () => {
   const NAME = 'MyToken';
@@ -15,13 +15,13 @@ describe('Token', () => {
     const [deployer, user] = await hre.ethers.getSigners();
 
     const Token = await hre.ethers.getContractFactory('Token');
-    const token = await Token.deploy(NAME, SYMBOL, TOTAL_SUPPLY);
+    const token = (await Token.deploy(NAME, SYMBOL, TOTAL_SUPPLY)) as Token;
     await token.waitForDeployment();
 
     return { token, deployer, user };
   }
 
-  let token: Contract;
+  let token: Token;
   let deployer: SignerWithAddress;
   let user: SignerWithAddress;
 

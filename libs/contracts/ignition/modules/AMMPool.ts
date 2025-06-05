@@ -1,14 +1,14 @@
 import { buildModule } from '@nomicfoundation/hardhat-ignition/modules';
-import TokenPairModule from './Token';
+import TokenModule from './Token';
 
 const AMMPoolModule = buildModule('AMMPoolModule', (m) => {
-  // Use the TokenPairModule to get the deployed tokens
-  const { tokenA, tokenB } = m.useModule(TokenPairModule);
+  // Use the TokenModule to get the deployed token
+  const { simplestToken } = m.useModule(TokenModule);
 
-  // Deploy the AMMPool with the token addresses
-  const ammPool = m.contract('AMMPool', [tokenA, tokenB]);
+  // Deploy the AMMPool with only simplestToken address (ETH is native)
+  const ammPool = m.contract('AMMPool', [simplestToken]);
 
-  return { ammPool, tokenA, tokenB };
+  return { ammPool, simplestToken };
 });
 
 export default AMMPoolModule;

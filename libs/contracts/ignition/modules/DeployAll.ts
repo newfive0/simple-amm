@@ -2,10 +2,10 @@ import { buildModule } from '@nomicfoundation/hardhat-ignition/modules';
 import AMMPoolModule from './AMMPool';
 
 const DeployAllModule = buildModule('DeployAllModule', (m) => {
-  // Deploy everything: tokens and AMM pool
-  const { ammPool, tokenA, tokenB } = m.useModule(AMMPoolModule);
+  // Deploy everything: token and AMM pool
+  const { ammPool, simplestToken } = m.useModule(AMMPoolModule);
 
-  return { ammPool, tokenA, tokenB };
+  return { ammPool, simplestToken };
 });
 
 export default DeployAllModule;

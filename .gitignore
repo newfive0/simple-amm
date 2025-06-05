@@ -24,6 +24,9 @@ node_modules
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# Cursor rules (local development preferences)
+.cursorrules
+
 # misc
 /.sass-cache
 /connect.lock
