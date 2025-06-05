@@ -33,16 +33,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - uses: nrwl/nx-set-shas@v4
-      
       - name: JavaScript/TypeScript lint
         run: pnpm exec nx lint-js contracts
-      
+
       - name: Solidity lint
         run: pnpm exec nx lint-sol contracts
-        
+
       - name: Check Solidity formatting
         run: pnpm exec nx check-format-sol contracts
-        
+
       - name: Smart contract tests
         run: pnpm exec nx test contracts
