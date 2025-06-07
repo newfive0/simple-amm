@@ -1,0 +1,17 @@
+{
+  "name": "@simple-amm/frontend-e2e",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/frontend-e2e/src",
+  "projectType": "application",
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint .",
+        "cwd": "apps/frontend-e2e"
+      }
+    }
+  },
+  "tags": [],
+  "implicitDependencies": ["@simple-amm/frontend"]
+}

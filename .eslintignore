@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+coverage/
+*.min.js
+*.bundle.js
+typechain-types/
+cache/
+artifacts/
+.nx/
+.vscode/
+.git/
+*.config.js
+*.config.ts
+vite.config.ts
+vitest.workspace.ts 

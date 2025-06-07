@@ -1,0 +1,23 @@
+{
+  "name": "@simple-amm/frontend",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/frontend/src",
+  "projectType": "application",
+  "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint src/",
+        "cwd": "apps/frontend"
+      }
+    },
+    "lint:fix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "eslint src/ --fix",
+        "cwd": "apps/frontend"
+      }
+    }
+  },
+  "tags": []
+}
