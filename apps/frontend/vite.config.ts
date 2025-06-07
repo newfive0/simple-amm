@@ -1,6 +1,34 @@
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
+import { copyFileSync, existsSync, mkdirSync } from 'fs';
+
+// Plugin to copy deployment artifacts
+const copyDeploymentArtifacts = () => {
+  return {
+    name: 'copy-deployment-artifacts',
+    buildStart() {
+      const sourceFile = resolve(
+        __dirname,
+        '../../libs/contracts/ignition/deployments/chain-31337/deployed_addresses.json',
+      );
+      const targetDir = resolve(__dirname, 'public');
+      const targetFile = resolve(targetDir, 'deployed_addresses.json');
+
+      if (!existsSync(targetDir)) {
+        mkdirSync(targetDir, { recursive: true });
+      }
+
+      if (existsSync(sourceFile)) {
+        copyFileSync(sourceFile, targetFile);
+        console.log('Copied deployment artifacts to public directory');
+      } else {
+        console.warn('Deployment artifacts not found at:', sourceFile);
+      }
+    },
+  };
+};
 
 export default defineConfig(() => ({
   root: __dirname,
@@ -13,7 +41,7 @@ export default defineConfig(() => ({
     port: 4300,
     host: 'localhost',
   },
-  plugins: [react()],
+  plugins: [react(), copyDeploymentArtifacts()],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
