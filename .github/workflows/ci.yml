@@ -33,11 +33,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: JavaScript/TypeScript lint
-        run: pnpm exec nx lint-js contracts
-
-      - name: Solidity lint
-        run: pnpm exec nx lint-sol contracts
+      - name: Lint all projects
+        run: pnpm exec nx run-many -t lint
 
       - name: Check Solidity formatting
         run: pnpm exec nx check-format-sol contracts

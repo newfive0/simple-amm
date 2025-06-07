@@ -4,6 +4,14 @@
   "sourceRoot": "libs/contracts/src",
   "projectType": "library",
   "targets": {
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["pnpm eslint .", "solhint 'src/**/*.sol'"],
+        "cwd": "libs/contracts",
+        "parallel": false
+      }
+    },
     "lint-js": {
       "executor": "nx:run-commands",
       "options": {

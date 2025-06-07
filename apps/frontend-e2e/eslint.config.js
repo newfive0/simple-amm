@@ -1,16 +1,16 @@
 // Import the base config using CommonJS import style
-import baseConfigModule from '../../eslint.config.js';
-export default [
-  ...baseConfigModule,
+const baseConfig = require('../../eslint.config.js');
+
+module.exports = [
+  ...baseConfig,
   {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       parserOptions: {
         project: './tsconfig.json',
         tsconfigRootDir: '.',
-      }
+      },
     },
-    rules: {
-    }
-  }
+    rules: {},
+  },
 ];

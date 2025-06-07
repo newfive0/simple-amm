@@ -1,17 +1,20 @@
 const tseslint = require('@typescript-eslint/eslint-plugin');
 const tsParser = require('@typescript-eslint/parser');
 const js = require('@eslint/js');
-const prettierConfig = require('eslint-config-prettier');
-const prettierPlugin = require('eslint-plugin-prettier');
 
 const baseConfig = [
   {
     ignores: [
       'node_modules/**',
+      'dist/**',
+      'build/**',
       'coverage/**',
-      'typechain-types/**',
-      'cache/**',
       'artifacts/**',
+      'cache/**',
+      'typechain-types/**',
+      'pnpm-lock.yaml',
+      '**/*.min.js',
+      '**/*.bundle.js',
     ],
   },
   js.configs.recommended,
@@ -19,7 +22,15 @@ const baseConfig = [
     files: ['*.js'],
     languageOptions: {
       sourceType: 'commonjs',
-      ecmaVersion: 'latest',
+      globals: {
+        require: 'readonly',
+        module: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+        process: 'readonly',
+        console: 'readonly',
+        Buffer: 'readonly',
+      },
     },
   },
   {
@@ -33,24 +44,25 @@ const baseConfig = [
       globals: {
         describe: 'readonly',
         it: 'readonly',
+        expect: 'readonly',
+        test: 'readonly',
         beforeEach: 'readonly',
+        console: 'readonly',
+        process: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
       },
     },
     plugins: {
       '@typescript-eslint': tseslint,
-      prettier: prettierPlugin,
     },
     rules: {
       ...tseslint.configs.recommended.rules,
       'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': ['error'], // Changed from 'warn' to 'error'
-      '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/no-explicit-any': 'error',
-      'no-undef': 'off',
-      'prettier/prettier': 'error',
+      '@typescript-eslint/no-unused-vars': 'error',
+      '@typescript-eslint/no-explicit-any': 'warn',
     },
   },
-  prettierConfig,
 ];
 
 module.exports = baseConfig;

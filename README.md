@@ -71,6 +71,26 @@ The deployment artifacts are saved in `libs/contracts/ignition/deployments/` for
 
 ## Linting
 
+### Frontend (React/TypeScript)
+
+For frontend React/TypeScript linting:
+
+```sh
+nx lint frontend                # Check for linting issues
+nx lint:fix frontend           # Automatically fix linting issues
+```
+
+### Project-wide
+
+For project-wide linting:
+
+```sh
+nx run-many -t lint            # Check all projects
+nx run-many -t lint:fix        # Fix all projects
+```
+
+### Contracts (TypeScript/JavaScript)
+
 For TypeScript/JavaScript linting:
 
 ```sh
@@ -78,10 +98,11 @@ nx lint-js contracts      # Check for linting issues
 nx lint-js-fix contracts  # Automatically fix linting issues when possible
 ```
 
+### Solidity
+
 For Solidity linting:
 
 ```sh
-# Run solhint to check your Solidity code
 nx lint-sol contracts      # Check your Solidity code
 nx lint-sol-fix contracts  # Automatically fix Solidity linting issues
 nx format-sol contracts    # Format Solidity code using prettier

@@ -1,52 +1,57 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
 
 // TypeScript declaration for MetaMask
 declare global {
   interface Window {
-    ethereum?: any;
+    ethereum?: {
+      request: (args: {
+        method: string;
+        params?:
+          | unknown[]
+          | {
+              type: string;
+              options: {
+                address: string;
+                symbol: string;
+                decimals: number;
+              };
+            };
+      }) => Promise<unknown>;
+      on: (event: string, callback: (accounts: string[]) => void) => void;
+      removeListener: (event: string, callback: () => void) => void;
+    };
   }
 }
 
 // Function to read contract addresses from deployment artifacts
 const getContractAddresses = async () => {
-  try {
-    const response = await fetch('/deployed_addresses.json');
-    const data = await response.json();
-    return {
-      tokenAddress: data['TokenModule#SimplestToken'],
-      ammPoolAddress: data['AMMPoolModule#AMMPool'],
-    };
-  } catch (error) {
-    console.error('Error loading contract addresses:', error);
-    throw error;
-  }
+  const response = await fetch('/deployed_addresses.json');
+  const data = await response.json();
+  return {
+    tokenAddress: data['TokenModule#SimplestToken'],
+    ammPoolAddress: data['AMMPoolModule#AMMPool'],
+  };
 };
 
 // Function to load contract artifacts
 const loadContractArtifacts = async () => {
-  try {
-    const [tokenResponse, ammPoolResponse] = await Promise.all([
-      fetch('/artifacts/Token.json'),
-      fetch('/artifacts/AMMPool.json'),
-    ]);
+  const [tokenResponse, ammPoolResponse] = await Promise.all([
+    fetch('/artifacts/Token.json'),
+    fetch('/artifacts/AMMPool.json'),
+  ]);
 
-    const tokenArtifact = await tokenResponse.json();
-    const ammPoolArtifact = await ammPoolResponse.json();
+  const tokenArtifact = await tokenResponse.json();
+  const ammPoolArtifact = await ammPoolResponse.json();
 
-    return {
-      tokenAbi: tokenArtifact.abi,
-      ammPoolAbi: ammPoolArtifact.abi,
-    };
-  } catch (error) {
-    console.error('Error loading contract artifacts:', error);
-    throw error;
-  }
+  return {
+    tokenAbi: tokenArtifact.abi,
+    ammPoolAbi: ammPoolArtifact.abi,
+  };
 };
 
 export function App() {
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
-  const [signer, setSigner] = useState<ethers.JsonRpcSigner | null>(null);
   const [account, setAccount] = useState<string>('');
   const [tokenContract, setTokenContract] = useState<ethers.Contract | null>(
     null,
@@ -76,16 +81,14 @@ export function App() {
   useEffect(() => {
     const loadContracts = async () => {
       try {
-        const [addresses, artifacts] = await Promise.all([
+        const [addresses] = await Promise.all([
           getContractAddresses(),
           loadContractArtifacts(),
         ]);
         setContractAddresses(addresses);
 
         // Store ABIs in state or context if needed
-        console.log('Loaded contract ABIs:', artifacts);
-      } catch (error) {
-        console.error('Failed to load contracts:', error);
+      } catch {
         setNetworkError(
           'Failed to load contracts. Please make sure contracts are deployed and artifacts are available.',
         );
@@ -105,25 +108,28 @@ export function App() {
   // Listen for account changes
   useEffect(() => {
     if (window.ethereum) {
-      window.ethereum.on('accountsChanged', (accounts: string[]) => {
+      const handleAccountsChanged = (accounts: string[]) => {
         if (accounts.length > 0) {
           setAccount(accounts[0]);
         } else {
           setAccount('');
         }
-      });
+      };
 
-      window.ethereum.on('chainChanged', () => {
+      const handleChainChanged = () => {
         window.location.reload();
-      });
-    }
+      };
 
-    return () => {
-      if (window.ethereum) {
-        window.ethereum.removeListener('accountsChanged', () => {});
-        window.ethereum.removeListener('chainChanged', () => {});
-      }
-    };
+      window.ethereum.on('accountsChanged', handleAccountsChanged);
+      window.ethereum.on('chainChanged', handleChainChanged);
+
+      return () => {
+        if (window.ethereum) {
+          window.ethereum.removeListener('accountsChanged', () => {});
+          window.ethereum.removeListener('chainChanged', () => {});
+        }
+      };
+    }
   }, []);
 
   // Update user balances
@@ -133,34 +139,16 @@ export function App() {
     address: string,
   ) => {
     try {
-      console.log('Updating balances for address:', address);
-      console.log('Token contract address:', await token.getAddress());
-      console.log('Token contract ABI:', token.interface.format());
-
       const tokenBal = await token.balanceOf(address);
-      console.log('Raw token balance:', tokenBal.toString());
-      console.log('Token balance type:', typeof tokenBal);
-      console.log('Token balance is BigInt:', tokenBal instanceof BigInt);
-
       const ethBal = await provider.getBalance(address);
-      console.log('Raw ETH balance:', ethBal.toString());
 
       const formattedTokenBal = ethers.formatEther(tokenBal);
       const formattedEthBal = ethers.formatEther(ethBal);
 
-      console.log('Formatted token balance:', formattedTokenBal);
-      console.log('Formatted ETH balance:', formattedEthBal);
-
       setTokenBalance(formattedTokenBal);
       setEthBalance(formattedEthBal);
     } catch (error) {
-      console.error('Error updating balances:', error);
       if (error instanceof Error) {
-        console.error('Error details:', {
-          message: error.message,
-          stack: error.stack,
-          name: error.name,
-        });
         setNetworkError(error.message);
       }
     }
@@ -176,9 +164,6 @@ export function App() {
         const address = await signer.getAddress();
         const network = await provider.getNetwork();
 
-        console.log('Connected to network:', network);
-        console.log('Connected address:', address);
-
         // Check if we're on the correct network (Hardhat local network)
         if (network.chainId !== 31337n) {
           setNetworkError(
@@ -189,7 +174,6 @@ export function App() {
         setNetworkError('');
 
         setProvider(provider);
-        setSigner(signer);
         setAccount(address);
 
         // Initialize contracts with addresses and ABIs from artifacts
@@ -210,9 +194,6 @@ export function App() {
           signer,
         );
 
-        console.log('Token contract address:', await token.getAddress());
-        console.log('AMM contract address:', await amm.getAddress());
-
         setTokenContract(token);
         setAmmContract(amm);
 
@@ -220,17 +201,15 @@ export function App() {
         try {
           const name = await token.name();
           const symbol = await token.symbol();
-          console.log('Token name:', name);
-          console.log('Token symbol:', symbol);
           setTokenName(name);
           setTokenSymbol(symbol);
 
           // Try to add token to MetaMask with the correct symbol
           try {
-            await window.ethereum.request({
+            await window.ethereum?.request({
               method: 'wallet_watchAsset',
               params: {
-                type: 'ERC20',
+                type: 'ERC20' as const,
                 options: {
                   address: contractAddresses.tokenAddress,
                   symbol: symbol,
@@ -238,11 +217,11 @@ export function App() {
                 },
               },
             });
-          } catch (error) {
-            console.error('Error adding token to MetaMask:', error);
+          } catch {
+            // Silently handle MetaMask token addition errors
           }
-        } catch (error) {
-          console.error('Error getting token info:', error);
+        } catch {
+          // Silently handle token info errors
         }
 
         // Get balances
@@ -251,7 +230,6 @@ export function App() {
         alert('Please install MetaMask!');
       }
     } catch (error) {
-      console.error('Error connecting wallet:', error);
       if (error instanceof Error) {
         setNetworkError(error.message);
       }
@@ -260,7 +238,9 @@ export function App() {
 
   // Handle swap from ETH to Token
   const swapETHForTokens = async () => {
-    if (!ammContract || !ethAmount) return;
+    if (!ammContract || !ethAmount) {
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -276,8 +256,7 @@ export function App() {
         await updateBalances(tokenContract, provider, account);
       }
       setEthAmount('');
-    } catch (error) {
-      console.error('Error swapping ETH for tokens:', error);
+    } catch {
       alert('Swap failed. Check console for details.');
     }
     setIsLoading(false);
@@ -285,8 +264,9 @@ export function App() {
 
   // Handle swap from Token to ETH
   const swapTokensForETH = async () => {
-    if (!ammContract || !tokenContract || !tokenAmount || !contractAddresses)
+    if (!ammContract || !tokenContract || !tokenAmount || !contractAddresses) {
       return;
+    }
 
     setIsLoading(true);
     try {
@@ -309,25 +289,26 @@ export function App() {
         await updateBalances(tokenContract, provider, account);
       }
       setTokenAmount('');
-    } catch (error) {
-      console.error('Error swapping tokens for ETH:', error);
+    } catch {
       alert('Swap failed. Check console for details.');
     }
     setIsLoading(false);
   };
 
   // Update pool balances
-  const updatePoolBalances = async () => {
-    if (!ammContract || !provider) return;
+  const updatePoolBalances = useCallback(async () => {
+    if (!ammContract || !provider) {
+      return;
+    }
     try {
       const ethReserve = await ammContract.reserveETH();
       const tokenReserve = await ammContract.reserveSimplest();
       setPoolEthBalance(ethers.formatEther(ethReserve));
       setPoolTokenBalance(ethers.formatEther(tokenReserve));
-    } catch (error) {
-      console.error('Error updating pool balances:', error);
+    } catch {
+      // Silently handle pool balance errors
     }
-  };
+  }, [ammContract, provider]);
 
   // Add liquidity to the pool
   const addLiquidity = async () => {
@@ -336,8 +317,9 @@ export function App() {
       !tokenContract ||
       !liquidityEthAmount ||
       !liquidityTokenAmount
-    )
+    ) {
       return;
+    }
 
     setIsLoading(true);
     try {
@@ -362,8 +344,7 @@ export function App() {
       }
       setLiquidityEthAmount('');
       setLiquidityTokenAmount('');
-    } catch (error) {
-      console.error('Error adding liquidity:', error);
+    } catch {
       alert('Failed to add liquidity. Check console for details.');
     }
     setIsLoading(false);
@@ -374,7 +355,7 @@ export function App() {
     if (ammContract && provider) {
       updatePoolBalances();
     }
-  }, [account, ammContract, provider]);
+  }, [account, ammContract, provider, updatePoolBalances]);
 
   return (
     <div
