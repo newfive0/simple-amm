@@ -1,5 +1,22 @@
 # SimpleAmm
 
+## Quick Start
+
+To start the complete development environment (Hardhat + contracts deployment + frontend):
+
+```sh
+./start-dev.sh
+```
+
+This script will:
+
+1. Start Hardhat local network on `http://localhost:8545`
+2. Deploy smart contracts (Token and AMMPool)
+3. Start frontend development server on `http://localhost:4200` (or next available port)
+4. Create log files: `libs/contracts/hardhat.log` and `frontend.log`
+
+Press `Ctrl+C` to stop all services.
+
 ## Run tasks
 
 To run the dev server for your app, use:
@@ -71,15 +88,6 @@ The deployment artifacts are saved in `libs/contracts/ignition/deployments/` for
 
 ## Linting
 
-### Frontend (React/TypeScript)
-
-For frontend React/TypeScript linting:
-
-```sh
-nx lint frontend                # Check for linting issues
-nx lint:fix frontend           # Automatically fix linting issues
-```
-
 ### Project-wide
 
 For project-wide linting:
@@ -87,6 +95,15 @@ For project-wide linting:
 ```sh
 nx run-many -t lint            # Check all projects
 nx run-many -t lint:fix        # Fix all projects
+```
+
+### Frontend (React/TypeScript)
+
+For frontend React/TypeScript linting:
+
+```sh
+nx lint frontend                # Check for linting issues
+nx lint:fix frontend           # Automatically fix linting issues
 ```
 
 ### Contracts (TypeScript/JavaScript)
