@@ -87,7 +87,7 @@ export const Swap: React.FC<SwapProps> = ({
 
   const SwapDirectionSelector = () => (
     <div className={styles.swapDirection}>
-      <label>Swap Direction:</label>
+      <label>Swap Direction</label>
       <select
         value={swapDirection}
         onChange={(e) => setSwapDirection(e.target.value as 'eth-to-token' | 'token-to-eth')}
@@ -116,14 +116,16 @@ export const Swap: React.FC<SwapProps> = ({
     buttonClass: string;
   }) => (
     <div className={styles.swapInput}>
-      <label>{label}</label>
-      <input
-        type="number"
-        step="0.01"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-      />
+      <div className={styles.inputField}>
+        <label>{label}</label>
+        <input
+          type="number"
+          step="0.01"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+        />
+      </div>
       <button
         onClick={onClick}
         disabled={isLoading || !value}
@@ -140,7 +142,7 @@ export const Swap: React.FC<SwapProps> = ({
       <SwapDirectionSelector />
       {swapDirection === 'eth-to-token' ? (
         <SwapInput
-          label="ETH Amount:"
+          label="ETH Amount"
           value={ethAmount}
           onChange={setEthAmount}
           placeholder="Enter ETH amount"
@@ -150,7 +152,7 @@ export const Swap: React.FC<SwapProps> = ({
         />
       ) : (
         <SwapInput
-          label="Token Amount:"
+          label="Token Amount"
           value={tokenAmount}
           onChange={setTokenAmount}
           placeholder="Enter token amount"

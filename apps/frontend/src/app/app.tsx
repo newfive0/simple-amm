@@ -70,6 +70,8 @@ export function App() {
   } | null>(null);
   const [poolEthBalance, setPoolEthBalance] = useState<string>('0');
   const [poolTokenBalance, setPoolTokenBalance] = useState<string>('0');
+  const [isCheckingConnection, setIsCheckingConnection] = useState<boolean>(true);
+  const [showCheckingMessage, setShowCheckingMessage] = useState<boolean>(false);
 
   // Load contract addresses and artifacts on mount
   useEffect(() => {
@@ -92,6 +94,43 @@ export function App() {
     loadContracts();
   }, []);
 
+  // Check for existing wallet connection on page load
+  useEffect(() => {
+    const checkWalletConnection = async () => {
+      if (window.ethereum && window.localStorage.getItem('walletConnected') === 'true') {
+        try {
+          const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+          if (accounts.length > 0) {
+            await connectWallet();
+          } else {
+            window.localStorage.removeItem('walletConnected');
+          }
+        } catch (error) {
+          console.log('Failed to reconnect wallet:', error);
+          window.localStorage.removeItem('walletConnected');
+        }
+      }
+      setIsCheckingConnection(false);
+      setShowCheckingMessage(false);
+    };
+
+    if (contractAddresses) {
+      checkWalletConnection();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contractAddresses]);
+
+  // Show checking message after delay to prevent flash
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      if (isCheckingConnection) {
+        setShowCheckingMessage(true);
+      }
+    }, 300); // Show after 300ms
+
+    return () => window.clearTimeout(timer);
+  }, [isCheckingConnection]);
+
   // Update balances when account changes or on mount
   useEffect(() => {
     if (tokenContract && provider && account) {
@@ -105,8 +144,14 @@ export function App() {
       const handleAccountsChanged = (accounts: string[]) => {
         if (accounts.length > 0) {
           setAccount(accounts[0]);
+          window.localStorage.setItem('walletConnected', 'true');
         } else {
           setAccount('');
+          window.localStorage.removeItem('walletConnected');
+          // Clear contracts and provider when disconnected
+          setTokenContract(null);
+          setAmmContract(null);
+          setProvider(null);
         }
       };
 
@@ -169,6 +214,9 @@ export function App() {
 
         setProvider(provider);
         setAccount(address);
+        
+        // Save wallet connection state
+        window.localStorage.setItem('walletConnected', 'true');
 
         // Initialize contracts with addresses and ABIs from artifacts
         if (!contractAddresses) {
@@ -198,21 +246,26 @@ export function App() {
           setTokenName(name);
           setTokenSymbol(symbol);
 
-          // Try to add token to MetaMask with the correct symbol
-          try {
-            await window.ethereum?.request({
-              method: 'wallet_watchAsset',
-              params: {
-                type: 'ERC20' as const,
-                options: {
-                  address: contractAddresses.tokenAddress,
-                  symbol: symbol,
-                  decimals: 18,
+          // Try to add token to MetaMask with the correct symbol (only once per token/wallet)
+          const tokenAddedKey = `tokenAdded_${contractAddresses.tokenAddress}_${address}`;
+          if (!window.localStorage.getItem(tokenAddedKey)) {
+            try {
+              await window.ethereum?.request({
+                method: 'wallet_watchAsset',
+                params: {
+                  type: 'ERC20' as const,
+                  options: {
+                    address: contractAddresses.tokenAddress,
+                    symbol: symbol,
+                    decimals: 18,
+                  },
                 },
-              },
-            });
-          } catch {
-            // Silently handle MetaMask token addition errors
+              });
+              // Mark token as added for this wallet
+              window.localStorage.setItem(tokenAddedKey, 'true');
+            } catch {
+              // Silently handle MetaMask token addition errors
+            }
           }
         } catch {
           // Silently handle token info errors
@@ -275,7 +328,20 @@ export function App() {
         fontFamily: 'Arial, sans-serif',
       }}
     >
-      <h1 style={{ textAlign: 'center', color: '#333' }}>Simple AMM</h1>
+      <h1 
+        style={{ 
+          textAlign: 'left', 
+          color: '#333',
+          padding: '20px',
+          margin: '0 0 0 0',
+          backgroundColor: '#ffffff',
+          border: '1px solid #e9ecef',
+          borderBottom: 'none',
+          fontSize: '24px'
+        }}
+      >
+        Very Simple AMM
+      </h1>
 
       {networkError && (
         <div
@@ -284,7 +350,6 @@ export function App() {
             marginBottom: '20px',
             backgroundColor: '#ffebee',
             color: '#c62828',
-            borderRadius: '4px',
             textAlign: 'center',
           }}
         >
@@ -292,7 +357,17 @@ export function App() {
         </div>
       )}
 
-      {!account || !ammContract || !tokenContract || !contractAddresses ? (
+      {isCheckingConnection && showCheckingMessage ? (
+        <div style={{ 
+          textAlign: 'center', 
+          marginTop: '50px',
+          padding: '20px',
+          backgroundColor: '#ffffff',
+          border: '1px solid #e9ecef'
+        }}>
+          <p>Checking wallet connection...</p>
+        </div>
+      ) : !isCheckingConnection && (!account || !ammContract || !tokenContract || !contractAddresses) ? (
         <div style={{ textAlign: 'center', marginTop: '50px' }}>
           <button
             onClick={connectWallet}
@@ -302,7 +377,6 @@ export function App() {
               backgroundColor: '#007bff',
               color: 'white',
               border: 'none',
-              borderRadius: '8px',
               cursor: 'pointer',
             }}
           >
@@ -310,7 +384,11 @@ export function App() {
           </button>
         </div>
       ) : (
-        <div>
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          gap: '0' 
+        }}>
           <WalletInfo
             account={account}
             ethBalance={ethBalance}

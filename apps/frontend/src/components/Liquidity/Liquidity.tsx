@@ -75,12 +75,12 @@ export const Liquidity: React.FC<LiquidityProps> = ({
 
   const PoolBalances = () => (
     <div className={styles.poolBalances}>
-      <h3>Pool Balances:</h3>
+      <h3>Pool Balances</h3>
       <p>
-        <strong>ETH:</strong> {parseFloat(poolEthBalance).toFixed(4)} ETH
+        <strong>ETH</strong> {parseFloat(poolEthBalance).toFixed(4)} ETH
       </p>
       <p>
-        <strong>Tokens:</strong> {parseFloat(poolTokenBalance).toFixed(4)} {tokenSymbol}
+        <strong>Tokens</strong> {parseFloat(poolTokenBalance).toFixed(4)} {tokenSymbol}
       </p>
     </div>
   );
@@ -114,13 +114,13 @@ export const Liquidity: React.FC<LiquidityProps> = ({
       <h2 className={styles.title}>Add Liquidity</h2>
       <PoolBalances />
       <InputField
-        label="ETH Amount:"
+        label="ETH Amount"
         value={liquidityEthAmount}
         onChange={setLiquidityEthAmount}
         placeholder="Enter ETH amount"
       />
       <InputField
-        label="Token Amount:"
+        label="Token Amount"
         value={liquidityTokenAmount}
         onChange={setLiquidityTokenAmount}
         placeholder="Enter token amount"
