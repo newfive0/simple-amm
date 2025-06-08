@@ -28,114 +28,136 @@ export const Swap: React.FC<SwapProps> = ({
     'eth-to-token' | 'token-to-eth'
   >('eth-to-token');
 
-  // Handle swap from ETH to Token
-  const swapETHForTokens = async () => {
-    if (!ethAmount) {
-      return;
-    }
+  const handleError = (error: unknown) => {
+    console.error('Swap failed:', error);
+    alert('Swap failed. Check console for details.');
+  };
 
+  const resetForm = () => {
+    setEthAmount('');
+    setTokenAmount('');
+  };
+
+  const executeSwapTransaction = async (callback: () => Promise<void>) => {
     setIsLoading(true);
     try {
+      await callback();
+      onSwapComplete();
+      resetForm();
+    } catch (error) {
+      handleError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const approveTokenSpending = async (amount: string) => {
+    const approveTx = await tokenContract.approve(
+      contractAddresses.ammPoolAddress,
+      ethers.parseEther(amount),
+    );
+    await approveTx.wait();
+  };
+
+  const swapETHForTokens = async () => {
+    if (!ethAmount) return;
+
+    await executeSwapTransaction(async () => {
       const tx = await ammContract.swap(
-        ethers.ZeroAddress, // address(0) for ETH
-        0, // amountIn is 0 for ETH swaps
+        ethers.ZeroAddress,
+        0,
         { value: ethers.parseEther(ethAmount) },
       );
       await tx.wait();
-
-      // Notify parent component to update balances
-      onSwapComplete();
-      setEthAmount('');
-    } catch {
-      alert('Swap failed. Check console for details.');
-    }
-    setIsLoading(false);
+    });
   };
 
-  // Handle swap from Token to ETH
   const swapTokensForETH = async () => {
-    if (!tokenAmount) {
-      return;
-    }
+    if (!tokenAmount) return;
 
-    setIsLoading(true);
-    try {
-      // First approve the AMM to spend tokens
-      const approveTx = await tokenContract.approve(
-        contractAddresses.ammPoolAddress,
-        ethers.parseEther(tokenAmount),
-      );
-      await approveTx.wait();
-
-      // Then swap tokens for ETH
-      const swapTx = await ammContract.swap(
+    await executeSwapTransaction(async () => {
+      await approveTokenSpending(tokenAmount);
+      const tx = await ammContract.swap(
         contractAddresses.tokenAddress,
         ethers.parseEther(tokenAmount),
       );
-      await swapTx.wait();
-
-      // Notify parent component to update balances
-      onSwapComplete();
-      setTokenAmount('');
-    } catch {
-      alert('Swap failed. Check console for details.');
-    }
-    setIsLoading(false);
+      await tx.wait();
+    });
   };
+
+  const SwapDirectionSelector = () => (
+    <div className={styles.swapDirection}>
+      <label>Swap Direction:</label>
+      <select
+        value={swapDirection}
+        onChange={(e) => setSwapDirection(e.target.value as 'eth-to-token' | 'token-to-eth')}
+      >
+        <option value="eth-to-token">ETH → Token</option>
+        <option value="token-to-eth">Token → ETH</option>
+      </select>
+    </div>
+  );
+
+  const SwapInput = ({ 
+    label, 
+    value, 
+    onChange, 
+    placeholder, 
+    onClick, 
+    buttonText, 
+    buttonClass 
+  }: {
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    placeholder: string;
+    onClick: () => void;
+    buttonText: string;
+    buttonClass: string;
+  }) => (
+    <div className={styles.swapInput}>
+      <label>{label}</label>
+      <input
+        type="number"
+        step="0.01"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+      />
+      <button
+        onClick={onClick}
+        disabled={isLoading || !value}
+        className={`${styles.swapButton} ${buttonClass}`}
+      >
+        {isLoading ? 'Swapping...' : buttonText}
+      </button>
+    </div>
+  );
 
   return (
     <div className={styles.swap}>
       <h2>Swap Tokens</h2>
-
-      <div className={styles.swapDirection}>
-        <label>Swap Direction:</label>
-        <select
-          value={swapDirection}
-          onChange={(e) =>
-            setSwapDirection(e.target.value as 'eth-to-token' | 'token-to-eth')
-          }
-        >
-          <option value="eth-to-token">ETH → Token</option>
-          <option value="token-to-eth">Token → ETH</option>
-        </select>
-      </div>
-
+      <SwapDirectionSelector />
       {swapDirection === 'eth-to-token' ? (
-        <div className={styles.swapInput}>
-          <label>ETH Amount:</label>
-          <input
-            type="number"
-            step="0.01"
-            value={ethAmount}
-            onChange={(e) => setEthAmount(e.target.value)}
-            placeholder="Enter ETH amount"
-          />
-          <button
-            onClick={swapETHForTokens}
-            disabled={isLoading || !ethAmount}
-            className={`${styles.swapButton} ${styles.ethToToken}`}
-          >
-            {isLoading ? 'Swapping...' : 'Swap ETH for Tokens'}
-          </button>
-        </div>
+        <SwapInput
+          label="ETH Amount:"
+          value={ethAmount}
+          onChange={setEthAmount}
+          placeholder="Enter ETH amount"
+          onClick={swapETHForTokens}
+          buttonText="Swap ETH for Tokens"
+          buttonClass={styles.ethToToken}
+        />
       ) : (
-        <div className={styles.swapInput}>
-          <label>Token Amount:</label>
-          <input
-            type="number"
-            step="0.01"
-            value={tokenAmount}
-            onChange={(e) => setTokenAmount(e.target.value)}
-            placeholder="Enter token amount"
-          />
-          <button
-            onClick={swapTokensForETH}
-            disabled={isLoading || !tokenAmount}
-            className={`${styles.swapButton} ${styles.tokenToEth}`}
-          >
-            {isLoading ? 'Swapping...' : 'Swap Tokens for ETH'}
-          </button>
-        </div>
+        <SwapInput
+          label="Token Amount:"
+          value={tokenAmount}
+          onChange={setTokenAmount}
+          placeholder="Enter token amount"
+          onClick={swapTokensForETH}
+          buttonText="Swap Tokens for ETH"
+          buttonClass={styles.tokenToEth}
+        />
       )}
     </div>
   );
