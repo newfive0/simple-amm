@@ -327,7 +327,7 @@ export function App() {
         </div>
       )}
 
-      {!account ? (
+      {!account || !ammContract || !tokenContract || !contractAddresses ? (
         <div style={{ textAlign: 'center', marginTop: '50px' }}>
           <button
             onClick={connectWallet}
