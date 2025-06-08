@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
-import { WalletInfo } from '../components';
+import { WalletInfo, Swap } from '../components';
 
 // TypeScript declaration for MetaMask
 declare global {
@@ -58,14 +58,9 @@ export function App() {
     null,
   );
   const [ammContract, setAmmContract] = useState<ethers.Contract | null>(null);
-  const [ethAmount, setEthAmount] = useState<string>('');
-  const [tokenAmount, setTokenAmount] = useState<string>('');
   const [tokenBalance, setTokenBalance] = useState<string>('0');
   const [ethBalance, setEthBalance] = useState<string>('0');
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [swapDirection, setSwapDirection] = useState<
-    'eth-to-token' | 'token-to-eth'
-  >('eth-to-token');
   const [tokenName, setTokenName] = useState<string>('');
   const [tokenSymbol, setTokenSymbol] = useState<string>('');
   const [networkError, setNetworkError] = useState<string>('');
@@ -237,65 +232,6 @@ export function App() {
     }
   };
 
-  // Handle swap from ETH to Token
-  const swapETHForTokens = async () => {
-    if (!ammContract || !ethAmount) {
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const tx = await ammContract.swap(
-        ethers.ZeroAddress, // address(0) for ETH
-        0, // amountIn is 0 for ETH swaps
-        { value: ethers.parseEther(ethAmount) },
-      );
-      await tx.wait();
-
-      // Update balances after swap
-      if (tokenContract && provider) {
-        await updateBalances(tokenContract, provider, account);
-      }
-      setEthAmount('');
-    } catch {
-      alert('Swap failed. Check console for details.');
-    }
-    setIsLoading(false);
-  };
-
-  // Handle swap from Token to ETH
-  const swapTokensForETH = async () => {
-    if (!ammContract || !tokenContract || !tokenAmount || !contractAddresses) {
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      // First approve the AMM to spend tokens
-      const approveTx = await tokenContract.approve(
-        contractAddresses.ammPoolAddress,
-        ethers.parseEther(tokenAmount),
-      );
-      await approveTx.wait();
-
-      // Then swap tokens for ETH
-      const swapTx = await ammContract.swap(
-        contractAddresses.tokenAddress,
-        ethers.parseEther(tokenAmount),
-      );
-      await swapTx.wait();
-
-      // Update balances after swap
-      if (provider) {
-        await updateBalances(tokenContract, provider, account);
-      }
-      setTokenAmount('');
-    } catch {
-      alert('Swap failed. Check console for details.');
-    }
-    setIsLoading(false);
-  };
-
   // Update pool balances
   const updatePoolBalances = useCallback(async () => {
     if (!ammContract || !provider) {
@@ -310,6 +246,20 @@ export function App() {
       // Silently handle pool balance errors
     }
   }, [ammContract, provider]);
+
+  // Update pool balances when account changes or on mount
+  useEffect(() => {
+    if (ammContract && provider) {
+      updatePoolBalances();
+    }
+  }, [account, ammContract, provider, updatePoolBalances]);
+
+  // Callback for when swap completes to update balances
+  const handleSwapComplete = async () => {
+    if (tokenContract && provider) {
+      await updateBalances(tokenContract, provider, account);
+    }
+  };
 
   // Add liquidity to the pool
   const addLiquidity = async () => {
@@ -350,13 +300,6 @@ export function App() {
     }
     setIsLoading(false);
   };
-
-  // Update pool balances when account changes or on mount
-  useEffect(() => {
-    if (ammContract && provider) {
-      updatePoolBalances();
-    }
-  }, [account, ammContract, provider, updatePoolBalances]);
 
   return (
     <div
@@ -411,138 +354,14 @@ export function App() {
             tokenName={tokenName}
           />
 
-          {/* Swap Section */}
-          <div
-            style={{
-              marginBottom: '30px',
-              padding: '20px',
-              backgroundColor: '#ffffff',
-              border: '1px solid #e9ecef',
-              borderRadius: '8px',
-            }}
-          >
-            <h2 style={{ marginTop: 0, color: '#333' }}>Swap Tokens</h2>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label
-                style={{
-                  display: 'block',
-                  marginBottom: '10px',
-                  fontWeight: 'bold',
-                }}
-              >
-                Swap Direction:
-              </label>
-              <select
-                value={swapDirection}
-                onChange={(e) =>
-                  setSwapDirection(
-                    e.target.value as 'eth-to-token' | 'token-to-eth',
-                  )
-                }
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  borderRadius: '6px',
-                  border: '1px solid #ddd',
-                  fontSize: '16px',
-                }}
-              >
-                <option value="eth-to-token">ETH → Token</option>
-                <option value="token-to-eth">Token → ETH</option>
-              </select>
-            </div>
-
-            {swapDirection === 'eth-to-token' ? (
-              <div style={{ marginBottom: '20px' }}>
-                <label
-                  style={{
-                    display: 'block',
-                    marginBottom: '8px',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  ETH Amount:
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={ethAmount}
-                  onChange={(e) => setEthAmount(e.target.value)}
-                  placeholder="Enter ETH amount"
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '6px',
-                    border: '1px solid #ddd',
-                    fontSize: '16px',
-                    boxSizing: 'border-box',
-                  }}
-                />
-                <button
-                  onClick={swapETHForTokens}
-                  disabled={isLoading || !ethAmount}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    marginTop: '10px',
-                    fontSize: '16px',
-                    backgroundColor: isLoading ? '#6c757d' : '#28a745',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: isLoading ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  {isLoading ? 'Swapping...' : 'Swap ETH for Tokens'}
-                </button>
-              </div>
-            ) : (
-              <div style={{ marginBottom: '20px' }}>
-                <label
-                  style={{
-                    display: 'block',
-                    marginBottom: '8px',
-                    fontWeight: 'bold',
-                  }}
-                >
-                  Token Amount:
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={tokenAmount}
-                  onChange={(e) => setTokenAmount(e.target.value)}
-                  placeholder="Enter token amount"
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    borderRadius: '6px',
-                    border: '1px solid #ddd',
-                    fontSize: '16px',
-                    boxSizing: 'border-box',
-                  }}
-                />
-                <button
-                  onClick={swapTokensForETH}
-                  disabled={isLoading || !tokenAmount}
-                  style={{
-                    width: '100%',
-                    padding: '12px',
-                    marginTop: '10px',
-                    fontSize: '16px',
-                    backgroundColor: isLoading ? '#6c757d' : '#dc3545',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: isLoading ? 'not-allowed' : 'pointer',
-                  }}
-                >
-                  {isLoading ? 'Swapping...' : 'Swap Tokens for ETH'}
-                </button>
-              </div>
-            )}
-          </div>
+          <Swap
+            ammContract={ammContract}
+            tokenContract={tokenContract}
+            contractAddresses={contractAddresses}
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            onSwapComplete={handleSwapComplete}
+          />
 
           {/* Liquidity Section */}
           <div
