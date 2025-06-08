@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
-import { WalletInfo, Swap } from '../components';
+import { WalletInfo, Swap, Liquidity } from '../components';
 
 // TypeScript declaration for MetaMask
 declare global {
@@ -70,8 +70,6 @@ export function App() {
   } | null>(null);
   const [poolEthBalance, setPoolEthBalance] = useState<string>('0');
   const [poolTokenBalance, setPoolTokenBalance] = useState<string>('0');
-  const [liquidityEthAmount, setLiquidityEthAmount] = useState<string>('');
-  const [liquidityTokenAmount, setLiquidityTokenAmount] = useState<string>('');
 
   // Load contract addresses and artifacts on mount
   useEffect(() => {
@@ -261,44 +259,11 @@ export function App() {
     }
   };
 
-  // Add liquidity to the pool
-  const addLiquidity = async () => {
-    if (
-      !ammContract ||
-      !tokenContract ||
-      !liquidityEthAmount ||
-      !liquidityTokenAmount
-    ) {
-      return;
+  const handleLiquidityComplete = async () => {
+    if (provider && tokenContract) {
+      await updateBalances(tokenContract, provider, account);
+      await updatePoolBalances();
     }
-
-    setIsLoading(true);
-    try {
-      // First approve the AMM to spend tokens
-      const approveTx = await tokenContract.approve(
-        contractAddresses!.ammPoolAddress,
-        ethers.parseEther(liquidityTokenAmount),
-      );
-      await approveTx.wait();
-
-      // Then add liquidity
-      const addLiquidityTx = await ammContract.addLiquidity(
-        ethers.parseEther(liquidityTokenAmount),
-        { value: ethers.parseEther(liquidityEthAmount) },
-      );
-      await addLiquidityTx.wait();
-
-      // Update balances after adding liquidity
-      if (provider) {
-        await updateBalances(tokenContract, provider, account);
-        await updatePoolBalances();
-      }
-      setLiquidityEthAmount('');
-      setLiquidityTokenAmount('');
-    } catch {
-      alert('Failed to add liquidity. Check console for details.');
-    }
-    setIsLoading(false);
   };
 
   return (
@@ -363,110 +328,17 @@ export function App() {
             onSwapComplete={handleSwapComplete}
           />
 
-          {/* Liquidity Section */}
-          <div
-            style={{
-              marginBottom: '30px',
-              padding: '20px',
-              backgroundColor: '#ffffff',
-              border: '1px solid #e9ecef',
-              borderRadius: '8px',
-            }}
-          >
-            <h2 style={{ marginTop: 0, color: '#333' }}>Add Liquidity</h2>
-
-            <div
-              style={{
-                marginBottom: '20px',
-                padding: '15px',
-                backgroundColor: '#e9ecef',
-                borderRadius: '8px',
-              }}
-            >
-              <h3 style={{ margin: '0 0 10px 0' }}>Pool Balances:</h3>
-              <p>
-                <strong>ETH:</strong> {parseFloat(poolEthBalance).toFixed(4)}{' '}
-                ETH
-              </p>
-              <p>
-                <strong>Tokens:</strong>{' '}
-                {parseFloat(poolTokenBalance).toFixed(4)} {tokenSymbol}
-              </p>
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label
-                style={{
-                  display: 'block',
-                  marginBottom: '8px',
-                  fontWeight: 'bold',
-                }}
-              >
-                ETH Amount:
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={liquidityEthAmount}
-                onChange={(e) => setLiquidityEthAmount(e.target.value)}
-                placeholder="Enter ETH amount"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '6px',
-                  border: '1px solid #ddd',
-                  fontSize: '16px',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label
-                style={{
-                  display: 'block',
-                  marginBottom: '8px',
-                  fontWeight: 'bold',
-                }}
-              >
-                Token Amount:
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={liquidityTokenAmount}
-                onChange={(e) => setLiquidityTokenAmount(e.target.value)}
-                placeholder="Enter token amount"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  borderRadius: '6px',
-                  border: '1px solid #ddd',
-                  fontSize: '16px',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-
-            <button
-              onClick={addLiquidity}
-              disabled={
-                isLoading || !liquidityEthAmount || !liquidityTokenAmount
-              }
-              style={{
-                width: '100%',
-                padding: '12px',
-                fontSize: '16px',
-                backgroundColor: isLoading ? '#6c757d' : '#28a745',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: isLoading ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {isLoading ? 'Adding Liquidity...' : 'Add Liquidity'}
-            </button>
-          </div>
+          <Liquidity
+            ammContract={ammContract}
+            tokenContract={tokenContract}
+            contractAddresses={contractAddresses}
+            poolEthBalance={poolEthBalance}
+            poolTokenBalance={poolTokenBalance}
+            tokenSymbol={tokenSymbol}
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            onLiquidityComplete={handleLiquidityComplete}
+          />
         </div>
       )}
     </div>
