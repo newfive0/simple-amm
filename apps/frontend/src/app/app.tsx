@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ethers } from 'ethers';
+import { WalletInfo } from '../components';
 
 // TypeScript declaration for MetaMask
 declare global {
@@ -402,29 +403,13 @@ export function App() {
         </div>
       ) : (
         <div>
-          <div
-            style={{
-              marginBottom: '30px',
-              padding: '15px',
-              backgroundColor: '#f8f9fa',
-              borderRadius: '8px',
-            }}
-          >
-            <p>
-              <strong>Connected Account:</strong> {account}
-            </p>
-            <p>
-              <strong>ETH Balance:</strong> {parseFloat(ethBalance).toFixed(4)}{' '}
-              ETH
-            </p>
-            <p>
-              <strong>Token Balance:</strong>{' '}
-              {parseFloat(tokenBalance).toFixed(4)} {tokenSymbol}
-            </p>
-            <p>
-              <strong>Token Name:</strong> {tokenName}
-            </p>
-          </div>
+          <WalletInfo
+            account={account}
+            ethBalance={ethBalance}
+            tokenBalance={tokenBalance}
+            tokenSymbol={tokenSymbol}
+            tokenName={tokenName}
+          />
 
           {/* Swap Section */}
           <div
