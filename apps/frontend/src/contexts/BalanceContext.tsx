@@ -17,7 +17,7 @@ const BalanceContext = createContext<BalanceContextType | undefined>(undefined);
 
 export function BalanceProvider({ children }: { children: ReactNode }) {
   const { provider, account } = useWallet();
-  const { tokenContract, ammContract, contractAddresses } = useContracts();
+  const { tokenContract, contractAddresses } = useContracts();
   
   const [ethBalance, setEthBalance] = useState<string>('0');
   const [tokenBalance, setTokenBalance] = useState<string>('0');
@@ -43,12 +43,12 @@ export function BalanceProvider({ children }: { children: ReactNode }) {
 
   // Refresh pool balances
   const refreshPoolBalances = useCallback(async () => {
-    if (!provider || !ammContract || !contractAddresses) return;
+    if (!provider || !tokenContract || !contractAddresses) return;
 
     try {
       const [ethBal, tokenBal] = await Promise.all([
         provider.getBalance(contractAddresses.ammPoolAddress),
-        ammContract.getTokenBalance(),
+        tokenContract.balanceOf(contractAddresses.ammPoolAddress),
       ]);
 
       setPoolEthBalance(ethers.formatEther(ethBal));
@@ -56,7 +56,7 @@ export function BalanceProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Failed to fetch pool balances:', error);
     }
-  }, [provider, ammContract, contractAddresses]);
+  }, [provider, tokenContract, contractAddresses]);
 
   // Refresh all balances
   const refreshAllBalances = useCallback(async () => {
@@ -80,12 +80,12 @@ export function BalanceProvider({ children }: { children: ReactNode }) {
     }
   }, [provider, account, tokenContract, refreshBalances]);
 
-  // Update pool balances when AMM contract is ready
+  // Update pool balances when contracts are ready
   useEffect(() => {
-    if (ammContract && contractAddresses) {
+    if (tokenContract && contractAddresses) {
       refreshPoolBalances();
     }
-  }, [ammContract, contractAddresses, refreshPoolBalances]);
+  }, [tokenContract, contractAddresses, refreshPoolBalances]);
 
   const value: BalanceContextType = {
     ethBalance,
