@@ -1,4 +1,3 @@
-import React from 'react';
 import styles from './WalletInfo.module.scss';
 
 interface WalletInfoProps {
@@ -9,13 +8,13 @@ interface WalletInfoProps {
   tokenName: string;
 }
 
-export const WalletInfo: React.FC<WalletInfoProps> = ({
+export const WalletInfo = ({
   account,
   ethBalance,
   tokenBalance,
   tokenSymbol,
   tokenName,
-}) => {
+}: WalletInfoProps) => {
   return (
     <div className={styles.walletInfo}>
       <p>

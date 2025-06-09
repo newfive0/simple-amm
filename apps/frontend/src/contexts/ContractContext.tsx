@@ -16,6 +16,15 @@ interface ContractContextType {
   contractsReady: boolean;
 }
 
+interface ReadyContractContextType {
+  tokenContract: ethers.Contract;
+  ammContract: ethers.Contract;
+  contractAddresses: ContractAddresses;
+  tokenName: string;
+  tokenSymbol: string;
+  contractsReady: true;
+}
+
 const ContractContext = createContext<ContractContextType | undefined>(undefined);
 
 // Function to read contract addresses from deployment artifacts
@@ -137,4 +146,12 @@ export function useContracts() {
     throw new Error('useContracts must be used within a ContractProvider');
   }
   return context;
+}
+
+export function useReadyContracts(): ReadyContractContextType {
+  const context = useContracts();
+  if (!context.contractsReady) {
+    throw new Error('Contracts are not ready. Check contractsReady before calling useReadyContracts');
+  }
+  return context as ReadyContractContextType;
 }

@@ -1,9 +1,9 @@
-import { useWallet, useContracts, useBalances, useLoading } from '../contexts';
+import { useWallet, useContracts, useReadyContracts, useBalances, useLoading } from '../contexts';
 import { WalletInfo, Swap, Liquidity } from '../components';
 
 export function App() {
   const { account, isCheckingConnection, showCheckingMessage, networkError, connectWallet } = useWallet();
-  const { ammContract, tokenContract, contractAddresses, tokenName, tokenSymbol, contractsReady } = useContracts();
+  const { tokenName, tokenSymbol, contractsReady } = useContracts();
   const { ethBalance, tokenBalance, poolEthBalance, poolTokenBalance, refreshAllBalances } = useBalances();
   const { isLoading, setIsLoading } = useLoading();
 
@@ -91,33 +91,65 @@ export function App() {
             tokenName={tokenName}
           />
 
-          {contractsReady && (
-            <>
-              <Swap
-                ammContract={ammContract!}
-                tokenContract={tokenContract!}
-                contractAddresses={contractAddresses!}
-                isLoading={isLoading}
-                setIsLoading={setIsLoading}
-                onSwapComplete={handleSwapComplete}
-              />
-
-              <Liquidity
-                ammContract={ammContract!}
-                tokenContract={tokenContract!}
-                contractAddresses={contractAddresses!}
-                poolEthBalance={poolEthBalance}
-                poolTokenBalance={poolTokenBalance}
-                tokenSymbol={tokenSymbol}
-                isLoading={isLoading}
-                setIsLoading={setIsLoading}
-                onLiquidityComplete={handleLiquidityComplete}
-              />
-            </>
-          )}
+          {contractsReady && <ContractsSection 
+            poolEthBalance={poolEthBalance}
+            poolTokenBalance={poolTokenBalance}
+            tokenSymbol={tokenSymbol}
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            onSwapComplete={handleSwapComplete}
+            onLiquidityComplete={handleLiquidityComplete}
+          />}
         </div>
       )}
     </div>
+  );
+}
+
+interface ContractsSectionProps {
+  poolEthBalance: string;
+  poolTokenBalance: string;
+  tokenSymbol: string;
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
+  onSwapComplete: () => Promise<void>;
+  onLiquidityComplete: () => Promise<void>;
+}
+
+function ContractsSection({
+  poolEthBalance,
+  poolTokenBalance,
+  tokenSymbol,
+  isLoading,
+  setIsLoading,
+  onSwapComplete,
+  onLiquidityComplete,
+}: ContractsSectionProps) {
+  const { ammContract, tokenContract, contractAddresses } = useReadyContracts();
+
+  return (
+    <>
+      <Swap
+        ammContract={ammContract}
+        tokenContract={tokenContract}
+        contractAddresses={contractAddresses}
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
+        onSwapComplete={onSwapComplete}
+      />
+
+      <Liquidity
+        ammContract={ammContract}
+        tokenContract={tokenContract}
+        contractAddresses={contractAddresses}
+        poolEthBalance={poolEthBalance}
+        poolTokenBalance={poolTokenBalance}
+        tokenSymbol={tokenSymbol}
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
+        onLiquidityComplete={onLiquidityComplete}
+      />
+    </>
   );
 }
 

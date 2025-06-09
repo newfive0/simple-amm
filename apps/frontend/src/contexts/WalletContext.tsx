@@ -2,25 +2,27 @@ import { createContext, useContext, useState, useEffect, useCallback, ReactNode 
 import { ethers } from 'ethers';
 
 // TypeScript declaration for MetaMask
+interface MetaMaskEthereum {
+  request(args: { method: 'eth_requestAccounts' }): Promise<string[]>;
+  request(args: { method: 'eth_accounts' }): Promise<string[]>;
+  request(args: {
+    method: string;
+    params?: unknown[] | {
+      type: string;
+      options: {
+        address: string;
+        symbol: string;
+        decimals: number;
+      };
+    };
+  }): Promise<unknown>;
+  on(event: string, callback: (accounts: string[]) => void): void;
+  removeListener(event: string, callback: (accounts: string[]) => void): void;
+}
+
 declare global {
   interface Window {
-    ethereum?: {
-      request: (args: {
-        method: string;
-        params?:
-          | unknown[]
-          | {
-              type: string;
-              options: {
-                address: string;
-                symbol: string;
-                decimals: number;
-              };
-            };
-      }) => Promise<unknown>;
-      on: (event: string, callback: (accounts: string[]) => void) => void;
-      removeListener: (event: string, callback: () => void) => void;
-    };
+    ethereum?: MetaMaskEthereum;
   }
 }
 
@@ -126,7 +128,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
       return () => {
         if (window.ethereum) {
-          window.ethereum.removeListener('accountsChanged', handleAccountsChanged as () => void);
+          window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
         }
       };
     }
