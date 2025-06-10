@@ -96,4 +96,4 @@ Always run linting and type checking before committing changes.
 
 ## Commit Message Guidelines
 
-Use minimal, descriptive commit messages without boilerplate text. Focus on what changed, not who made the change or what tools were used.
+Use minimal, descriptive commit messages without boilerplate text. Focus on what changed, not who made the change or what tools were used. Do not append Claude or AI assistance to commit messages.
