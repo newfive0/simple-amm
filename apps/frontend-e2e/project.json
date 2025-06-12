@@ -5,10 +5,11 @@
   "projectType": "application",
   "targets": {
     "e2e": {
-      "executor": "@nx/playwright:playwright",
+      "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/.playwright"],
       "options": {
-        "config": "{projectRoot}/synpress.config.ts"
+        "command": "synpress && npx playwright test --config=synpress.config.ts",
+        "cwd": "apps/frontend-e2e"
       }
     },
     "lint": {

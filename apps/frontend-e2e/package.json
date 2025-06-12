@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "scripts": {
+    "e2e": "synpress"
+  },
   "nx": {
     "implicitDependencies": [
       "@simple-amm/frontend"
