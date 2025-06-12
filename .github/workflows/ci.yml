@@ -128,4 +128,6 @@ jobs:
           xvfb-run -a npx synpress
 
       - name: Run e2e tests
-        run: xvfb-run -a pnpm exec nx e2e frontend-e2e
+        run: |
+          cd apps/frontend-e2e
+          xvfb-run -a npm run e2e
