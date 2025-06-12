@@ -5,6 +5,9 @@ export default defineConfig({
   timeout: 120000, // 2 minutes for wallet interactions
   fullyParallel: false, // MetaMask tests should run sequentially
   
+  // Always generate HTML report
+  reporter: [['html', { open: 'never' }]],
+  
   use: {
     baseURL: 'http://localhost:4300',
     actionTimeout: 30000,
