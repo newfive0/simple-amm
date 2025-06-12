@@ -78,11 +78,13 @@ jobs:
 
       - name: Cache global npm packages
         uses: actions/cache@v4
+        id: global-npm-cache
         with:
-          path: ~/.npm/_global
-          key: ${{ runner.os }}-global-npm
+          path: /usr/local/lib/node_modules
+          key: ${{ runner.os }}-global-npm-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Install wait-on
+        if: steps.global-npm-cache.outputs.cache-hit != 'true'
         run: npm install -g wait-on
 
   e2e-tests:
@@ -116,8 +118,8 @@ jobs:
       - name: Restore global npm packages cache
         uses: actions/cache@v4
         with:
-          path: ~/.npm/_global
-          key: ${{ runner.os }}-global-npm
+          path: /usr/local/lib/node_modules
+          key: ${{ runner.os }}-global-npm-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Start Hardhat network and wait for readiness
         run: |
