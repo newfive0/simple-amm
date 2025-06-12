@@ -44,7 +44,7 @@ jobs:
       - name: Smart contract tests
         run: pnpm exec nx test contracts
 
-  e2e-tests:
+  setup-e2e:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -84,6 +84,40 @@ jobs:
 
       - name: Install wait-on
         run: npm install -g wait-on
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: setup-e2e
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: tree:0
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Restore Playwright browsers cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Restore global npm packages cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm/_global
+          key: ${{ runner.os }}-global-npm
 
       - name: Start Hardhat network and wait for readiness
         run: |
