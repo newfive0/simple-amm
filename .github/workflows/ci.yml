@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  main:
+  lint-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -24,7 +24,6 @@ jobs:
         with:
           run_install: false
 
-      # Cache node_modules
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -44,3 +43,48 @@ jobs:
 
       - name: Smart contract tests
         run: pnpm exec nx test contracts
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          filter: tree:0
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install wait-on
+        run: npm install -g wait-on
+
+      - name: Start Hardhat network and wait for readiness
+        run: |
+          cd libs/contracts
+          npx hardhat node &
+          wait-on http://127.0.0.1:8545
+        
+      - name: Deploy contracts and copy artifacts  
+        run: |
+          cd libs/contracts
+          npx hardhat ignition deploy ignition/modules/DeployAll.ts --network localhost
+          cd ../..
+          pnpm exec nx copy-artifacts contracts
+
+      - name: Build Synpress cache
+        run: |
+          cd apps/frontend-e2e
+          npx synpress
+
+      - name: Run e2e tests
+        run: pnpm exec nx e2e frontend-e2e

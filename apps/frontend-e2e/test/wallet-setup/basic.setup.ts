@@ -1,0 +1,21 @@
+import { defineWalletSetup } from '@synthetixio/synpress';
+import { MetaMask } from '@synthetixio/synpress/playwright';
+
+const SEED_PHRASE = 'elephant giggle rainbow sandwich robot wizard banana unicorn dragon magic cake treasure';
+const PASSWORD = 'Tester@1234';
+
+export default defineWalletSetup(PASSWORD, async (context, walletPage) => {
+  const metamask = new MetaMask(context, walletPage, PASSWORD);
+  await metamask.importWallet(SEED_PHRASE);
+  
+  // Add localhost network for Hardhat
+  await metamask.addNetwork({
+    name: 'Localhost',
+    rpcUrl: 'http://127.0.0.1:8545',
+    chainId: 31337,
+    symbol: 'ETH',
+  });
+  
+  // Switch to localhost network
+  await metamask.switchNetwork('Localhost');
+});

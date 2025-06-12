@@ -4,6 +4,13 @@
   "sourceRoot": "apps/frontend-e2e/src",
   "projectType": "application",
   "targets": {
+    "e2e": {
+      "executor": "@nx/playwright:playwright",
+      "outputs": ["{workspaceRoot}/dist/.playwright"],
+      "options": {
+        "config": "{projectRoot}/synpress.config.ts"
+      }
+    },
     "lint": {
       "executor": "nx:run-commands",
       "options": {

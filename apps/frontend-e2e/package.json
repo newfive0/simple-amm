@@ -6,5 +6,9 @@
     "implicitDependencies": [
       "@simple-amm/frontend"
     ]
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.36.0",
+    "@synthetixio/synpress": "^4.1.0"
   }
 }

@@ -56,6 +56,10 @@ nx test contracts                   # Run tests via Nx
 npx hardhat ignition deploy ignition/modules/AMMPool.ts --network localhost
 npx hardhat ignition deploy ignition/modules/DeployAll.ts --network localhost
 
+# Copy artifacts to frontend
+nx copy-artifacts contracts        # Copy contract artifacts and deployed addresses to frontend
+npx ts-node scripts/copy-artifacts.ts  # Direct script execution
+
 # Linting
 nx lint-js contracts               # TypeScript/JS linting
 nx lint-js-fix contracts
@@ -80,15 +84,16 @@ nx format-sol contracts           # Format Solidity code
 - MetaMask integration for wallet connectivity
 
 ### Key Integration Points
-- Contract artifacts are copied from `libs/contracts/artifacts/` to `apps/frontend/public/artifacts/`
-- Deployed addresses stored in `/public/deployed_addresses.json`
+- Contract artifacts are automatically copied from `libs/contracts/artifacts/` to `apps/frontend/public/artifacts/`
+- Deployed addresses automatically copied from `libs/contracts/ignition/deployments/chain-31337/deployed_addresses.json` to `apps/frontend/public/deployed_addresses.json`
 - Frontend reads contract ABIs and addresses from these artifacts for blockchain interaction
+- Use `nx copy-artifacts contracts` after deployment to sync artifacts to frontend
 
 ## Development Workflow
 
 1. Start local Hardhat network
 2. Deploy contracts using Ignition modules
-3. Copy artifacts to frontend public directory (handled by build process)
+3. Copy artifacts to frontend: `nx copy-artifacts contracts`
 4. Start frontend development server
 5. Connect MetaMask to localhost:8545 for testing
 

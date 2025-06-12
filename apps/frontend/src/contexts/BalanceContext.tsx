@@ -17,7 +17,7 @@ const BalanceContext = createContext<BalanceContextType | undefined>(undefined);
 
 export function BalanceProvider({ children }: { children: ReactNode }) {
   const { provider, account } = useWallet();
-  const { tokenContract, contractAddresses } = useContracts();
+  const { tokenContract, ammContract } = useContracts();
   
   const [ethBalance, setEthBalance] = useState<string>('0');
   const [tokenBalance, setTokenBalance] = useState<string>('0');
@@ -43,20 +43,20 @@ export function BalanceProvider({ children }: { children: ReactNode }) {
 
   // Refresh pool balances
   const refreshPoolBalances = useCallback(async () => {
-    if (!provider || !tokenContract || !contractAddresses) return;
+    if (!ammContract) return;
 
     try {
-      const [ethBal, tokenBal] = await Promise.all([
-        provider.getBalance(contractAddresses.ammPoolAddress),
-        tokenContract.balanceOf(contractAddresses.ammPoolAddress),
+      const [ethReserve, tokenReserve] = await Promise.all([
+        ammContract.reserveETH(),
+        ammContract.reserveSimplest(),
       ]);
 
-      setPoolEthBalance(ethers.formatEther(ethBal));
-      setPoolTokenBalance(ethers.formatEther(tokenBal));
+      setPoolEthBalance(ethers.formatEther(ethReserve));
+      setPoolTokenBalance(ethers.formatEther(tokenReserve));
     } catch (error) {
       console.error('Failed to fetch pool balances:', error);
     }
-  }, [provider, tokenContract, contractAddresses]);
+  }, [ammContract]);
 
   // Refresh all balances
   const refreshAllBalances = useCallback(async () => {
@@ -82,10 +82,10 @@ export function BalanceProvider({ children }: { children: ReactNode }) {
 
   // Update pool balances when contracts are ready
   useEffect(() => {
-    if (tokenContract && contractAddresses) {
+    if (ammContract) {
       refreshPoolBalances();
     }
-  }, [tokenContract, contractAddresses, refreshPoolBalances]);
+  }, [ammContract, refreshPoolBalances]);
 
   const value: BalanceContextType = {
     ethBalance,

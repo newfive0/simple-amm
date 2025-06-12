@@ -60,6 +60,13 @@
         "command": "npx hardhat test",
         "cwd": "libs/contracts"
       }
+    },
+    "copy-artifacts": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx ts-node scripts/copy-artifacts.ts",
+        "cwd": "libs/contracts"
+      }
     }
   },
   "tags": []
