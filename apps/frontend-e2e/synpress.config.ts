@@ -8,6 +8,8 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:4300',
     actionTimeout: 30000,
+    // Run headless in CI environment
+    headless: !!process.env.CI,
   },
 
   expect: {
