@@ -2,7 +2,7 @@ import { defineWalletSetup } from '@synthetixio/synpress';
 import { MetaMask } from '@synthetixio/synpress/playwright';
 import type { BrowserContext, Page } from '@playwright/test';
 
-const SEED_PHRASE = 'elephant giggle rainbow sandwich robot wizard banana unicorn dragon magic cake treasure';
+const SEED_PHRASE = 'unicorn unicorn unicorn unicorn unicorn unicorn unicorn unicorn unicorn unicorn unicorn talk';
 const PASSWORD = 'Tester@1234';
 
 const basicSetup: ReturnType<typeof defineWalletSetup> = defineWalletSetup(PASSWORD, async (context: BrowserContext, walletPage: Page) => {
