@@ -64,7 +64,7 @@
     "copy-artifacts": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx ts-node scripts/copy-artifacts.ts",
+        "command": "./scripts/copy-artifacts.sh",
         "cwd": "libs/contracts"
       }
     }
