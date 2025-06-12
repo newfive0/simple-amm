@@ -6,7 +6,7 @@ const test = testWithSynpress(metaMaskFixtures(basicSetup));
 const { expect } = test;
 
 test('should connect wallet and display AMM interface', async ({ context, page, metamaskPage, extensionId }) => {
-  const metamask = new MetaMask(context, metamaskPage, basicSetup.walletPassword, extensionId);
+  const metamask = new MetaMask(context, metamaskPage, 'Tester@1234', extensionId);
 
   await page.goto('/');
   await page.locator('button').filter({ hasText: /connect/i }).first().click();

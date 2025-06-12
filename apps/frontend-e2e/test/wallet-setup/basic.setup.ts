@@ -1,10 +1,11 @@
 import { defineWalletSetup } from '@synthetixio/synpress';
 import { MetaMask } from '@synthetixio/synpress/playwright';
+import type { BrowserContext, Page } from '@playwright/test';
 
 const SEED_PHRASE = 'elephant giggle rainbow sandwich robot wizard banana unicorn dragon magic cake treasure';
 const PASSWORD = 'Tester@1234';
 
-export default defineWalletSetup(PASSWORD, async (context, walletPage) => {
+const basicSetup: ReturnType<typeof defineWalletSetup> = defineWalletSetup(PASSWORD, async (context: BrowserContext, walletPage: Page) => {
   const metamask = new MetaMask(context, walletPage, PASSWORD);
   await metamask.importWallet(SEED_PHRASE);
   
@@ -19,3 +20,5 @@ export default defineWalletSetup(PASSWORD, async (context, walletPage) => {
   // Switch to localhost network
   await metamask.switchNetwork('Localhost');
 });
+
+export default basicSetup;

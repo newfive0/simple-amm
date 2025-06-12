@@ -78,6 +78,7 @@ jobs:
         run: |
           cd libs/contracts
           npx hardhat ignition deploy ignition/modules/DeployAll.ts --network localhost
+          npm install -g ts-node
           cd ../..
           pnpm exec nx copy-artifacts contracts
 
