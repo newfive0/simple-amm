@@ -44,7 +44,9 @@ jobs:
       - name: Smart contract tests
         run: pnpm exec nx test contracts
 
-  setup-e2e:
+
+
+  e2e-tests:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
@@ -74,41 +76,6 @@ jobs:
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps
-
-
-
-  e2e-tests:
-    runs-on: macos-latest
-    needs: setup-e2e
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          filter: tree:0
-          fetch-depth: 0
-
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        with:
-          run_install: false
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Restore Playwright browsers cache
-        uses: actions/cache@v4
-        id: playwright-restore-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
-
-      - name: Install Playwright browsers
-        if: steps.playwright-restore-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps
 
       - name: Install wait-on
