@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   lint-and-test:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,7 +45,7 @@ jobs:
         run: pnpm exec nx test contracts
 
   setup-e2e:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -79,7 +79,7 @@ jobs:
 
 
   e2e-tests:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     needs: setup-e2e
     steps:
       - uses: actions/checkout@v4
