@@ -102,9 +102,14 @@ jobs:
 
       - name: Restore Playwright browsers cache
         uses: actions/cache@v4
+        id: playwright-restore-cache
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-restore-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps
 
       - name: Install wait-on
         run: npm install -g wait-on
