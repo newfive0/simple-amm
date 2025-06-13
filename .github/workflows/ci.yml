@@ -133,12 +133,12 @@ jobs:
         if: steps.synpress-cache.outputs.cache-hit != 'true'
         run: |
           cd apps/frontend-e2e
-          xvfb-run -a npx synpress
+          npx synpress
 
       - name: Run e2e tests
         run: |
           cd apps/frontend-e2e
-          xvfb-run -a npx playwright test --config=synpress.config.ts
+          npx playwright test --config=synpress.config.ts
 
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
