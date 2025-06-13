@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Commit Message Guidelines
+
+Use minimal, descriptive commit messages without boilerplate text. Focus on what changed, not who made the change or what tools were used. Do not append Claude or AI assistance to commit messages.
+
 ## Project Overview
 
 This is a simple Automated Market Maker (AMM) DApp built with React frontend and Solidity smart contracts. The project uses Nx monorepo structure with two main components:
@@ -98,7 +102,3 @@ nx format-sol contracts           # Format Solidity code
 5. Connect MetaMask to localhost:8545 for testing
 
 Always run linting and type checking before committing changes.
-
-## Commit Message Guidelines
-
-Use minimal, descriptive commit messages without boilerplate text. Focus on what changed, not who made the change or what tools were used. Do not append Claude or AI assistance to commit messages.
