@@ -76,18 +76,6 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps
 
-      - name: Cache Synpress extension
-        uses: actions/cache@v4
-        id: synpress-cache
-        with:
-          path: apps/frontend-e2e/.cache-synpress
-          key: ${{ runner.os }}-synpress-${{ hashFiles('apps/frontend-e2e/test/wallet-setup/basic.setup.ts') }}
-
-      - name: Build Synpress cache
-        if: steps.synpress-cache.outputs.cache-hit != 'true'
-        run: |
-          cd apps/frontend-e2e
-          xvfb-run -a npx synpress
 
 
   e2e-tests:
@@ -134,11 +122,18 @@ jobs:
           cd ../..
           pnpm exec nx copy-artifacts contracts
 
-      - name: Restore Synpress cache
+      - name: Cache Synpress extension
         uses: actions/cache@v4
+        id: synpress-cache
         with:
           path: apps/frontend-e2e/.cache-synpress
           key: ${{ runner.os }}-synpress-${{ hashFiles('apps/frontend-e2e/test/wallet-setup/basic.setup.ts') }}
+
+      - name: Build Synpress cache
+        if: steps.synpress-cache.outputs.cache-hit != 'true'
+        run: |
+          cd apps/frontend-e2e
+          xvfb-run -a npx synpress
 
       - name: Run e2e tests
         run: |
