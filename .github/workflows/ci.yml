@@ -87,7 +87,7 @@ jobs:
         if: steps.synpress-cache.outputs.cache-hit != 'true'
         run: |
           cd apps/frontend-e2e
-          npx synpress
+          xvfb-run -a npx synpress
 
 
   e2e-tests:
