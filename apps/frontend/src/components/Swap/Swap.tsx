@@ -1,6 +1,59 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ethers } from 'ethers';
 import styles from './Swap.module.scss';
+
+interface SwapInputProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  onClick: () => void;
+  buttonText: string;
+  buttonClass: string;
+  isLoading: boolean;
+  expectedOutput?: string;
+  outputLabel?: string;
+}
+
+const SwapInput = ({ 
+  label, 
+  value, 
+  onChange, 
+  placeholder, 
+  onClick, 
+  buttonText, 
+  buttonClass,
+  isLoading,
+  expectedOutput,
+  outputLabel
+}: SwapInputProps) => (
+  <div className={styles.swapInput}>
+    <div className={styles.inputField}>
+      <label>{label}</label>
+      <div className={styles.inputRow}>
+        <input
+          type="number"
+          step="0.01"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          autoFocus={false}
+          className={styles.inputLeft}
+        />
+        <div className={styles.expectedOutput}>
+          {expectedOutput && outputLabel ? `≈ ${expectedOutput} ${outputLabel}` : `≈ 0 ${outputLabel || 'SIMP'}`}
+        </div>
+      </div>
+    </div>
+    <button
+      onClick={onClick}
+      disabled={isLoading || !value}
+      className={`${styles.swapButton} ${buttonClass}`}
+    >
+      {isLoading ? 'Waiting...' : buttonText}
+    </button>
+  </div>
+);
 
 interface SwapProps {
   ammContract: ethers.Contract;
@@ -9,24 +62,56 @@ interface SwapProps {
     tokenAddress: string;
     ammPoolAddress: string;
   };
+  poolEthBalance: string;
+  poolTokenBalance: string;
+  tokenSymbol: string;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
   onSwapComplete: () => void;
 }
 
-export const Swap: React.FC<SwapProps> = ({
+export const Swap = ({
   ammContract,
   tokenContract,
   contractAddresses,
+  poolEthBalance,
+  poolTokenBalance,
+  tokenSymbol,
   isLoading,
   setIsLoading,
   onSwapComplete,
-}) => {
+}: SwapProps) => {
   const [ethAmount, setEthAmount] = useState<string>('');
   const [tokenAmount, setTokenAmount] = useState<string>('');
   const [swapDirection, setSwapDirection] = useState<
     'eth-to-token' | 'token-to-eth'
   >('eth-to-token');
+
+  const calculateSwapOutput = (inputAmount: string, isEthToToken: boolean): string => {
+    if (!inputAmount || inputAmount === '0') return '';
+    
+    const poolEthFloat = parseFloat(poolEthBalance);
+    const poolTokenFloat = parseFloat(poolTokenBalance);
+    
+    if (poolEthFloat === 0 || poolTokenFloat === 0) return '';
+    
+    const input = parseFloat(inputAmount);
+    if (isNaN(input)) return '';
+    
+    // Using constant product formula: x * y = k
+    // For swap: newY = k / (x + inputX) = (x * y) / (x + inputX)
+    // Output = y - newY = y - (x * y) / (x + inputX) = (y * inputX) / (x + inputX)
+    
+    if (isEthToToken) {
+      // ETH input -> Token output
+      const outputTokens = (poolTokenFloat * input) / (poolEthFloat + input);
+      return outputTokens.toFixed(6);
+    } else {
+      // Token input -> ETH output
+      const outputEth = (poolEthFloat * input) / (poolTokenFloat + input);
+      return outputEth.toFixed(6);
+    }
+  };
 
   const handleError = (error: unknown) => {
     console.error('Swap failed:', error);
@@ -92,49 +177,12 @@ export const Swap: React.FC<SwapProps> = ({
         value={swapDirection}
         onChange={(e) => setSwapDirection(e.target.value as 'eth-to-token' | 'token-to-eth')}
       >
-        <option value="eth-to-token">ETH → Token</option>
-        <option value="token-to-eth">Token → ETH</option>
+        <option value="eth-to-token">ETH → SIMP</option>
+        <option value="token-to-eth">SIMP → ETH</option>
       </select>
     </div>
   );
 
-  const SwapInput = ({ 
-    label, 
-    value, 
-    onChange, 
-    placeholder, 
-    onClick, 
-    buttonText, 
-    buttonClass 
-  }: {
-    label: string;
-    value: string;
-    onChange: (value: string) => void;
-    placeholder: string;
-    onClick: () => void;
-    buttonText: string;
-    buttonClass: string;
-  }) => (
-    <div className={styles.swapInput}>
-      <div className={styles.inputField}>
-        <label>{label}</label>
-        <input
-          type="number"
-          step="0.01"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-        />
-      </div>
-      <button
-        onClick={onClick}
-        disabled={isLoading || !value}
-        className={`${styles.swapButton} ${buttonClass}`}
-      >
-        {isLoading ? 'Swapping...' : buttonText}
-      </button>
-    </div>
-  );
 
   return (
     <div className={styles.swap}>
@@ -142,23 +190,31 @@ export const Swap: React.FC<SwapProps> = ({
       <SwapDirectionSelector />
       {swapDirection === 'eth-to-token' ? (
         <SwapInput
+          key="eth-to-token"
           label="ETH Amount"
           value={ethAmount}
           onChange={setEthAmount}
           placeholder="Enter ETH amount"
           onClick={swapETHForTokens}
-          buttonText="Swap ETH for Tokens"
+          buttonText="Swap ETH for SIMP"
           buttonClass={styles.ethToToken}
+          isLoading={isLoading}
+          expectedOutput={calculateSwapOutput(ethAmount, true)}
+          outputLabel={tokenSymbol}
         />
       ) : (
         <SwapInput
-          label="Token Amount"
+          key="token-to-eth"
+          label="SIMP Amount"
           value={tokenAmount}
           onChange={setTokenAmount}
-          placeholder="Enter token amount"
+          placeholder="Enter SIMP amount"
           onClick={swapTokensForETH}
-          buttonText="Swap Tokens for ETH"
+          buttonText="Swap SIMP for ETH"
           buttonClass={styles.tokenToEth}
+          isLoading={isLoading}
+          expectedOutput={calculateSwapOutput(tokenAmount, false)}
+          outputLabel="ETH"
         />
       )}
     </div>

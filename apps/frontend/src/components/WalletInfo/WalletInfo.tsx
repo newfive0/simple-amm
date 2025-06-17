@@ -5,7 +5,6 @@ interface WalletInfoProps {
   ethBalance: string;
   tokenBalance: string;
   tokenSymbol: string;
-  tokenName: string;
 }
 
 export const WalletInfo = ({
@@ -13,7 +12,6 @@ export const WalletInfo = ({
   ethBalance,
   tokenBalance,
   tokenSymbol,
-  tokenName,
 }: WalletInfoProps) => {
   return (
     <div className={styles.walletInfo}>
@@ -21,14 +19,7 @@ export const WalletInfo = ({
         <strong>Connected Account:</strong> {account}
       </p>
       <p>
-        <strong>ETH Balance:</strong> {parseFloat(ethBalance).toFixed(4)} ETH
-      </p>
-      <p>
-        <strong>Token Balance:</strong> {parseFloat(tokenBalance).toFixed(4)}{' '}
-        {tokenSymbol}
-      </p>
-      <p>
-        <strong>Token Name:</strong> {tokenName}
+        <strong>Balance:</strong> {parseFloat(tokenBalance).toFixed(4)} {tokenSymbol} / {parseFloat(ethBalance).toFixed(4)} ETH
       </p>
     </div>
   );

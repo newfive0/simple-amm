@@ -3,7 +3,7 @@ import { WalletInfo, Swap, Liquidity } from '../components';
 
 export function App() {
   const { account, isCheckingConnection, showCheckingMessage, networkError, connectWallet } = useWallet();
-  const { tokenName, tokenSymbol, contractsReady } = useContracts();
+  const { tokenSymbol, contractsReady } = useContracts();
   const { ethBalance, tokenBalance, poolEthBalance, poolTokenBalance, refreshAllBalances } = useBalances();
   const { isLoading, setIsLoading } = useLoading();
 
@@ -50,7 +50,7 @@ export function App() {
 
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
-      <h1>Simple AMM DApp</h1>
+      <h1>Simple AMM</h1>
       
       {!account ? (
         <div style={{ 
@@ -88,7 +88,6 @@ export function App() {
             ethBalance={ethBalance}
             tokenBalance={tokenBalance}
             tokenSymbol={tokenSymbol}
-            tokenName={tokenName}
           />
 
           {contractsReady && <ContractsSection 
@@ -133,6 +132,9 @@ function ContractsSection({
         ammContract={ammContract}
         tokenContract={tokenContract}
         contractAddresses={contractAddresses}
+        poolEthBalance={poolEthBalance}
+        poolTokenBalance={poolTokenBalance}
+        tokenSymbol={tokenSymbol}
         isLoading={isLoading}
         setIsLoading={setIsLoading}
         onSwapComplete={onSwapComplete}

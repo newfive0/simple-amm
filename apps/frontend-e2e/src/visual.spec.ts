@@ -19,6 +19,11 @@ test('should connect wallet and display AMM interface', async ({ context, page, 
   await expect(page.locator('text=Swap').first()).toBeVisible({ timeout: 10000 });
   await expect(page.locator('text=Liquidity').first()).toBeVisible({ timeout: 10000 });
   
+  // Wait for token symbol to load from contract in the balance display
+  await expect(page.locator('text=/^Balance:.*SIMP.*ETH/')).toBeVisible({ 
+    timeout: 15000 
+  });
+  
   // Additional wait to ensure all data has loaded
   await page.waitForTimeout(2000);
 
