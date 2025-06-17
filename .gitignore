@@ -56,6 +56,9 @@ test-results/
 # Synpress cache
 .cache-synpress
 
+# Playwright reports
+playwright-report/
+
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 
