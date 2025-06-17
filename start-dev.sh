@@ -44,8 +44,12 @@ fi
 echo "Deploying contracts..."
 npx hardhat ignition deploy ignition/modules/AMMPool.ts --network localhost --reset
 
-# Start frontend
+# Copy artifacts to frontend
 cd ../..
+echo "Copying contract artifacts..."
+nx copy-artifacts contracts
+
+# Start frontend
 echo "Starting frontend..."
 nx serve frontend > frontend.log 2>&1 &
 FRONTEND_PID=$!
