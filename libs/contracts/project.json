@@ -67,6 +67,13 @@
         "command": "./scripts/copy-artifacts.sh",
         "cwd": "libs/contracts"
       }
+    },
+    "install": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npm install --registry https://registry.npmjs.org/",
+        "cwd": "libs/contracts"
+      }
     }
   },
   "tags": []
