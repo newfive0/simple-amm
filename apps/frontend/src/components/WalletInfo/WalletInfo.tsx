@@ -5,6 +5,7 @@ interface WalletInfoProps {
   ethBalance: string;
   tokenBalance: string;
   tokenSymbol: string;
+  isCheckingConnection: boolean;
 }
 
 export const WalletInfo = ({
@@ -12,7 +13,16 @@ export const WalletInfo = ({
   ethBalance,
   tokenBalance,
   tokenSymbol,
+  isCheckingConnection,
 }: WalletInfoProps) => {
+  if (isCheckingConnection) {
+    return (
+      <div className={styles.walletInfo}>
+        <p>Checking wallet connection...</p>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.walletInfo}>
       <p>

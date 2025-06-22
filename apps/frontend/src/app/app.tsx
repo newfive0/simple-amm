@@ -1,8 +1,8 @@
 import { useWallet, useContracts, useReadyContracts, useBalances, useLoading } from '../contexts';
-import { WalletInfo, Swap, Liquidity } from '../components';
+import { WalletInfo, Swap, Liquidity, NetworkError, ConnectWallet } from '../components';
 
 export const App = () => {
-  const { account, isCheckingConnection, showCheckingMessage, networkError, connectWallet } = useWallet();
+  const { account, isCheckingConnection, networkError, connectWallet } = useWallet();
   const { tokenSymbol, contractsReady } = useContracts();
   const { ethBalance, tokenBalance, poolEthBalance, poolTokenBalance, refreshAllBalances } = useBalances();
   const { isLoading, setIsLoading } = useLoading();
@@ -15,37 +15,9 @@ export const App = () => {
     await refreshAllBalances();
   };
 
-  if (isCheckingConnection) {
-    return (
-      <div style={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center' 
-      }}>
-        {showCheckingMessage && <div>Checking wallet connection...</div>}
-      </div>
-    );
-  }
 
   if (networkError) {
-    return (
-      <div style={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        flexDirection: 'column',
-        gap: '1rem'
-      }}>
-        <div style={{ color: 'red', textAlign: 'center' }}>
-          {networkError}
-        </div>
-        <button onClick={() => window.location.reload()}>
-          Reload Page
-        </button>
-      </div>
-    );
+    return <NetworkError error={networkError} />;
   }
 
   return (
@@ -53,30 +25,7 @@ export const App = () => {
       <h1>Simple AMM</h1>
       
       {!account ? (
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
-          gap: '1rem' 
-        }}>
-          <p>Connect your wallet to start trading</p>
-          <button 
-            onClick={connectWallet}
-            disabled={isLoading}
-            style={{
-              padding: '12px 24px',
-              fontSize: '16px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: isLoading ? 'not-allowed' : 'pointer',
-              opacity: isLoading ? 0.6 : 1,
-            }}
-          >
-            {isLoading ? 'Connecting...' : 'Connect Wallet'}
-          </button>
-        </div>
+        <ConnectWallet onConnect={connectWallet} isLoading={isLoading} />
       ) : (
         <div style={{ 
           display: 'flex', 
@@ -88,6 +37,7 @@ export const App = () => {
             ethBalance={ethBalance}
             tokenBalance={tokenBalance}
             tokenSymbol={tokenSymbol}
+            isCheckingConnection={isCheckingConnection}
           />
 
           {contractsReady && <ContractsSection 

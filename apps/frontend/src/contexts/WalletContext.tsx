@@ -30,7 +30,6 @@ interface WalletContextType {
   provider: ethers.BrowserProvider | null;
   account: string;
   isCheckingConnection: boolean;
-  showCheckingMessage: boolean;
   networkError: string;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
@@ -42,7 +41,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
   const [account, setAccount] = useState<string>('');
   const [isCheckingConnection, setIsCheckingConnection] = useState<boolean>(true);
-  const [showCheckingMessage, setShowCheckingMessage] = useState<boolean>(false);
   const [networkError, setNetworkError] = useState<string>('');
 
   // Connect wallet function
@@ -103,14 +101,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       setIsCheckingConnection(false);
     };
 
-    // Show checking message after a delay
-    const timer = window.setTimeout(() => {
-      setShowCheckingMessage(true);
-    }, 1000);
-
     checkWalletConnection();
-
-    return () => window.clearTimeout(timer);
   }, [connectWallet]);
 
   // Set up account change listener
@@ -140,7 +131,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     provider,
     account,
     isCheckingConnection,
-    showCheckingMessage,
     networkError,
     connectWallet,
     disconnectWallet,
