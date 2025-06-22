@@ -56,13 +56,15 @@ npx hardhat node                    # Start local network
 npx hardhat test                    # Run contract tests
 nx test contracts                   # Run tests via Nx
 
+# Build contracts (compiles and generates TypeChain types)
+nx build contracts                  # Generates TypeChain types in apps/frontend/src/typechain-types/
+
 # Contract deployment
 npx hardhat ignition deploy ignition/modules/AMMPool.ts --network localhost
 npx hardhat ignition deploy ignition/modules/DeployAll.ts --network localhost
 
 # Copy artifacts to frontend
-nx copy-artifacts contracts        # Copy contract artifacts and deployed addresses to frontend
-npx ts-node scripts/copy-artifacts.ts  # Direct script execution
+nx copy-artifacts contracts        # Copy deployed addresses to frontend (ABIs no longer needed - TypeChain used)
 
 # Linting
 nx lint-js contracts               # TypeScript/JS linting
@@ -88,10 +90,10 @@ nx format-sol contracts           # Format Solidity code
 - MetaMask integration for wallet connectivity
 
 ### Key Integration Points
-- Contract artifacts are automatically copied from `libs/contracts/artifacts/` to `apps/frontend/public/artifacts/`
 - Deployed addresses automatically copied from `libs/contracts/ignition/deployments/chain-31337/deployed_addresses.json` to `apps/frontend/public/deployed_addresses.json`
-- Frontend reads contract ABIs and addresses from these artifacts for blockchain interaction
-- Use `nx copy-artifacts contracts` after deployment to sync artifacts to frontend
+- Frontend uses TypeChain-generated factories for type-safe contract interaction
+- Contract ABIs are embedded in TypeChain factories (no longer need to copy ABIs)
+- Use `nx copy-artifacts contracts` after deployment to sync deployed addresses to frontend
 
 ## Development Workflow
 
