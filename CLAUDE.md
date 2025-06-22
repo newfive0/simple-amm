@@ -17,6 +17,12 @@ The AMM implements a constant product formula (x * y = k) for ETH/SIMP token swa
 
 ## Quick Development Start
 
+**First time setup after cloning:**
+```bash
+# Generate TypeChain types (required for TypeScript compilation)
+nx build contracts
+```
+
 Use the convenience script to start the complete development environment:
 ```bash
 ./scripts/start-dev.sh
@@ -97,6 +103,10 @@ nx format-sol contracts           # Format Solidity code
 
 ## Development Workflow
 
+**After fresh clone:**
+1. Generate TypeChain types: `nx build contracts`
+
+**Regular development:**
 1. Start local Hardhat network
 2. Deploy contracts using Ignition modules
 3. Copy artifacts to frontend: `nx copy-artifacts contracts`
@@ -104,3 +114,5 @@ nx format-sol contracts           # Format Solidity code
 5. Connect MetaMask to localhost:8545 for testing
 
 Always run linting and type checking before committing changes.
+
+**Note:** TypeChain types are generated build artifacts and not committed to the repository. They must be generated locally after cloning.

@@ -2,10 +2,17 @@
 
 ## Quick Start
 
+**First time setup after cloning:**
+
+```sh
+# Generate TypeChain types (required for TypeScript compilation)
+nx build contracts
+```
+
 To start the complete development environment (Hardhat + contracts deployment + frontend):
 
 ```sh
-./start-dev.sh
+./scripts/start-dev.sh
 ```
 
 This script will:
@@ -133,3 +140,9 @@ To run the Solidity smart contract tests:
 ```sh
 nx test contracts         # Run Hardhat tests for the contracts
 ```
+
+## Important Notes
+
+- **TypeChain Types**: This project uses TypeChain for type-safe contract interaction. The generated types are build artifacts and not committed to the repository.
+- **After cloning**: Always run `nx build contracts` first to generate the required TypeChain types before running other commands.
+- **Build Dependencies**: The frontend build automatically depends on contracts build, so running `nx build frontend` will also generate the types.
