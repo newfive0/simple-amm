@@ -5,6 +5,24 @@ import basicSetup from '../test/wallet-setup/basic.setup';
 const test = testWithSynpress(metaMaskFixtures(basicSetup));
 const { expect } = test;
 
+test('should display connect wallet page before connection', async ({ page }) => {
+  await page.goto('/');
+
+  // Wait for the connect wallet UI to be visible
+  await expect(page.locator('button').filter({ hasText: /connect wallet/i })).toBeVisible({
+    timeout: 5000,
+  });
+
+  // Wait for the main heading to be visible
+  await expect(page.locator('h1').filter({ hasText: 'Simple AMM' })).toBeVisible();
+
+  // Take screenshot of the initial connect wallet state
+  await expect(page).toHaveScreenshot('connect-wallet-page.png', {
+    fullPage: true,
+  });
+});
+
+
 test('should connect wallet and display AMM interface', async ({ context, page, metamaskPage, extensionId }) => {
   const metamask = new MetaMask(context, metamaskPage, 'Tester@1234', extensionId);
 

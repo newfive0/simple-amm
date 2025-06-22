@@ -10,12 +10,6 @@ export const NetworkError = ({ error }: NetworkErrorProps) => {
       <div className={styles.errorMessage}>
         {error}
       </div>
-      <button 
-        className={styles.reloadButton}
-        onClick={() => window.location.reload()}
-      >
-        Reload Page
-      </button>
     </div>
   );
 };

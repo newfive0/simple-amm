@@ -10,7 +10,8 @@
       "options": {
         "commands": [
           "../../scripts/check-hardhat.sh",
-          "synpress && npx playwright test --config=synpress.config.ts"
+          "synpress && npx playwright test --config=synpress.config.ts",
+          "npx playwright test --config=playwright.config.ts"
         ],
         "parallel": false,
         "cwd": "apps/frontend-e2e"

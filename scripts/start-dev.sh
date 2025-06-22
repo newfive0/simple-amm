@@ -5,14 +5,22 @@ check_hardhat_ready() {
     echo "Checking Hardhat node..."
     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     for i in {1..30}; do
-        if "$SCRIPT_DIR/check-hardhat.sh" > /dev/null 2>&1; then
+        # Try to connect to Hardhat directly
+        response=$(curl -s -X POST -H "Content-Type: application/json" \
+           --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
+           http://localhost:8545 2>/dev/null || echo "")
+        
+        if echo "$response" | grep -q '"result"'; then
             echo "Hardhat node is ready!"
             return 0
         fi
+        
         if [ $i -eq 30 ]; then
             echo "Hardhat node failed to start"
+            echo "Last response: $response"
             return 1
         fi
+        echo "⏳ Waiting for Hardhat node... (attempt $i/30)"
         sleep 1
     done
 }
