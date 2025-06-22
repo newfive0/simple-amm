@@ -11,7 +11,7 @@ describe('Token', () => {
   const SYMBOL = 'MTK';
   const TOTAL_SUPPLY = ethers.parseEther('1000000'); // 1M tokens
 
-  async function deployTokenFixture() {
+  const deployTokenFixture = async () => {
     const [deployer, user] = await hre.ethers.getSigners();
 
     const Token = await hre.ethers.getContractFactory('Token');
@@ -19,7 +19,7 @@ describe('Token', () => {
     await token.waitForDeployment();
 
     return { token, deployer, user };
-  }
+  };
 
   let token: Token;
   let deployer: SignerWithAddress;

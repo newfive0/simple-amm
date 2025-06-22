@@ -15,7 +15,7 @@ interface BalanceContextType {
 
 const BalanceContext = createContext<BalanceContextType | undefined>(undefined);
 
-export function BalanceProvider({ children }: { children: ReactNode }) {
+export const BalanceProvider = ({ children }: { children: ReactNode }) => {
   const { provider, account } = useWallet();
   const { tokenContract, ammContract } = useContracts();
   
@@ -100,10 +100,10 @@ export function BalanceProvider({ children }: { children: ReactNode }) {
   return <BalanceContext.Provider value={value}>{children}</BalanceContext.Provider>;
 }
 
-export function useBalances() {
+export const useBalances = () => {
   const context = useContext(BalanceContext);
   if (context === undefined) {
     throw new Error('useBalances must be used within a BalanceProvider');
   }
   return context;
-}
+};

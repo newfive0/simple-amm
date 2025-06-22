@@ -38,7 +38,7 @@ const getContractAddresses = async (): Promise<ContractAddresses> => {
 };
 
 
-export function ContractProvider({ children }: { children: ReactNode }) {
+export const ContractProvider = ({ children }: { children: ReactNode }) => {
   const { provider, account } = useWallet();
   
   const [tokenContract, setTokenContract] = useState<Token | null>(null);
@@ -122,18 +122,18 @@ export function ContractProvider({ children }: { children: ReactNode }) {
   return <ContractContext.Provider value={value}>{children}</ContractContext.Provider>;
 }
 
-export function useContracts() {
+export const useContracts = () => {
   const context = useContext(ContractContext);
   if (context === undefined) {
     throw new Error('useContracts must be used within a ContractProvider');
   }
   return context;
-}
+};
 
-export function useReadyContracts(): ReadyContractContextType {
+export const useReadyContracts = (): ReadyContractContextType => {
   const context = useContracts();
   if (!context.contractsReady) {
     throw new Error('Contracts are not ready. Check contractsReady before calling useReadyContracts');
   }
   return context as ReadyContractContextType;
-}
+};

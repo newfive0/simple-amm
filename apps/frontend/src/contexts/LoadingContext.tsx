@@ -9,7 +9,7 @@ interface LoadingContextType {
 
 const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 
-export function LoadingProvider({ children }: { children: ReactNode }) {
+export const LoadingProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [loadingMessage, setLoadingMessage] = useState<string>('');
 
@@ -21,12 +21,12 @@ export function LoadingProvider({ children }: { children: ReactNode }) {
   };
 
   return <LoadingContext.Provider value={value}>{children}</LoadingContext.Provider>;
-}
+};
 
-export function useLoading() {
+export const useLoading = () => {
   const context = useContext(LoadingContext);
   if (context === undefined) {
     throw new Error('useLoading must be used within a LoadingProvider');
   }
   return context;
-}
+};

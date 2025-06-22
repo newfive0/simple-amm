@@ -17,7 +17,7 @@ describe('AMMPool', () => {
   const SWAP_AMOUNT = ethers.parseEther('1'); // 1 SimplestToken or equivalent in tests
 
   // Base deployment fixture
-  async function deployPoolFixture() {
+  const deployPoolFixture = async () => {
     const [owner, user1, user2] = await hre.ethers.getSigners();
 
     // Deploy tokens
@@ -46,7 +46,7 @@ describe('AMMPool', () => {
   }
 
   // Fixture with liquidity already added
-  async function deployPoolWithLiquidityFixture() {
+  const deployPoolWithLiquidityFixture = async () => {
     const { ammPool, simplestToken, owner, user1, user2 } =
       await deployPoolFixture();
 

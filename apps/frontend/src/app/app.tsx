@@ -1,7 +1,7 @@
 import { useWallet, useContracts, useReadyContracts, useBalances, useLoading } from '../contexts';
 import { WalletInfo, Swap, Liquidity } from '../components';
 
-export function App() {
+export const App = () => {
   const { account, isCheckingConnection, showCheckingMessage, networkError, connectWallet } = useWallet();
   const { tokenSymbol, contractsReady } = useContracts();
   const { ethBalance, tokenBalance, poolEthBalance, poolTokenBalance, refreshAllBalances } = useBalances();
@@ -115,7 +115,7 @@ interface ContractsSectionProps {
   onLiquidityComplete: () => Promise<void>;
 }
 
-function ContractsSection({
+const ContractsSection = ({
   poolEthBalance,
   poolTokenBalance,
   tokenSymbol,
@@ -123,7 +123,7 @@ function ContractsSection({
   setIsLoading,
   onSwapComplete,
   onLiquidityComplete,
-}: ContractsSectionProps) {
+}: ContractsSectionProps) => {
   const { ammContract, tokenContract, contractAddresses } = useReadyContracts();
 
   return (
