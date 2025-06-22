@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ethers } from 'ethers';
+import { Token, AMMPool } from '../../typechain-types';
 import styles from './Swap.module.scss';
 
 interface SwapInputProps {
@@ -56,8 +57,8 @@ const SwapInput = ({
 );
 
 interface SwapProps {
-  ammContract: ethers.Contract;
-  tokenContract: ethers.Contract;
+  ammContract: AMMPool;
+  tokenContract: Token;
   contractAddresses: {
     tokenAddress: string;
     ammPoolAddress: string;

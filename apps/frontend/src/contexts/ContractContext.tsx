@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { ethers } from 'ethers';
 import { useWallet } from './WalletContext';
+import { Token__factory, AMMPool__factory, Token, AMMPool } from '../typechain-types';
 
 interface ContractAddresses {
   tokenAddress: string;
@@ -8,8 +8,8 @@ interface ContractAddresses {
 }
 
 interface ContractContextType {
-  tokenContract: ethers.Contract | null;
-  ammContract: ethers.Contract | null;
+  tokenContract: Token | null;
+  ammContract: AMMPool | null;
   contractAddresses: ContractAddresses | null;
   tokenName: string;
   tokenSymbol: string;
@@ -17,8 +17,8 @@ interface ContractContextType {
 }
 
 interface ReadyContractContextType {
-  tokenContract: ethers.Contract;
-  ammContract: ethers.Contract;
+  tokenContract: Token;
+  ammContract: AMMPool;
   contractAddresses: ContractAddresses;
   tokenName: string;
   tokenSymbol: string;
@@ -37,27 +37,12 @@ const getContractAddresses = async (): Promise<ContractAddresses> => {
   };
 };
 
-// Function to load contract artifacts
-const loadContractArtifacts = async () => {
-  const [tokenResponse, ammPoolResponse] = await Promise.all([
-    fetch('/artifacts/Token.json'),
-    fetch('/artifacts/AMMPool.json'),
-  ]);
-
-  const tokenArtifact = await tokenResponse.json();
-  const ammPoolArtifact = await ammPoolResponse.json();
-
-  return {
-    tokenAbi: tokenArtifact.abi,
-    ammPoolAbi: ammPoolArtifact.abi,
-  };
-};
 
 export function ContractProvider({ children }: { children: ReactNode }) {
   const { provider, account } = useWallet();
   
-  const [tokenContract, setTokenContract] = useState<ethers.Contract | null>(null);
-  const [ammContract, setAmmContract] = useState<ethers.Contract | null>(null);
+  const [tokenContract, setTokenContract] = useState<Token | null>(null);
+  const [ammContract, setAmmContract] = useState<AMMPool | null>(null);
   const [contractAddresses, setContractAddresses] = useState<ContractAddresses | null>(null);
   const [tokenName, setTokenName] = useState<string>('');
   const [tokenSymbol, setTokenSymbol] = useState<string>('');
@@ -89,17 +74,14 @@ export function ContractProvider({ children }: { children: ReactNode }) {
 
       try {
         const signer = await provider.getSigner();
-        const artifacts = await loadContractArtifacts();
         
-        const tokenContractInstance = new ethers.Contract(
+        const tokenContractInstance = Token__factory.connect(
           contractAddresses.tokenAddress,
-          artifacts.tokenAbi,
           signer,
         );
         
-        const ammContractInstance = new ethers.Contract(
+        const ammContractInstance = AMMPool__factory.connect(
           contractAddresses.ammPoolAddress,
-          artifacts.ammPoolAbi,
           signer,
         );
 

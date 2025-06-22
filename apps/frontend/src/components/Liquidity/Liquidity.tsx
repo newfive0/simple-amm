@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ethers } from 'ethers';
+import { Token, AMMPool } from '../../typechain-types';
 import styles from './Liquidity.module.scss';
 
 interface InputFieldProps {
@@ -30,8 +31,8 @@ const InputField = ({
 );
 
 interface LiquidityProps {
-  ammContract: ethers.Contract;
-  tokenContract: ethers.Contract;
+  ammContract: AMMPool;
+  tokenContract: Token;
   contractAddresses: {
     tokenAddress: string;
     ammPoolAddress: string;

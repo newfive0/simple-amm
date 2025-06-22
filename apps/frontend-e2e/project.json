@@ -8,7 +8,11 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/.playwright"],
       "options": {
-        "command": "synpress && npx playwright test --config=synpress.config.ts",
+        "commands": [
+          "../../scripts/check-hardhat.sh",
+          "synpress && npx playwright test --config=synpress.config.ts"
+        ],
+        "parallel": false,
         "cwd": "apps/frontend-e2e"
       }
     },

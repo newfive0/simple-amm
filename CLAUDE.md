@@ -19,7 +19,7 @@ The AMM implements a constant product formula (x * y = k) for ETH/SIMP token swa
 
 Use the convenience script to start the complete development environment:
 ```bash
-./start-dev.sh
+./scripts/start-dev.sh
 ```
 This starts Hardhat network, deploys contracts, and launches the frontend.
 

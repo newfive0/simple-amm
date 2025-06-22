@@ -3,10 +3,9 @@
 # Function to check if Hardhat node is ready
 check_hardhat_ready() {
     echo "Checking Hardhat node..."
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     for i in {1..30}; do
-        if curl -s -X POST -H "Content-Type: application/json" \
-           --data '{"jsonrpc":"2.0","method":"eth_blockNumber","params":[],"id":1}' \
-           http://localhost:8545 > /dev/null 2>&1; then
+        if "$SCRIPT_DIR/check-hardhat.sh" > /dev/null 2>&1; then
             echo "Hardhat node is ready!"
             return 0
         fi
