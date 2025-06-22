@@ -32,6 +32,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build contracts (generates TypeChain types)
+        run: pnpm exec nx build contracts
+
       - name: Lint all projects
         run: pnpm exec nx run-many -t lint
 
