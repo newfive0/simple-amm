@@ -30,7 +30,6 @@ interface WalletContextType {
   provider: ethers.BrowserProvider | null;
   account: string;
   isCheckingConnection: boolean;
-  networkError: string;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
 }
@@ -41,19 +40,16 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
   const [account, setAccount] = useState<string>('');
   const [isCheckingConnection, setIsCheckingConnection] = useState<boolean>(true);
-  const [networkError, setNetworkError] = useState<string>('');
+
+  // Check for Ethereum wallet installation immediately when component mounts
+  if (typeof window !== 'undefined' && !window.ethereum) {
+    throw new Error('Ethereum wallet required. Please install a Web3 wallet extension.');
+  }
 
   // Connect wallet function
   const connectWallet = useCallback(async () => {
-    if (!window.ethereum) {
-      setNetworkError('MetaMask not detected. Please install MetaMask.');
-      return;
-    }
-
     try {
-      setNetworkError('');
-
-      const accounts = await window.ethereum.request({
+      const accounts = await window.ethereum!.request({
         method: 'eth_requestAccounts',
       });
 
@@ -61,7 +57,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         throw new Error('No accounts returned');
       }
 
-      const ethProvider = new ethers.BrowserProvider(window.ethereum);
+      const ethProvider = new ethers.BrowserProvider(window.ethereum!);
       const signer = await ethProvider.getSigner();
       const userAddress = await signer.getAddress();
 
@@ -69,9 +65,8 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       setAccount(userAddress);
 
       window.localStorage.setItem('walletConnected', 'true');
-    } catch (error) {
-      console.error('Failed to connect wallet:', error);
-      setNetworkError('Failed to connect wallet. Please try again.');
+    } catch {
+      throw new Error('Failed to connect wallet. Please try again.');
     }
   }, []);
 
@@ -93,8 +88,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
           } else {
             window.localStorage.removeItem('walletConnected');
           }
-        } catch (error) {
-          console.error('Failed to check wallet connection:', error);
+        } catch {
           window.localStorage.removeItem('walletConnected');
         }
       }
@@ -131,7 +125,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     provider,
     account,
     isCheckingConnection,
-    networkError,
     connectWallet,
     disconnectWallet,
   };

@@ -115,8 +115,8 @@ export const Liquidity = ({
   };
 
   const handleError = (error: unknown) => {
-    console.error('Add liquidity failed:', error);
-    alert('Failed to add liquidity. Check console for details.');
+    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    alert(`Failed to add liquidity: ${message}`);
   };
 
   const resetForm = () => {

@@ -122,6 +122,9 @@ importers:
       react-dom:
         specifier: 19.0.0
         version: 19.0.0(react@19.0.0)
+      react-error-boundary:
+        specifier: ^6.0.0
+        version: 6.0.0(react@19.0.0)
       react-router-dom:
         specifier: 6.29.0
         version: 6.29.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -6255,6 +6258,11 @@ packages:
     resolution: {integrity: sha512-4GV5sHFG0e/0AD4X+ySy6UJd3jVl1iNsNHdpad0qhABJ11twS3TTBnseqsKurKcsNqCEFeGL3uLpVChpIO3QfQ==}
     peerDependencies:
       react: ^19.0.0
+
+  react-error-boundary@6.0.0:
+    resolution: {integrity: sha512-gdlJjD7NWr0IfkPlaREN2d9uUZUlksrfOx7SX62VRerwXbMY6ftGCIZua1VG1aXFNOimhISsTq+Owp725b9SiA==}
+    peerDependencies:
+      react: '>=16.13.1'
 
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
@@ -14716,6 +14724,11 @@ snapshots:
     dependencies:
       react: 19.0.0
       scheduler: 0.25.0
+
+  react-error-boundary@6.0.0(react@19.0.0):
+    dependencies:
+      '@babel/runtime': 7.27.6
+      react: 19.0.0
 
   react-is@16.13.1: {}
 

@@ -23,6 +23,24 @@
         "command": "eslint .",
         "cwd": "apps/frontend-e2e"
       }
+    },
+    "show-report": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx playwright show-report",
+        "cwd": "apps/frontend-e2e"
+      }
+    },
+    "update-snapshots": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "../../scripts/check-hardhat.sh",
+          "npx playwright test --config=playwright.config.ts --update-snapshots"
+        ],
+        "parallel": false,
+        "cwd": "apps/frontend-e2e"
+      }
     }
   },
   "tags": [],

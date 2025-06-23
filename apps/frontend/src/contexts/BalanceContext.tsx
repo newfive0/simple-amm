@@ -36,8 +36,8 @@ export const BalanceProvider = ({ children }: { children: ReactNode }) => {
 
       setEthBalance(ethers.formatEther(ethBal));
       setTokenBalance(ethers.formatEther(tokenBal));
-    } catch (error) {
-      console.error('Failed to fetch user balances:', error);
+    } catch {
+      // Silently handle error - balances will remain at previous values
     }
   }, [provider, account, tokenContract]);
 
@@ -53,8 +53,8 @@ export const BalanceProvider = ({ children }: { children: ReactNode }) => {
 
       setPoolEthBalance(ethers.formatEther(ethReserve));
       setPoolTokenBalance(ethers.formatEther(tokenReserve));
-    } catch (error) {
-      console.error('Failed to fetch pool balances:', error);
+    } catch {
+      // Silently handle error - balances will remain at previous values
     }
   }, [ammContract]);
 

@@ -47,6 +47,9 @@ jobs:
       - name: Smart contract tests
         run: pnpm exec nx test contracts
 
+      - name: Frontend unit tests
+        run: pnpm exec nx test frontend
+
 
 
   e2e-tests:

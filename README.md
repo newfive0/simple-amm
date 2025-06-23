@@ -135,11 +135,56 @@ nx check-format-sol contracts # Check if Solidity code is properly formatted wit
 
 ## Testing
 
+### Smart Contract Tests
+
 To run the Solidity smart contract tests:
 
 ```sh
 nx test contracts         # Run Hardhat tests for the contracts
 ```
+
+### Unit Tests (Frontend)
+
+To run frontend unit tests:
+
+```sh
+nx test frontend          # Run frontend unit tests with Vitest
+```
+
+### E2E Testing (Playwright)
+
+The project includes end-to-end testing with Playwright and Synpress (for MetaMask integration):
+
+```sh
+# Run all E2E tests (includes MetaMask wallet tests)
+nx e2e frontend-e2e
+
+# Show Playwright test report in browser
+nx show-report frontend-e2e
+
+# Update visual snapshots when UI changes
+nx update-snapshots frontend-e2e
+```
+
+**Manual E2E Commands** (if you prefer to run from the e2e directory):
+
+```sh
+cd apps/frontend-e2e
+
+# Run regular Playwright tests
+npx playwright test --config=playwright.config.ts
+
+# Run MetaMask integration tests  
+npx playwright test --config=synpress.config.ts
+
+# Update snapshots
+npx playwright test --update-snapshots
+
+# Show report
+npx playwright show-report
+```
+
+**Note**: E2E tests require the development environment to be running. Use `./scripts/start-dev.sh` or ensure Hardhat and frontend are running before executing E2E tests.
 
 ## Important Notes
 

@@ -115,8 +115,8 @@ export const Swap = ({
   };
 
   const handleError = (error: unknown) => {
-    console.error('Swap failed:', error);
-    alert('Swap failed. Check console for details.');
+    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    alert(`Swap failed: ${message}`);
   };
 
   const resetForm = () => {

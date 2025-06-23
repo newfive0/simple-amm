@@ -1,8 +1,8 @@
 import { useWallet, useContracts, useReadyContracts, useBalances, useLoading } from '../contexts';
-import { WalletInfo, Swap, Liquidity, NetworkError, ConnectWallet } from '../components';
+import { WalletInfo, Swap, Liquidity, ConnectWallet } from '../components';
 
 export const App = () => {
-  const { account, isCheckingConnection, networkError, connectWallet } = useWallet();
+  const { account, isCheckingConnection, connectWallet } = useWallet();
   const { tokenSymbol, contractsReady } = useContracts();
   const { ethBalance, tokenBalance, poolEthBalance, poolTokenBalance, refreshAllBalances } = useBalances();
   const { isLoading, setIsLoading } = useLoading();
@@ -15,17 +15,21 @@ export const App = () => {
     await refreshAllBalances();
   };
 
-
-  if (networkError) {
-    return <NetworkError error={networkError} />;
-  }
+  const handleConnectWallet = async () => {
+    setIsLoading(true);
+    try {
+      await connectWallet();
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <h1>Simple AMM</h1>
       
       {!account ? (
-        <ConnectWallet onConnect={connectWallet} isLoading={isLoading} />
+        <ConnectWallet onConnect={handleConnectWallet} isLoading={isLoading} />
       ) : (
         <div style={{ 
           display: 'flex', 

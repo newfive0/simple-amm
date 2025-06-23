@@ -53,8 +53,8 @@ export const ContractProvider = ({ children }: { children: ReactNode }) => {
       try {
         const addresses = await getContractAddresses();
         setContractAddresses(addresses);
-      } catch (error) {
-        console.error('Failed to load contract addresses:', error);
+      } catch {
+        // Silently handle error - contracts will remain null
       }
     };
 
@@ -96,8 +96,7 @@ export const ContractProvider = ({ children }: { children: ReactNode }) => {
         
         setTokenName(name);
         setTokenSymbol(symbol);
-      } catch (error) {
-        console.error('Failed to initialize contracts:', error);
+      } catch {
         setTokenContract(null);
         setAmmContract(null);
         setTokenName('');
