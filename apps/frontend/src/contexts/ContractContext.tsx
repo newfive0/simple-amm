@@ -35,24 +35,24 @@ const getContractAddresses = (): ContractAddresses => {
 
 
 export const ContractProvider = ({ children }: { children: ReactNode }) => {
-  const { provider, account } = useWallet();
+  const { signer, account } = useWallet();
   
-  if (!provider || !account) {
-    throw new Error('Wallet provider and account required for contract initialization.');
+  if (!signer || !account) {
+    throw new Error('Wallet signer and account required for contract initialization.');
   }
 
   // Initialize contract addresses synchronously
   const contractAddresses = getContractAddresses();
   
-  // Initialize contracts with provider - they'll connect with signer when transactions are needed
+  // Initialize contracts with signer for transaction support
   const tokenContract = Token__factory.connect(
     contractAddresses.tokenAddress,
-    provider,
+    signer,
   );
   
   const ammContract = AMMPool__factory.connect(
     contractAddresses.ammPoolAddress,
-    provider,
+    signer,
   );
 
   const value: ContractContextType = {

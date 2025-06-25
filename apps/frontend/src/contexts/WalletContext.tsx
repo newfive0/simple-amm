@@ -10,6 +10,7 @@ declare global {
 
 interface WalletContextType {
   provider: ethers.BrowserProvider | null;
+  signer: ethers.JsonRpcSigner | null;
   account: string;
   isCheckingConnection: boolean;
   connectWallet: () => Promise<void>;
@@ -31,6 +32,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   ensureEthereumWallet();
   
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
+  const [signer, setSigner] = useState<ethers.JsonRpcSigner | null>(null);
   const [account, setAccount] = useState<string>('');
   const [isCheckingConnection, setIsCheckingConnection] = useState<boolean>(true);
 
@@ -54,10 +56,11 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     const ethereum = ensureEthereumWallet();
 
     const ethProvider = new ethers.BrowserProvider(ethereum);
-    const signer = await ethProvider.getSigner();
-    const userAddress = await signer.getAddress();
+    const ethSigner = await ethProvider.getSigner();
+    const userAddress = await ethSigner.getAddress();
 
     setProvider(ethProvider);
+    setSigner(ethSigner);
     setAccount(userAddress);
   }, []);
 
@@ -71,6 +74,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   // Disconnect wallet function
   const disconnectWallet = useCallback(() => {
     setProvider(null);
+    setSigner(null);
     setAccount('');
     window.localStorage.removeItem('walletConnected');
   }, []);
@@ -109,6 +113,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
 
   const value: WalletContextType = {
     provider,
+    signer,
     account,
     isCheckingConnection,
     connectWallet,

@@ -5,8 +5,8 @@ import styles from './Liquidity.module.scss';
 
 interface InputFieldProps {
   label: string;
-  value: string;
-  onChange: (value: string) => void;
+  value: number;
+  onChange: (value: number) => void;
   placeholder: string;
 }
 
@@ -21,8 +21,16 @@ const InputField = ({
     <input
       type="number"
       step="0.01"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
+      value={value === 0 ? '' : value.toString()}
+      onChange={(e) => {
+        const value = e.target.value;
+        const numValue = Number(value);
+        if (value && isNaN(numValue)) {
+          alert('Please enter a valid number');
+          return;
+        }
+        onChange(numValue || 0);
+      }}
       placeholder={placeholder}
       className={styles.input}
       autoFocus={false}
@@ -52,13 +60,13 @@ export const Liquidity = ({
   tokenSymbol,
   onLiquidityComplete,
 }: LiquidityProps) => {
-  const [liquidityEthAmount, setLiquidityEthAmount] = useState<string>('');
-  const [liquidityTokenAmount, setLiquidityTokenAmount] = useState<string>('');
+  const [liquidityEthAmount, setLiquidityEthAmount] = useState<number>(0);
+  const [liquidityTokenAmount, setLiquidityTokenAmount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  const calculateCorrespondingAmount = (amount: string, isEthInput: boolean): string => {
-    if (!amount || amount === '0') {
-      return '';
+  const calculateCorrespondingAmount = (amount: number, isEthInput: boolean): number => {
+    if (!amount || amount === 0) {
+      return 0;
     }
     
     const poolEthFloat = parseFloat(poolEthBalance);
@@ -66,24 +74,19 @@ export const Liquidity = ({
     
     // If pool is empty, don't auto-calculate - let user set initial ratio
     if (poolEthFloat === 0 || poolTokenFloat === 0) {
-      return '';
+      return 0;
     }
-    
-    const inputAmount = parseFloat(amount);
-    if (isNaN(inputAmount)) return '';
     
     if (isEthInput) {
       // Calculate required token amount based on ETH input
-      const requiredTokens = (inputAmount * poolTokenFloat) / poolEthFloat;
-      return requiredTokens.toFixed(6);
+      return (amount * poolTokenFloat) / poolEthFloat;
     } else {
       // Calculate required ETH amount based on token input
-      const requiredEth = (inputAmount * poolEthFloat) / poolTokenFloat;
-      return requiredEth.toFixed(6);
+      return (amount * poolEthFloat) / poolTokenFloat;
     }
   };
 
-  const handleEthAmountChange = (value: string) => {
+  const handleEthAmountChange = (value: number) => {
     setLiquidityEthAmount(value);
     const correspondingTokenAmount = calculateCorrespondingAmount(value, true);
     
@@ -97,7 +100,7 @@ export const Liquidity = ({
     }
   };
 
-  const handleTokenAmountChange = (value: string) => {
+  const handleTokenAmountChange = (value: number) => {
     setLiquidityTokenAmount(value);
     const correspondingEthAmount = calculateCorrespondingAmount(value, false);
     
@@ -117,14 +120,14 @@ export const Liquidity = ({
   };
 
   const resetForm = () => {
-    setLiquidityEthAmount('');
-    setLiquidityTokenAmount('');
+    setLiquidityEthAmount(0);
+    setLiquidityTokenAmount(0);
   };
 
-  const approveTokenSpending = async (amount: string) => {
+  const approveTokenSpending = async (amount: number) => {
     const approveTx = await tokenContract.approve(
       contractAddresses.ammPoolAddress,
-      ethers.parseEther(amount),
+      ethers.parseEther(amount.toString()),
     );
     await approveTx.wait();
   };
@@ -139,8 +142,8 @@ export const Liquidity = ({
       await approveTokenSpending(liquidityTokenAmount);
 
       const addLiquidityTx = await ammContract.addLiquidity(
-        ethers.parseEther(liquidityTokenAmount),
-        { value: ethers.parseEther(liquidityEthAmount) },
+        ethers.parseEther(liquidityTokenAmount.toString()),
+        { value: ethers.parseEther(liquidityEthAmount.toString()) },
       );
       await addLiquidityTx.wait();
 

@@ -1,0 +1,11 @@
+{
+  "name": "simple-amm",
+  "targets": {
+    "start-dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./scripts/start-dev.sh"
+      }
+    }
+  }
+}
