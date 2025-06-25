@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import App from './app/app';
-import { WalletProvider, ContractProvider, BalanceProvider, LoadingProvider } from './contexts';
+import { WalletProvider } from './contexts';
 import { ErrorBoundary } from './components';
 
 const root = ReactDOM.createRoot(
@@ -11,15 +11,9 @@ const root = ReactDOM.createRoot(
 root.render(
   <StrictMode>
     <ErrorBoundary>
-      <LoadingProvider>
-        <WalletProvider>
-          <ContractProvider>
-            <BalanceProvider>
-              <App />
-            </BalanceProvider>
-          </ContractProvider>
-        </WalletProvider>
-      </LoadingProvider>
+      <WalletProvider>
+        <App />
+      </WalletProvider>
     </ErrorBoundary>
   </StrictMode>,
 );

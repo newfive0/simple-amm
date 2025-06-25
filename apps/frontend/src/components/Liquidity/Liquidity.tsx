@@ -40,8 +40,6 @@ interface LiquidityProps {
   poolEthBalance: string;
   poolTokenBalance: string;
   tokenSymbol: string;
-  isLoading: boolean;
-  setIsLoading: (loading: boolean) => void;
   onLiquidityComplete: () => void;
 }
 
@@ -52,12 +50,11 @@ export const Liquidity = ({
   poolEthBalance,
   poolTokenBalance,
   tokenSymbol,
-  isLoading,
-  setIsLoading,
   onLiquidityComplete,
 }: LiquidityProps) => {
   const [liquidityEthAmount, setLiquidityEthAmount] = useState<string>('');
   const [liquidityTokenAmount, setLiquidityTokenAmount] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const calculateCorrespondingAmount = (amount: string, isEthInput: boolean): string => {
     if (!amount || amount === '0') {

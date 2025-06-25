@@ -10,7 +10,7 @@ test('should display network error page when MetaMask is not detected', async ({
   await page.goto('/');
 
   // Wait for the error boundary to display the wallet error message
-  await expect(page.locator('text=/Ethereum wallet required/i')).toBeVisible({
+  await expect(page.locator('text=/Ethereum wallet required. Please install a Web3 wallet extension./i')).toBeVisible({
     timeout: 10000,
   });
 

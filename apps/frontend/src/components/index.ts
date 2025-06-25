@@ -4,3 +4,4 @@ export { Liquidity } from './Liquidity';
 export { NetworkError } from './NetworkError';
 export { ConnectWallet } from './ConnectWallet';
 export { ErrorBoundary } from './ErrorBoundary';
+export { ConnectedDashboard } from './ConnectedDashboard';

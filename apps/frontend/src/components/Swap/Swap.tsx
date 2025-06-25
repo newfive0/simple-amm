@@ -66,8 +66,6 @@ interface SwapProps {
   poolEthBalance: string;
   poolTokenBalance: string;
   tokenSymbol: string;
-  isLoading: boolean;
-  setIsLoading: (loading: boolean) => void;
   onSwapComplete: () => void;
 }
 
@@ -78,12 +76,11 @@ export const Swap = ({
   poolEthBalance,
   poolTokenBalance,
   tokenSymbol,
-  isLoading,
-  setIsLoading,
   onSwapComplete,
 }: SwapProps) => {
   const [ethAmount, setEthAmount] = useState<string>('');
   const [tokenAmount, setTokenAmount] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
   const [swapDirection, setSwapDirection] = useState<
     'eth-to-token' | 'token-to-eth'
   >('eth-to-token');

@@ -1,28 +1,10 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { ethers } from 'ethers';
-
-// TypeScript declaration for MetaMask
-interface MetaMaskEthereum {
-  request(args: { method: 'eth_requestAccounts' }): Promise<string[]>;
-  request(args: { method: 'eth_accounts' }): Promise<string[]>;
-  request(args: {
-    method: string;
-    params?: unknown[] | {
-      type: string;
-      options: {
-        address: string;
-        symbol: string;
-        decimals: number;
-      };
-    };
-  }): Promise<unknown>;
-  on(event: string, callback: (accounts: string[]) => void): void;
-  removeListener(event: string, callback: (accounts: string[]) => void): void;
-}
+import { EIP1193Provider } from 'eip-1193';
 
 declare global {
   interface Window {
-    ethereum?: MetaMaskEthereum;
+    ethereum?: EIP1193Provider;
   }
 }
 
@@ -36,39 +18,55 @@ interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
+// Type guard to ensure window.ethereum exists
+const ensureEthereumWallet = (): EIP1193Provider => {
+  if (!window.ethereum) {
+    throw new Error('Ethereum wallet required. Please install a Web3 wallet extension.');
+  }
+  return window.ethereum;
+};
+
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
+  // Check if wallet is available immediately when component initializes
+  ensureEthereumWallet();
+  
   const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
   const [account, setAccount] = useState<string>('');
   const [isCheckingConnection, setIsCheckingConnection] = useState<boolean>(true);
 
-  // Check for Ethereum wallet installation immediately when component mounts
-  if (typeof window !== 'undefined' && !window.ethereum) {
-    throw new Error('Ethereum wallet required. Please install a Web3 wallet extension.');
-  }
+  // Request wallet connection (permission)
+  const requestWalletConnection = useCallback(async () => {
+    const ethereum = ensureEthereumWallet();
 
-  // Connect wallet function
-  const connectWallet = useCallback(async () => {
-    try {
-      const accounts = await window.ethereum!.request({
-        method: 'eth_requestAccounts',
-      });
+    const accounts = await ethereum.request({
+      method: 'eth_requestAccounts',
+    });
 
-      if (!Array.isArray(accounts) || accounts.length === 0) {
-        throw new Error('No accounts returned');
-      }
-
-      const ethProvider = new ethers.BrowserProvider(window.ethereum!);
-      const signer = await ethProvider.getSigner();
-      const userAddress = await signer.getAddress();
-
-      setProvider(ethProvider);
-      setAccount(userAddress);
-
-      window.localStorage.setItem('walletConnected', 'true');
-    } catch {
-      throw new Error('Failed to connect wallet. Please try again.');
+    if (!Array.isArray(accounts) || accounts.length === 0) {
+      throw new Error('No accounts returned');
     }
+
+    return accounts;
   }, []);
+
+  // Initialize wallet state after connection
+  const initializeWalletState = useCallback(async () => {
+    const ethereum = ensureEthereumWallet();
+
+    const ethProvider = new ethers.BrowserProvider(ethereum);
+    const signer = await ethProvider.getSigner();
+    const userAddress = await signer.getAddress();
+
+    setProvider(ethProvider);
+    setAccount(userAddress);
+  }, []);
+
+  // Connect wallet function (combines both actions)
+  const connectWallet = useCallback(async () => {
+    await requestWalletConnection();
+    await initializeWalletState();
+    window.localStorage.setItem('walletConnected', 'true');
+  }, [requestWalletConnection, initializeWalletState]);
 
   // Disconnect wallet function
   const disconnectWallet = useCallback(() => {
@@ -80,45 +78,33 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
   // Check for existing wallet connection on page load
   useEffect(() => {
     const checkWalletConnection = async () => {
-      if (window.ethereum && window.localStorage.getItem('walletConnected') === 'true') {
-        try {
-          const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-          if (Array.isArray(accounts) && accounts.length > 0) {
-            await connectWallet();
-          } else {
-            window.localStorage.removeItem('walletConnected');
-          }
-        } catch {
-          window.localStorage.removeItem('walletConnected');
-        }
+      if (window.localStorage.getItem('walletConnected') === 'true') {
+        // Only initialize state, don't request permission again
+        await initializeWalletState();
       }
       setIsCheckingConnection(false);
     };
 
     checkWalletConnection();
-  }, [connectWallet]);
+  }, [initializeWalletState]);
 
   // Set up account change listener
   useEffect(() => {
-    if (window.ethereum) {
-      const handleAccountsChanged = (accounts: string[]) => {
-        if (accounts.length === 0) {
-          disconnectWallet();
-        } else if (accounts[0] !== account) {
-          connectWallet();
-        }
-      };
-
-      window.ethereum.on('accountsChanged', handleAccountsChanged);
-
-      return () => {
-        if (window.ethereum) {
-          window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
-        }
-      };
-    }
+    const ethereum = ensureEthereumWallet();
     
-    return undefined;
+    const handleAccountsChanged = (accounts: string[]) => {
+      if (accounts.length === 0) {
+        disconnectWallet();
+      } else if (accounts[0] !== account) {
+        connectWallet();
+      }
+    };
+
+    ethereum.on('accountsChanged', handleAccountsChanged);
+
+    return () => {
+      ethereum.removeListener('accountsChanged', handleAccountsChanged);
+    };
   }, [account, connectWallet, disconnectWallet]);
 
   const value: WalletContextType = {

@@ -1,0 +1,1 @@
+export { ConnectedDashboard } from './ConnectedDashboard';

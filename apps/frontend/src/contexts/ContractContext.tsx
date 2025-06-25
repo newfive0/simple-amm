@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, ReactNode } from 'react';
 import { useWallet } from './WalletContext';
 import { Token__factory, AMMPool__factory, Token, AMMPool } from '../typechain-types';
 
@@ -8,29 +8,25 @@ interface ContractAddresses {
 }
 
 interface ContractContextType {
-  tokenContract: Token | null;
-  ammContract: AMMPool | null;
-  contractAddresses: ContractAddresses | null;
-  tokenName: string;
-  tokenSymbol: string;
-  contractsReady: boolean;
-}
-
-interface ReadyContractContextType {
   tokenContract: Token;
   ammContract: AMMPool;
   contractAddresses: ContractAddresses;
-  tokenName: string;
-  tokenSymbol: string;
-  contractsReady: true;
 }
 
 const ContractContext = createContext<ContractContextType | undefined>(undefined);
 
-// Function to read contract addresses from deployment artifacts
-const getContractAddresses = async (): Promise<ContractAddresses> => {
-  const response = await fetch('/deployed_addresses.json');
-  const data = await response.json();
+// Function to read contract addresses from deployment artifacts synchronously
+const getContractAddresses = (): ContractAddresses => {
+  // This will be available since the artifacts are copied to public during build
+  const request = new XMLHttpRequest();
+  request.open('GET', '/deployed_addresses.json', false); // synchronous
+  request.send();
+  
+  if (request.status !== 200) {
+    throw new Error('Failed to load contract addresses. Ensure contracts are deployed.');
+  }
+  
+  const data = JSON.parse(request.responseText);
   return {
     tokenAddress: data['TokenModule#SimplestToken'],
     ammPoolAddress: data['AMMPoolModule#AMMPool'],
@@ -41,81 +37,28 @@ const getContractAddresses = async (): Promise<ContractAddresses> => {
 export const ContractProvider = ({ children }: { children: ReactNode }) => {
   const { provider, account } = useWallet();
   
-  const [tokenContract, setTokenContract] = useState<Token | null>(null);
-  const [ammContract, setAmmContract] = useState<AMMPool | null>(null);
-  const [contractAddresses, setContractAddresses] = useState<ContractAddresses | null>(null);
-  const [tokenName, setTokenName] = useState<string>('');
-  const [tokenSymbol, setTokenSymbol] = useState<string>('');
+  if (!provider || !account) {
+    throw new Error('Wallet provider and account required for contract initialization.');
+  }
 
-  // Load contract addresses on mount
-  useEffect(() => {
-    const loadContracts = async () => {
-      try {
-        const addresses = await getContractAddresses();
-        setContractAddresses(addresses);
-      } catch {
-        // Silently handle error - contracts will remain null
-      }
-    };
-
-    loadContracts();
-  }, []);
-
-  // Initialize contracts when provider and addresses are available
-  useEffect(() => {
-    const initializeContracts = async () => {
-      if (!provider || !account || !contractAddresses) {
-        setTokenContract(null);
-        setAmmContract(null);
-        setTokenName('');
-        setTokenSymbol('');
-        return;
-      }
-
-      try {
-        const signer = await provider.getSigner();
-        
-        const tokenContractInstance = Token__factory.connect(
-          contractAddresses.tokenAddress,
-          signer,
-        );
-        
-        const ammContractInstance = AMMPool__factory.connect(
-          contractAddresses.ammPoolAddress,
-          signer,
-        );
-
-        setTokenContract(tokenContractInstance);
-        setAmmContract(ammContractInstance);
-
-        // Get token details
-        const [name, symbol] = await Promise.all([
-          tokenContractInstance.name(),
-          tokenContractInstance.symbol(),
-        ]);
-        
-        setTokenName(name);
-        setTokenSymbol(symbol);
-      } catch {
-        setTokenContract(null);
-        setAmmContract(null);
-        setTokenName('');
-        setTokenSymbol('');
-      }
-    };
-
-    initializeContracts();
-  }, [provider, account, contractAddresses]);
-
-  const contractsReady = !!(tokenContract && ammContract && contractAddresses);
+  // Initialize contract addresses synchronously
+  const contractAddresses = getContractAddresses();
+  
+  // Initialize contracts with provider - they'll connect with signer when transactions are needed
+  const tokenContract = Token__factory.connect(
+    contractAddresses.tokenAddress,
+    provider,
+  );
+  
+  const ammContract = AMMPool__factory.connect(
+    contractAddresses.ammPoolAddress,
+    provider,
+  );
 
   const value: ContractContextType = {
     tokenContract,
     ammContract,
     contractAddresses,
-    tokenName,
-    tokenSymbol,
-    contractsReady,
   };
 
   return <ContractContext.Provider value={value}>{children}</ContractContext.Provider>;
@@ -129,10 +72,3 @@ export const useContracts = () => {
   return context;
 };
 
-export const useReadyContracts = (): ReadyContractContextType => {
-  const context = useContracts();
-  if (!context.contractsReady) {
-    throw new Error('Contracts are not ready. Check contractsReady before calling useReadyContracts');
-  }
-  return context as ReadyContractContextType;
-};

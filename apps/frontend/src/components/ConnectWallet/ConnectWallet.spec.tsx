@@ -2,102 +2,75 @@ import { render, fireEvent, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import { ConnectWallet } from './ConnectWallet';
 
-describe('ConnectWallet', () => {
-  const mockOnConnect = vi.fn();
+// Mock the contexts
+const mockConnectWallet = vi.fn();
 
+vi.mock('../../contexts', () => ({
+  useWallet: () => ({
+    connectWallet: mockConnectWallet,
+  }),
+}));
+
+describe('ConnectWallet', () => {
   beforeEach(() => {
-    mockOnConnect.mockClear();
+    mockConnectWallet.mockClear();
   });
 
   it('should render successfully', () => {
-    const { baseElement } = render(
-      <ConnectWallet onConnect={mockOnConnect} isLoading={false} />
-    );
+    const { baseElement } = render(<ConnectWallet />);
     expect(baseElement).toBeTruthy();
   });
 
   it('should display the correct message', () => {
-    const { getByText } = render(
-      <ConnectWallet onConnect={mockOnConnect} isLoading={false} />
-    );
+    const { getByText } = render(<ConnectWallet />);
     expect(getByText('Connect your wallet to start trading')).toBeTruthy();
   });
 
-  it('should display "Connect Wallet" button when not loading', () => {
-    const { getByRole } = render(
-      <ConnectWallet onConnect={mockOnConnect} isLoading={false} />
-    );
-    const button = getByRole('button');
-    expect(button).toHaveProperty('textContent', 'Connect Wallet');
-    expect(button).toHaveProperty('disabled', false);
+  it('should display the connect button', () => {
+    const { getByText } = render(<ConnectWallet />);
+    const button = getByText('Connect Wallet');
+    expect(button).toBeTruthy();
   });
 
-  it('should display "Connecting..." button when loading', () => {
-    const { getByRole } = render(
-      <ConnectWallet onConnect={mockOnConnect} isLoading={true} />
-    );
-    const button = getByRole('button');
-    expect(button).toHaveProperty('textContent', 'Connecting...');
-    expect(button).toHaveProperty('disabled', true);
-  });
-
-  it('should call onConnect when button is clicked and not loading', () => {
-    const { getByRole } = render(
-      <ConnectWallet onConnect={mockOnConnect} isLoading={false} />
-    );
+  it('should call connectWallet when button is clicked', async () => {
+    const { getByRole } = render(<ConnectWallet />);
     const button = getByRole('button');
     
     fireEvent.click(button);
     
-    expect(mockOnConnect).toHaveBeenCalledTimes(1);
+    expect(mockConnectWallet).toHaveBeenCalledTimes(1);
   });
 
-  it('should not call onConnect when button is clicked while loading', () => {
-    const { getByRole } = render(
-      <ConnectWallet onConnect={mockOnConnect} isLoading={true} />
-    );
+  it('should show loading state when connecting', async () => {
+    // Mock connectWallet to return a promise that doesn't resolve immediately
+    const createDeferredPromise = () => {
+      let resolvePromise: () => void;
+      const promise = new Promise<void>((resolve) => {
+        resolvePromise = resolve;
+      });
+      return { promise, resolve: resolvePromise! };
+    };
+    
+    const { promise, resolve } = createDeferredPromise();
+    mockConnectWallet.mockReturnValue(promise);
+    
+    const { getByRole, getByText } = render(<ConnectWallet />);
     const button = getByRole('button');
     
+    // Click the button to start connecting
     fireEvent.click(button);
     
-    expect(mockOnConnect).not.toHaveBeenCalled();
-  });
-
-  it('should handle async onConnect function', async () => {
-    const asyncOnConnect = vi.fn().mockResolvedValue(undefined);
-    const { getByRole } = render(
-      <ConnectWallet onConnect={asyncOnConnect} isLoading={false} />
-    );
-    const button = getByRole('button');
-    
-    fireEvent.click(button);
-    
+    // Check that the loading state is shown
     await waitFor(() => {
-      expect(asyncOnConnect).toHaveBeenCalledTimes(1);
+      expect(getByText('Connecting...')).toBeTruthy();
     });
-  });
-
-  it('should handle async onConnect function that rejects', async () => {
-    const asyncOnConnect = vi.fn().mockRejectedValue(new Error('Connection failed'));
-    const { getByRole } = render(
-      <ConnectWallet onConnect={asyncOnConnect} isLoading={false} />
-    );
-    const button = getByRole('button');
     
-    fireEvent.click(button);
+    // Resolve the promise to finish the connection
+    resolve();
     
+    // Wait for the loading state to disappear
     await waitFor(() => {
-      expect(asyncOnConnect).toHaveBeenCalledTimes(1);
+      expect(getByText('Connect Wallet')).toBeTruthy();
     });
-  });
-
-  it('should render component structure correctly', () => {
-    const { getByRole, getByText } = render(
-      <ConnectWallet onConnect={mockOnConnect} isLoading={false} />
-    );
-    
-    // Check that elements are present (structure verification)
-    expect(getByRole('button')).toBeTruthy();
-    expect(getByText('Connect your wallet to start trading')).toBeTruthy();
   });
 });

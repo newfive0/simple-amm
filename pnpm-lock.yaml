@@ -113,6 +113,9 @@ importers:
 
   apps/frontend:
     dependencies:
+      eip-1193:
+        specifier: ^0.6.3
+        version: 0.6.3
       ethers:
         specifier: ^6.0.0
         version: 6.14.4
@@ -4161,6 +4164,9 @@ packages:
 
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
+
+  eip-1193@0.6.3:
+    resolution: {integrity: sha512-6vAWYsAWCfwkLana//Ow5xKbT4T1ovXfJGNwcfHEPjleeuI132sI0EetG+xVBg/nsqzcqJA3AOomMovFk7jbPg==}
 
   ejs@3.1.10:
     resolution: {integrity: sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==}
@@ -12117,6 +12123,8 @@ snapshots:
   eastasianwidth@0.2.0: {}
 
   ee-first@1.1.1: {}
+
+  eip-1193@0.6.3: {}
 
   ejs@3.1.10:
     dependencies:
