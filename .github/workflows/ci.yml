@@ -104,18 +104,18 @@ jobs:
         uses: actions/cache@v4
         id: synpress-cache
         with:
-          path: apps/frontend-e2e/.cache-synpress
-          key: ${{ runner.os }}-synpress-${{ hashFiles('apps/frontend-e2e/test/wallet-setup/basic.setup.ts') }}
+          path: apps/e2e/.cache-synpress
+          key: ${{ runner.os }}-synpress-${{ hashFiles('apps/e2e/test/wallet-setup/basic.setup.ts') }}
 
       - name: Build Synpress cache
         if: steps.synpress-cache.outputs.cache-hit != 'true'
         run: |
-          cd apps/frontend-e2e
+          cd apps/e2e
           npx synpress
 
       - name: Run e2e tests
         run: |
-          cd apps/frontend-e2e
+          cd apps/e2e
           npx playwright test --config=synpress.config.ts
 
       - name: Upload Playwright Report
@@ -123,5 +123,5 @@ jobs:
         if: always()
         with:
           name: playwright-report
-          path: apps/frontend-e2e/playwright-report/
+          path: apps/e2e/playwright-report/
           retention-days: 30
