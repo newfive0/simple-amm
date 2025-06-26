@@ -11,7 +11,8 @@ Use minimal, descriptive commit messages without boilerplate text. Focus on what
 This is a simple Automated Market Maker (AMM) DApp built with React frontend and Solidity smart contracts. The project uses Nx monorepo structure with two main components:
 
 - **Frontend** (`apps/frontend`): React application with MetaMask integration for interacting with the AMM
-- **Contracts** (`libs/contracts`): Hardhat-based smart contracts including ERC20 token and AMM pool
+- **Contracts** (`libs/contracts`): Hardhat-based smart contracts including ERC20 token and AMM pool  
+- **E2E Tests** (`apps/e2e`): Playwright and Synpress tests for full user flow validation
 
 The AMM implements a constant product formula (x * y = k) for ETH/SIMP token swaps with liquidity provision functionality.
 
@@ -53,6 +54,9 @@ nx build frontend
 # Frontend linting
 nx lint frontend
 nx lint:fix frontend
+
+# Frontend unit tests
+nx test frontend
 ```
 
 ### Smart Contract Development
@@ -82,20 +86,21 @@ nx format-sol contracts           # Format Solidity code
 
 ### End-to-End Testing
 ```bash
-# Run all e2e tests (requires Hardhat node running)
-nx e2e frontend-e2e
+# Run all e2e tests (automatically starts Hardhat node and frontend)
+nx test e2e
 
 # Update visual snapshots
-nx update-snapshots frontend-e2e
+nx update-snapshots e2e
 
 # Show test report
-nx show-report frontend-e2e
+nx show-report e2e
 ```
 
 **E2E Test Coverage:**
 - Visual tests: Connect wallet flow and AMM interface
 - AMM functionality: Add liquidity (10 ETH + 20 SIMP), swap ETH→SIMP, swap SIMP→ETH
 - Tests use Synpress with MetaMask automation on localhost:8545
+- Located in `apps/e2e/` directory
 
 ## Architecture Notes
 
@@ -111,12 +116,15 @@ nx show-report frontend-e2e
 - Component structure: WalletInfo, Swap, Liquidity components
 - Contract artifacts and deployed addresses loaded from `/public/` directory
 - MetaMask integration for wallet connectivity
+- Vitest for unit testing with @testing-library/jest-dom matchers
+- Common test utilities in `src/test-utils.ts` for reusable testing helpers
 
 ### Key Integration Points
 - Deployed addresses automatically copied from `libs/contracts/ignition/deployments/chain-31337/deployed_addresses.json` to `apps/frontend/public/deployed_addresses.json`
 - Frontend uses TypeChain-generated factories for type-safe contract interaction
 - Contract ABIs are embedded in TypeChain factories (no longer need to copy ABIs)
 - Use `nx copy-artifacts contracts` after deployment to sync deployed addresses to frontend
+- E2E tests located in `apps/e2e/` with automatic environment setup and teardown
 
 ## Development Workflow
 

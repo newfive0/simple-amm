@@ -1,5 +1,9 @@
 # SimpleAmm
 
+This is a simple Automated Market Maker (AMM) DApp built with React frontend and Solidity smart contracts.
+
+For detailed development instructions and project information, see [CLAUDE.md](CLAUDE.md).
+
 ## Quick Start
 
 **First time setup after cloning:**
@@ -156,20 +160,20 @@ nx test frontend          # Run frontend unit tests with Vitest
 The project includes end-to-end testing with Playwright and Synpress (for MetaMask integration):
 
 ```sh
-# Run all E2E tests (includes MetaMask wallet tests)
-nx e2e frontend-e2e
+# Run all E2E tests (automatically starts Hardhat node and frontend)
+nx test e2e
 
 # Show Playwright test report in browser
-nx show-report frontend-e2e
+nx show-report e2e
 
 # Update visual snapshots when UI changes
-nx update-snapshots frontend-e2e
+nx update-snapshots e2e
 ```
 
 **Manual E2E Commands** (if you prefer to run from the e2e directory):
 
 ```sh
-cd apps/frontend-e2e
+cd apps/e2e
 
 # Run regular Playwright tests
 npx playwright test --config=playwright.config.ts
@@ -184,7 +188,7 @@ npx playwright test --update-snapshots
 npx playwright show-report
 ```
 
-**Note**: E2E tests require the development environment to be running. Use `./scripts/start-dev.sh` or ensure Hardhat and frontend are running before executing E2E tests.
+**Note**: E2E tests automatically start and stop the development environment (Hardhat node, contract deployment, and frontend server).
 
 ## Important Notes
 

@@ -1,5 +1,5 @@
 {
-  "name": "@simple-amm/frontend-e2e",
+  "name": "@simple-amm/e2e",
   "version": "0.0.1",
   "private": true,
   "type": "module",

@@ -1,4 +1,4 @@
-# Frontend E2E Tests
+# E2E Tests
 
 Visual tests for the Simple AMM using Playwright and Synpress.
 
@@ -21,13 +21,13 @@ Visual tests for the Simple AMM using Playwright and Synpress.
 
 4. **Run tests:**
    ```bash
-   pnpm exec nx run frontend-e2e:e2e
+   nx test e2e
    ```
 
 ## Update Snapshots
 
 ```bash
-pnpm exec nx run frontend-e2e:e2e --update-snapshots
+nx update-snapshots e2e
 ```
 
 ## What the Test Does

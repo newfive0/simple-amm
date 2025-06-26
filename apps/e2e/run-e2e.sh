@@ -5,7 +5,7 @@ echo "Starting development environment..."
 cd ../..
 ./scripts/start-dev.sh 2>&1 | tee /tmp/simple-amm-e2e-start-dev.log &
 DEV_PID=$!
-cd apps/frontend-e2e
+cd apps/e2e
 
 # Cleanup function
 cleanup() {
