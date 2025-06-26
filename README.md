@@ -2,29 +2,24 @@
 
 This is a simple Automated Market Maker (AMM) DApp built with React frontend and Solidity smart contracts.
 
-For detailed development instructions and project information, see [CLAUDE.md](CLAUDE.md).
-
 ## Quick Start
 
-**First time setup after cloning:**
-
+**First time setup:**
 ```sh
 # Generate TypeChain types (required for TypeScript compilation)
 nx build contracts
 ```
 
-To start the complete development environment (Hardhat + contracts deployment + frontend):
-
+**Start development environment:**
 ```sh
-./scripts/start-dev.sh
+nx start-dev
 ```
 
-This script will:
-
-1. Start Hardhat local network on `http://localhost:8545`
-2. Deploy smart contracts (Token and AMMPool)
-3. Start frontend development server on `http://localhost:4200` (or next available port)
-4. Create log files: `libs/contracts/hardhat.log` and `frontend.log`
+This automatically:
+- Starts Hardhat local network on `http://localhost:8545`
+- Deploys smart contracts (Token and AMMPool)
+- Launches frontend on `http://localhost:4200`
+- Creates log files: `libs/contracts/hardhat.log` and `frontend.log`
 
 Press `Ctrl+C` to stop all services.
 
@@ -97,46 +92,6 @@ After successful deployment, you'll see the contract addresses output:
 
 The deployment artifacts are saved in `libs/contracts/ignition/deployments/` for reuse.
 
-## Linting
-
-### Project-wide
-
-For project-wide linting:
-
-```sh
-nx run-many -t lint            # Check all projects
-nx run-many -t lint:fix        # Fix all projects
-```
-
-### Frontend (React/TypeScript)
-
-For frontend React/TypeScript linting:
-
-```sh
-nx lint frontend                # Check for linting issues
-nx lint:fix frontend           # Automatically fix linting issues
-```
-
-### Contracts (TypeScript/JavaScript)
-
-For TypeScript/JavaScript linting:
-
-```sh
-nx lint-js contracts      # Check for linting issues
-nx lint-js-fix contracts  # Automatically fix linting issues when possible
-```
-
-### Solidity
-
-For Solidity linting:
-
-```sh
-nx lint-sol contracts      # Check your Solidity code
-nx lint-sol-fix contracts  # Automatically fix Solidity linting issues
-nx format-sol contracts    # Format Solidity code using prettier
-nx check-format-sol contracts # Check if Solidity code is properly formatted without making changes
-```
-
 ## Testing
 
 ### Smart Contract Tests
@@ -189,6 +144,46 @@ npx playwright show-report
 ```
 
 **Note**: E2E tests automatically start and stop the development environment (Hardhat node, contract deployment, and frontend server).
+
+## Linting
+
+### Project-wide
+
+For project-wide linting:
+
+```sh
+nx run-many -t lint            # Check all projects
+nx run-many -t lint:fix        # Fix all projects
+```
+
+### Frontend (React/TypeScript)
+
+For frontend React/TypeScript linting:
+
+```sh
+nx lint frontend                # Check for linting issues
+nx lint:fix frontend           # Automatically fix linting issues
+```
+
+### Contracts (TypeScript/JavaScript)
+
+For TypeScript/JavaScript linting:
+
+```sh
+nx lint-js contracts      # Check for linting issues
+nx lint-js-fix contracts  # Automatically fix linting issues when possible
+```
+
+### Solidity
+
+For Solidity linting:
+
+```sh
+nx lint-sol contracts      # Check your Solidity code
+nx lint-sol-fix contracts  # Automatically fix Solidity linting issues
+nx format-sol contracts    # Format Solidity code using prettier
+nx check-format-sol contracts # Check if Solidity code is properly formatted without making changes
+```
 
 ## Important Notes
 
