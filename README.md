@@ -2,6 +2,23 @@
 
 This is a simple Automated Market Maker (AMM) DApp built with React frontend and Solidity smart contracts.
 
+## Prerequisites
+
+Before getting started, ensure you have the following installed:
+
+- **Node.js** (v18 or later) - [Download here](https://nodejs.org/)
+- **pnpm** (package manager) - Install with: `npm install -g pnpm`
+- **Nx CLI** (monorepo toolkit) - Install with: `npm install -g nx`
+
+## Installation
+
+**Clone and install dependencies:**
+```sh
+git clone <repository-url>
+cd simple-amm
+pnpm install
+```
+
 ## Quick Start
 
 **First time setup:**
