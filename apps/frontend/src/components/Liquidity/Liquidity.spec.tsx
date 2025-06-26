@@ -1,35 +1,21 @@
 import { render, fireEvent, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import { Liquidity } from './Liquidity';
-import { createDeferredTransactionPromise } from '../../test-utils';
-import { Token, AMMPool } from '../../typechain-types';
+import { 
+  createDeferredTransactionPromise, 
+  createMockContracts, 
+  mockContractAddresses
+} from '../../test-mocks';
 
-// Mock ethers
-vi.mock('ethers', () => ({
-  ethers: {
-    parseEther: vi.fn((value: string) => `parsed-${value}`),
-  },
-}));
 
-// Mock contracts
-const mockTokenContract = {
-  approve: vi.fn(),
-};
-
-const mockAmmContract = {
-  addLiquidity: vi.fn(),
-};
-
-const mockContractAddresses = {
-  tokenAddress: '0x123',
-  ammPoolAddress: '0x456',
-};
+// Create mock contracts
+const { mockTokenContract, mockAmmContract, tokenContract, ammContract } = createMockContracts();
 
 const mockOnLiquidityComplete = vi.fn();
 
 const defaultProps = {
-  ammContract: mockAmmContract as unknown as AMMPool,
-  tokenContract: mockTokenContract as unknown as Token,
+  ammContract,
+  tokenContract,
   contractAddresses: mockContractAddresses,
   poolEthBalance: '10.0',
   poolTokenBalance: '20.0',
@@ -150,11 +136,11 @@ describe('Liquidity', () => {
     await waitFor(() => {
       expect(mockTokenContract.approve).toHaveBeenCalledWith(
         mockContractAddresses.ammPoolAddress,
-        'parsed-10'
+        BigInt(10000000000000000000) // 10 SIMP tokens in wei
       );
       expect(mockAmmContract.addLiquidity).toHaveBeenCalledWith(
-        'parsed-10',
-        { value: 'parsed-5' }
+        BigInt(10000000000000000000), // 10 SIMP tokens in wei
+        { value: BigInt(5000000000000000000) } // 5 ETH in wei
       );
       expect(mockOnLiquidityComplete).toHaveBeenCalled();
     });

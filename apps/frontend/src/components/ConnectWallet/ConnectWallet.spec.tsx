@@ -1,7 +1,7 @@
 import { render, fireEvent, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import { ConnectWallet } from './ConnectWallet';
-import { createDeferredPromise } from '../../test-utils';
+import { createDeferredPromise } from '../../test-mocks';
 
 // Mock the contexts
 const mockConnectWallet = vi.fn();
