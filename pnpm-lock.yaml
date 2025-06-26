@@ -111,6 +111,15 @@ importers:
         specifier: ^8.19.0
         version: 8.34.1(eslint@9.29.0(jiti@2.4.2))(typescript@5.7.3)
 
+  apps/e2e:
+    devDependencies:
+      '@playwright/test':
+        specifier: ^1.36.0
+        version: 1.53.0
+      '@synthetixio/synpress':
+        specifier: ^4.1.0
+        version: 4.1.0(@depay/solana-web3.js@1.98.2)(@depay/web3-blockchains@9.8.6)(@playwright/test@1.53.0)(@swc/core@1.5.29(@swc/helpers@0.5.17))(ethers@6.14.4)(playwright-core@1.53.0)(postcss@8.5.6)(ts-node@10.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@types/node@22.7.5)(typescript@5.7.3))(typescript@5.7.3)(zod@3.22.4)
+
   apps/frontend:
     dependencies:
       eip-1193:
@@ -168,15 +177,6 @@ importers:
       vitest:
         specifier: ^3.0.0
         version: 3.2.4(@types/node@22.7.5)(@vitest/ui@3.2.4)(jiti@2.4.2)(jsdom@22.1.0)(sass@1.89.2)(terser@5.43.0)(yaml@2.8.0)
-
-  apps/frontend-e2e:
-    devDependencies:
-      '@playwright/test':
-        specifier: ^1.36.0
-        version: 1.53.0
-      '@synthetixio/synpress':
-        specifier: ^4.1.0
-        version: 4.1.0(@depay/solana-web3.js@1.98.2)(@depay/web3-blockchains@9.8.6)(@playwright/test@1.53.0)(@swc/core@1.5.29(@swc/helpers@0.5.17))(ethers@6.14.4)(playwright-core@1.53.0)(postcss@8.5.6)(ts-node@10.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@types/node@22.7.5)(typescript@5.7.3))(typescript@5.7.3)(zod@3.22.4)
 
   libs/contracts:
     dependencies:
@@ -15517,7 +15517,7 @@ snapshots:
     dependencies:
       '@jridgewell/gen-mapping': 0.3.8
       commander: 4.1.1
-      glob: 10.3.10
+      glob: 10.4.5
       lines-and-columns: 1.2.4
       mz: 2.7.0
       pirates: 4.0.7
