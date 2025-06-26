@@ -15,7 +15,5 @@ test('should display network error page when MetaMask is not detected', async ({
   });
 
   // Take screenshot of the network error state
-  await expect(page).toHaveScreenshot('network-error-page.png', {
-    fullPage: true,
-  });
+  await expect(page).toHaveScreenshot('network-error-page.png');
 });

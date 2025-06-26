@@ -25,16 +25,26 @@ check_hardhat_ready() {
     done
 }
 
+# Kill services function
+kill_services() {
+    pkill -f "hardhat node" 2>/dev/null || true
+    pkill -f "nx serve" 2>/dev/null || true
+}
+
 # Cleanup function
 cleanup() {
     echo "Stopping services..."
-    pkill -f "hardhat node"
-    pkill -f "nx serve"
+    kill_services
     exit 0
 }
+
 trap cleanup SIGINT SIGTERM EXIT
 
 echo "Starting development environment..."
+
+# Clean up any existing processes
+echo "Cleaning up existing processes..."
+kill_services
 
 # Start Hardhat
 cd libs/contracts

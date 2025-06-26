@@ -8,11 +8,7 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/.playwright"],
       "options": {
-        "commands": [
-          "../../scripts/check-hardhat.sh",
-          "synpress && npx playwright test --config=synpress.config.ts",
-          "npx playwright test --config=playwright.config.ts"
-        ],
+        "command": "./run-e2e.sh",
         "parallel": false,
         "cwd": "apps/frontend-e2e"
       }
@@ -34,10 +30,7 @@
     "update-snapshots": {
       "executor": "nx:run-commands",
       "options": {
-        "commands": [
-          "../../scripts/check-hardhat.sh",
-          "npx playwright test --config=playwright.config.ts --update-snapshots"
-        ],
+        "command": "./run-e2e.sh --update-snapshots",
         "parallel": false,
         "cwd": "apps/frontend-e2e"
       }

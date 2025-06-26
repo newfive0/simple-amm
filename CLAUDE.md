@@ -80,6 +80,23 @@ nx lint-sol-fix contracts
 nx format-sol contracts           # Format Solidity code
 ```
 
+### End-to-End Testing
+```bash
+# Run all e2e tests (requires Hardhat node running)
+nx e2e frontend-e2e
+
+# Update visual snapshots
+nx update-snapshots frontend-e2e
+
+# Show test report
+nx show-report frontend-e2e
+```
+
+**E2E Test Coverage:**
+- Visual tests: Connect wallet flow and AMM interface
+- AMM functionality: Add liquidity (10 ETH + 20 SIMP), swap ETH→SIMP, swap SIMP→ETH
+- Tests use Synpress with MetaMask automation on localhost:8545
+
 ## Architecture Notes
 
 ### Smart Contracts

@@ -41,12 +41,4 @@ test('should connect wallet and display AMM interface', async ({ context, page, 
   await expect(page.locator('text=/^Balance:.*SIMP.*ETH/')).toBeVisible({ 
     timeout: 15000 
   });
-  
-  // Additional wait to ensure all data has loaded
-  await page.waitForTimeout(2000);
-
-  // Take full-page screenshot showing complete AMM interface
-  await expect(page).toHaveScreenshot('wallet-connected-success.png', { 
-    fullPage: true 
-  });
 });

@@ -65,6 +65,7 @@ playwright-report/
 # Development script logs
 frontend.log
 libs/contracts/hardhat.log
+apps/frontend-e2e/hardhat.log
 
 # TypeChain generated types (build artifacts)
 typechain-types/
