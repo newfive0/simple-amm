@@ -1,6 +1,7 @@
 import { render, fireEvent, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import { ConnectWallet } from './ConnectWallet';
+import { createDeferredPromise } from '../../test-utils';
 
 // Mock the contexts
 const mockConnectWallet = vi.fn();
@@ -43,15 +44,7 @@ describe('ConnectWallet', () => {
 
   it('should show loading state when connecting', async () => {
     // Mock connectWallet to return a promise that doesn't resolve immediately
-    const createDeferredPromise = () => {
-      let resolvePromise: () => void;
-      const promise = new Promise<void>((resolve) => {
-        resolvePromise = resolve;
-      });
-      return { promise, resolve: resolvePromise! };
-    };
-    
-    const { promise, resolve } = createDeferredPromise();
+    const { promise, resolve } = createDeferredPromise<void>();
     mockConnectWallet.mockReturnValue(promise);
     
     const { getByRole, getByText } = render(<ConnectWallet />);
