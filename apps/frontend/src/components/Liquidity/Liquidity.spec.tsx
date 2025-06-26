@@ -136,11 +136,11 @@ describe('Liquidity', () => {
     await waitFor(() => {
       expect(mockTokenContract.approve).toHaveBeenCalledWith(
         mockContractAddresses.ammPoolAddress,
-        BigInt(10000000000000000000) // 10 SIMP tokens in wei
+        BigInt(10) * BigInt(10 ** 18) // 10 SIMP tokens in wei
       );
       expect(mockAmmContract.addLiquidity).toHaveBeenCalledWith(
-        BigInt(10000000000000000000), // 10 SIMP tokens in wei
-        { value: BigInt(5000000000000000000) } // 5 ETH in wei
+        BigInt(10) * BigInt(10 ** 18), // 10 SIMP tokens in wei
+        { value: BigInt(5) * BigInt(10 ** 18) } // 5 ETH in wei
       );
       expect(mockOnLiquidityComplete).toHaveBeenCalled();
     });

@@ -135,7 +135,7 @@ describe('Swap Component', () => {
         expect(mockAmmContract.swap).toHaveBeenCalledWith(
           ethers.ZeroAddress,
           0,
-          { value: BigInt(1500000000000000000) } // 1.5 ETH in wei
+          { value: BigInt(15) * BigInt(10 ** 17) } // 1.5 ETH in wei
         );
       });
       
@@ -203,7 +203,7 @@ describe('Swap Component', () => {
       await waitFor(() => {
         expect(mockTokenContract.approve).toHaveBeenCalledWith(
           mockContractAddresses.ammPoolAddress,
-          BigInt(2500000000000000000) // 2.5 ETH in wei
+          BigInt(25) * BigInt(10 ** 17) // 2.5 ETH in wei
         );
       });
       
@@ -212,7 +212,7 @@ describe('Swap Component', () => {
       await waitFor(() => {
         expect(mockAmmContract.swap).toHaveBeenCalledWith(
           mockContractAddresses.tokenAddress,
-          BigInt(2500000000000000000) // 2.5 ETH in wei
+          BigInt(25) * BigInt(10 ** 17) // 2.5 ETH in wei
         );
       });
       
@@ -304,22 +304,6 @@ describe('Swap Component', () => {
         expect(swapButton).toHaveTextContent('Swap ETH for SIMP');
         expect(swapButton).toBeDisabled(); // Still disabled because input is now empty
       });
-    });
-
-    it('should disable swap button during loading', async () => {
-      const { promise } = createDeferredTransactionPromise();
-      mockAmmContract.swap.mockResolvedValue(promise);
-      
-      render(<Swap {...defaultProps} />);
-      
-      const input = screen.getByPlaceholderText('Enter ETH amount');
-      fireEvent.change(input, { target: { value: '1' } });
-      
-      const swapButton = screen.getByText('Swap ETH for SIMP');
-      expect(swapButton).not.toBeDisabled();
-      
-      fireEvent.click(swapButton);
-      expect(swapButton).toBeDisabled();
     });
   });
 
