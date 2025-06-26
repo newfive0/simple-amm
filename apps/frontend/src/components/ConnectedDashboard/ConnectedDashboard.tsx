@@ -66,8 +66,8 @@ const DashboardContent = () => {
 };
 
 interface ContractsSectionProps {
-  poolEthBalance: string;
-  poolTokenBalance: string;
+  poolEthBalance: number;
+  poolTokenBalance: number;
   tokenSymbol: string;
   onSwapComplete: () => Promise<void>;
   onLiquidityComplete: () => Promise<void>;

@@ -7,22 +7,22 @@ import { createMockContracts } from '../../test-mocks';
 // Mock the child components
 interface MockWalletInfoProps {
   account: string;
-  ethBalance: string;
-  tokenBalance: string;
+  ethBalance: number;
+  tokenBalance: number;
   tokenSymbol: string;
   isCheckingConnection: boolean;
 }
 
 interface MockSwapProps {
-  poolEthBalance: string;
-  poolTokenBalance: string;
+  poolEthBalance: number;
+  poolTokenBalance: number;
   tokenSymbol: string;
   onSwapComplete: () => void;
 }
 
 interface MockLiquidityProps {
-  poolEthBalance: string;
-  poolTokenBalance: string;
+  poolEthBalance: number;
+  poolTokenBalance: number;
   tokenSymbol: string;
   onLiquidityComplete: () => void;
 }
@@ -30,7 +30,7 @@ interface MockLiquidityProps {
 vi.mock('../WalletInfo/WalletInfo', () => ({
   WalletInfo: ({ account, ethBalance, tokenBalance, tokenSymbol, isCheckingConnection }: MockWalletInfoProps) => (
     <div data-testid="wallet-info">
-      {isCheckingConnection ? 'Checking...' : `${account} - ${ethBalance} ETH / ${tokenBalance} ${tokenSymbol}`}
+      {isCheckingConnection ? 'Checking...' : `${account} - ${ethBalance.toFixed(4)} ETH / ${tokenBalance.toFixed(4)} ${tokenSymbol}`}
     </div>
   ),
 }));
@@ -38,7 +38,7 @@ vi.mock('../WalletInfo/WalletInfo', () => ({
 vi.mock('../Swap/Swap', () => ({
   Swap: ({ poolEthBalance, poolTokenBalance, tokenSymbol, onSwapComplete }: MockSwapProps) => (
     <div data-testid="swap">
-      <div>Pool: {poolEthBalance} ETH / {poolTokenBalance} {tokenSymbol}</div>
+      <div>Pool: {poolEthBalance.toFixed(4)} ETH / {poolTokenBalance.toFixed(4)} {tokenSymbol}</div>
       <button onClick={onSwapComplete}>Complete Swap</button>
     </div>
   ),
@@ -47,7 +47,7 @@ vi.mock('../Swap/Swap', () => ({
 vi.mock('../Liquidity/Liquidity', () => ({
   Liquidity: ({ poolEthBalance, poolTokenBalance, tokenSymbol, onLiquidityComplete }: MockLiquidityProps) => (
     <div data-testid="liquidity">
-      <div>Pool: {poolEthBalance} ETH / {poolTokenBalance} {tokenSymbol}</div>
+      <div>Pool: {poolEthBalance.toFixed(4)} ETH / {poolTokenBalance.toFixed(4)} {tokenSymbol}</div>
       <button onClick={onLiquidityComplete}>Complete Liquidity</button>
     </div>
   ),
@@ -60,10 +60,10 @@ const mockWalletContext = {
 };
 
 const mockBalancesContext = {
-  ethBalance: '5.0',
-  tokenBalance: '1000.0',
-  poolEthBalance: '10.0',
-  poolTokenBalance: '20.0',
+  ethBalance: 5.0,
+  tokenBalance: 1000.0,
+  poolEthBalance: 10.0,
+  poolTokenBalance: 20.0,
   refreshAllBalances: vi.fn().mockResolvedValue(undefined),
 };
 
@@ -107,7 +107,7 @@ describe('ConnectedDashboard', () => {
       render(<ConnectedDashboard />);
 
       await waitFor(() => {
-        expect(screen.getByText(/0x1234567890abcdef1234567890abcdef12345678 - 5\.0 ETH \/ 1000\.0 SIMP/)).toBeInTheDocument();
+        expect(screen.getByText(/0x1234567890abcdef1234567890abcdef12345678 - 5\.0000 ETH \/ 1000\.0000 SIMP/)).toBeInTheDocument();
       });
     });
 
@@ -115,7 +115,7 @@ describe('ConnectedDashboard', () => {
       render(<ConnectedDashboard />);
 
       await waitFor(() => {
-        const swapElements = screen.getAllByText('Pool: 10.0 ETH / 20.0 SIMP');
+        const swapElements = screen.getAllByText('Pool: 10.0000 ETH / 20.0000 SIMP');
         expect(swapElements).toHaveLength(2); // One for Swap, one for Liquidity
       });
     });
@@ -137,7 +137,7 @@ describe('ConnectedDashboard', () => {
       render(<ConnectedDashboard />);
 
       await waitFor(() => {
-        expect(screen.getByText(/1000\.0 CUSTOM/)).toBeInTheDocument();
+        expect(screen.getByText(/1000\.0000 CUSTOM/)).toBeInTheDocument();
       });
     });
   });

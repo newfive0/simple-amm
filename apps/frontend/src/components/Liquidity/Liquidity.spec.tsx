@@ -17,8 +17,8 @@ const defaultProps = {
   ammContract,
   tokenContract,
   contractAddresses: mockContractAddresses,
-  poolEthBalance: '10.0',
-  poolTokenBalance: '20.0',
+  poolEthBalance: 10.0,
+  poolTokenBalance: 20.0,
   tokenSymbol: 'SIMP',
   onLiquidityComplete: mockOnLiquidityComplete,
 };
@@ -81,8 +81,8 @@ describe('Liquidity', () => {
   it('should not auto-calculate when pool is empty', () => {
     const emptyPoolProps = {
       ...defaultProps,
-      poolEthBalance: '0.0',
-      poolTokenBalance: '0.0',
+      poolEthBalance: 0.0,
+      poolTokenBalance: 0.0,
     };
     const { getByPlaceholderText } = render(<Liquidity {...emptyPoolProps} />);
     const ethInput = getByPlaceholderText('Enter ETH amount');
@@ -136,11 +136,11 @@ describe('Liquidity', () => {
     await waitFor(() => {
       expect(mockTokenContract.approve).toHaveBeenCalledWith(
         mockContractAddresses.ammPoolAddress,
-        BigInt(10) * BigInt(10 ** 18) // 10 SIMP tokens in wei
+        BigInt(10 * 1e18) // 10 SIMP tokens in wei
       );
       expect(mockAmmContract.addLiquidity).toHaveBeenCalledWith(
-        BigInt(10) * BigInt(10 ** 18), // 10 SIMP tokens in wei
-        { value: BigInt(5) * BigInt(10 ** 18) } // 5 ETH in wei
+        BigInt(10 * 1e18), // 10 SIMP tokens in wei
+        { value: BigInt(5 * 1e18) } // 5 ETH in wei
       );
       expect(mockOnLiquidityComplete).toHaveBeenCalled();
     });

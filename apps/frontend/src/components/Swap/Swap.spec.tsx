@@ -18,8 +18,8 @@ const defaultProps = {
   ammContract,
   tokenContract,
   contractAddresses: mockContractAddresses,
-  poolEthBalance: '10.0',
-  poolTokenBalance: '20.0',
+  poolEthBalance: 10.0,
+  poolTokenBalance: 20.0,
   tokenSymbol: 'SIMP',
   onSwapComplete: mockOnSwapComplete,
 };
@@ -96,7 +96,7 @@ describe('Swap Component', () => {
     });
 
     it('should handle zero pool balances', () => {
-      render(<Swap {...defaultProps} poolEthBalance="0" poolTokenBalance="0" />);
+      render(<Swap {...defaultProps} poolEthBalance={0} poolTokenBalance={0} />);
       
       const input = screen.getByPlaceholderText('Enter ETH amount');
       fireEvent.change(input, { target: { value: '1' } });
@@ -135,7 +135,7 @@ describe('Swap Component', () => {
         expect(mockAmmContract.swap).toHaveBeenCalledWith(
           ethers.ZeroAddress,
           0,
-          { value: BigInt(15) * BigInt(10 ** 17) } // 1.5 ETH in wei
+          { value: BigInt(1.5 * 1e18) } // 1.5 ETH in wei
         );
       });
       
@@ -203,7 +203,7 @@ describe('Swap Component', () => {
       await waitFor(() => {
         expect(mockTokenContract.approve).toHaveBeenCalledWith(
           mockContractAddresses.ammPoolAddress,
-          BigInt(25) * BigInt(10 ** 17) // 2.5 ETH in wei
+          BigInt(2.5 * 1e18) // 2.5 ETH in wei
         );
       });
       
@@ -212,7 +212,7 @@ describe('Swap Component', () => {
       await waitFor(() => {
         expect(mockAmmContract.swap).toHaveBeenCalledWith(
           mockContractAddresses.tokenAddress,
-          BigInt(25) * BigInt(10 ** 17) // 2.5 ETH in wei
+          BigInt(2.5 * 1e18) // 2.5 ETH in wei
         );
       });
       

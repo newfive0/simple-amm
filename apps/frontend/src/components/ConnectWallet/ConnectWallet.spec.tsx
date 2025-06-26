@@ -1,4 +1,4 @@
-import { render, fireEvent, waitFor } from '@testing-library/react';
+import { render, fireEvent, waitFor, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import { ConnectWallet } from './ConnectWallet';
 import { createDeferredPromise } from '../../test-mocks';
@@ -37,7 +37,9 @@ describe('ConnectWallet', () => {
     const { getByRole } = render(<ConnectWallet />);
     const button = getByRole('button');
     
-    fireEvent.click(button);
+    act(() => {
+      fireEvent.click(button);
+    });
     
     expect(mockConnectWallet).toHaveBeenCalledTimes(1);
   });
@@ -51,7 +53,9 @@ describe('ConnectWallet', () => {
     const button = getByRole('button');
     
     // Click the button to start connecting
-    fireEvent.click(button);
+    act(() => {
+      fireEvent.click(button);
+    });
     
     // Check that the loading state is shown
     await waitFor(() => {
@@ -59,7 +63,9 @@ describe('ConnectWallet', () => {
     });
     
     // Resolve the promise to finish the connection
-    resolve();
+    act(() => {
+      resolve();
+    });
     
     // Wait for the loading state to disappear
     await waitFor(() => {

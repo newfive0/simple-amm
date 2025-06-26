@@ -63,8 +63,8 @@ interface SwapProps {
     tokenAddress: string;
     ammPoolAddress: string;
   };
-  poolEthBalance: string;
-  poolTokenBalance: string;
+  poolEthBalance: number;
+  poolTokenBalance: number;
   tokenSymbol: string;
   onSwapComplete: () => void;
 }
@@ -88,10 +88,7 @@ export const Swap = ({
   const calculateSwapOutput = (inputAmount: string, isEthToToken: boolean): string => {
     if (!inputAmount || inputAmount === '0') return '';
     
-    const poolEthFloat = parseFloat(poolEthBalance);
-    const poolTokenFloat = parseFloat(poolTokenBalance);
-    
-    if (poolEthFloat === 0 || poolTokenFloat === 0) return '';
+    if (poolEthBalance === 0 || poolTokenBalance === 0) return '';
     
     const input = parseFloat(inputAmount);
     if (isNaN(input)) return '';
@@ -102,11 +99,11 @@ export const Swap = ({
     
     if (isEthToToken) {
       // ETH input -> Token output
-      const outputTokens = (poolTokenFloat * input) / (poolEthFloat + input);
+      const outputTokens = (poolTokenBalance * input) / (poolEthBalance + input);
       return outputTokens.toFixed(6);
     } else {
       // Token input -> ETH output
-      const outputEth = (poolEthFloat * input) / (poolTokenFloat + input);
+      const outputEth = (poolEthBalance * input) / (poolTokenBalance + input);
       return outputEth.toFixed(6);
     }
   };

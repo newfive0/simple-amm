@@ -45,8 +45,8 @@ interface LiquidityProps {
     tokenAddress: string;
     ammPoolAddress: string;
   };
-  poolEthBalance: string;
-  poolTokenBalance: string;
+  poolEthBalance: number;
+  poolTokenBalance: number;
   tokenSymbol: string;
   onLiquidityComplete: () => void;
 }
@@ -69,8 +69,8 @@ export const Liquidity = ({
       return 0;
     }
     
-    const poolEthFloat = parseFloat(poolEthBalance);
-    const poolTokenFloat = parseFloat(poolTokenBalance);
+    const poolEthFloat = poolEthBalance;
+    const poolTokenFloat = poolTokenBalance;
     
     // If pool is empty, don't auto-calculate - let user set initial ratio
     if (poolEthFloat === 0 || poolTokenFloat === 0) {
@@ -90,8 +90,8 @@ export const Liquidity = ({
     setLiquidityEthAmount(value);
     const correspondingTokenAmount = calculateCorrespondingAmount(value, true);
     
-    const poolEthFloat = parseFloat(poolEthBalance);
-    const poolTokenFloat = parseFloat(poolTokenBalance);
+    const poolEthFloat = poolEthBalance;
+    const poolTokenFloat = poolTokenBalance;
     const poolHasLiquidity = poolEthFloat > 0 && poolTokenFloat > 0;
     
     // If pool has liquidity, always update the other field (including clearing it)
@@ -104,8 +104,8 @@ export const Liquidity = ({
     setLiquidityTokenAmount(value);
     const correspondingEthAmount = calculateCorrespondingAmount(value, false);
     
-    const poolEthFloat = parseFloat(poolEthBalance);
-    const poolTokenFloat = parseFloat(poolTokenBalance);
+    const poolEthFloat = poolEthBalance;
+    const poolTokenFloat = poolTokenBalance;
     const poolHasLiquidity = poolEthFloat > 0 && poolTokenFloat > 0;
     
     // If pool has liquidity, always update the other field (including clearing it)
@@ -159,7 +159,7 @@ export const Liquidity = ({
   const PoolBalances = () => (
     <div className={styles.poolBalances}>
       <p>
-        <strong>Pool Balance:</strong> {parseFloat(poolTokenBalance).toFixed(4)} {tokenSymbol} / {parseFloat(poolEthBalance).toFixed(4)} ETH
+        <strong>Pool Balance:</strong> {poolTokenBalance.toFixed(4)} {tokenSymbol} / {poolEthBalance.toFixed(4)} ETH
       </p>
     </div>
   );

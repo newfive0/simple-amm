@@ -32,11 +32,14 @@ export function createDeferredTransactionPromise() {
 export const createMockTokenContract = () => ({
   approve: vi.fn(),
   symbol: vi.fn(),
+  balanceOf: vi.fn(),
 });
 
 export const createMockAMMContract = () => ({
   swap: vi.fn(),
   addLiquidity: vi.fn(),
+  reserveETH: vi.fn(),
+  reserveSimplest: vi.fn(),
 });
 
 // Type-safe mock contract factories

@@ -4,8 +4,8 @@ import { WalletInfo } from './WalletInfo';
 
 const defaultProps = {
   account: '0x1234567890abcdef1234567890abcdef12345678',
-  ethBalance: '5.123456789',
-  tokenBalance: '1000.987654321',
+  ethBalance: 5.123456789,
+  tokenBalance: 1000.987654321,
   tokenSymbol: 'SIMP',
   isCheckingConnection: false,
 };

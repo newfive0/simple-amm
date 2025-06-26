@@ -2,8 +2,8 @@ import styles from './WalletInfo.module.scss';
 
 interface WalletInfoProps {
   account: string;
-  ethBalance: string;
-  tokenBalance: string;
+  ethBalance: number;
+  tokenBalance: number;
   tokenSymbol: string;
   isCheckingConnection: boolean;
 }
@@ -29,7 +29,7 @@ export const WalletInfo = ({
         <strong>Connected Account:</strong> {account}
       </p>
       <p>
-        <strong>Balance:</strong> {parseFloat(tokenBalance).toFixed(4)} {tokenSymbol} / {parseFloat(ethBalance).toFixed(4)} ETH
+        <strong>Balance:</strong> {tokenBalance.toFixed(4)} {tokenSymbol} / {ethBalance.toFixed(4)} ETH
       </p>
     </div>
   );
