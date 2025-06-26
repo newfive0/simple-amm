@@ -1,0 +1,7 @@
+# Ignore build artifacts and generated files
+/artifacts
+/cache
+/typechain-types
+/dist
+/coverage
+node_modules
