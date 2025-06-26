@@ -31,6 +31,7 @@ export function createDeferredTransactionPromise() {
 // Create mock contract instances
 export const createMockTokenContract = () => ({
   approve: vi.fn(),
+  symbol: vi.fn(),
 });
 
 export const createMockAMMContract = () => ({
