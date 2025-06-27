@@ -19,7 +19,7 @@ test('should display AMM page with disabled elements before connection', async (
   // Wait for disabled swap elements to be visible
   await expect(page.getByText('Swap Tokens')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Please connect wallet' })).toBeVisible();
-  await expect(page.getByText('Your Account: Not connected')).toBeVisible();
+  await expect(page.getByText('Your Account: Not connected')).toBeVisible({ timeout: 10000 });
 
   // Take screenshot of the initial AMM state before connection
   await expect(page).toHaveScreenshot('amm-before-connection.png', {

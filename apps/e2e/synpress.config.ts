@@ -13,6 +13,8 @@ export default defineConfig({
     actionTimeout: 30000,
     // Run headless in CI environment
     headless: !!process.env.CI,
+    // Set consistent viewport to avoid scrollbar differences
+    viewport: { width: 1280, height: 720 },
   },
 
   expect: {
