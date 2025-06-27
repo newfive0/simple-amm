@@ -27,5 +27,6 @@ describe('ErrorBoundary', () => {
     );
 
     expect(getByText('Test error message')).toBeTruthy();
+    expect(getByText('Try again')).toBeTruthy();
   });
 });

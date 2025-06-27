@@ -21,7 +21,7 @@ check_hardhat_ready() {
             return 1
         fi
         echo "⏳ Waiting for Hardhat node... (attempt $i/30)"
-        sleep 1
+        sleep 3
     done
 }
 
