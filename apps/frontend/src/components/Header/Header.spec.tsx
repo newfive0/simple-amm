@@ -22,6 +22,7 @@ describe('Header Component', () => {
       ethereumProvider: null,
       signer: null,
       isCheckingConnection: false,
+      error: null,
       connectWallet: vi.fn()
     };
     
@@ -39,6 +40,7 @@ describe('Header Component', () => {
       ethereumProvider: null,
       signer: null,
       isCheckingConnection: false,
+      error: null,
       connectWallet: vi.fn()
     };
     
@@ -48,5 +50,41 @@ describe('Header Component', () => {
     
     expect(screen.getByText('Very Simple AMM')).toBeInTheDocument();
     expect(screen.queryByText('Connect Wallet')).not.toBeInTheDocument();
+  });
+
+  it('should display error message when error exists', () => {
+    const mockWalletContext: WalletContextType = {
+      account: '',
+      ethereumProvider: null,
+      signer: null,
+      isCheckingConnection: false,
+      error: 'User rejected the request',
+      connectWallet: vi.fn()
+    };
+    
+    vi.mocked(useWallet).mockReturnValue(mockWalletContext);
+    
+    render(<Header />);
+    
+    expect(screen.getByText('Very Simple AMM')).toBeInTheDocument();
+    expect(screen.getByText('User rejected the request')).toBeInTheDocument();
+  });
+
+  it('should not display error section when error is null', () => {
+    const mockWalletContext: WalletContextType = {
+      account: '',
+      ethereumProvider: null,
+      signer: null,
+      isCheckingConnection: false,
+      error: null,
+      connectWallet: vi.fn()
+    };
+    
+    vi.mocked(useWallet).mockReturnValue(mockWalletContext);
+    
+    render(<Header />);
+    
+    expect(screen.getByText('Very Simple AMM')).toBeInTheDocument();
+    expect(screen.queryByText('User rejected the request')).not.toBeInTheDocument();
   });
 });
