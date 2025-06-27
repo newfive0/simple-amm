@@ -1,8 +1,14 @@
-import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { ethers } from 'ethers';
 import { ConnectedDashboard } from './ConnectedDashboard';
-import { createMockContracts } from '../../test-mocks';
+
+// Mock balance utilities
+vi.mock('../../utils/balances', () => ({
+  getWalletBalances: vi.fn(),
+  getPoolBalances: vi.fn(),
+  getTokenSymbol: vi.fn(),
+}));
 
 // Mock the child components
 interface MockWalletInfoProps {
@@ -14,6 +20,9 @@ interface MockWalletInfoProps {
 }
 
 interface MockSwapProps {
+  ammContract: unknown;
+  tokenContract: unknown;
+  contractAddresses: { tokenAddress: string; ammPoolAddress: string };
   poolEthBalance: number;
   poolTokenBalance: number;
   tokenSymbol: string;
@@ -21,6 +30,9 @@ interface MockSwapProps {
 }
 
 interface MockLiquidityProps {
+  ammContract: unknown;
+  tokenContract: unknown;
+  contractAddresses: { tokenAddress: string; ammPoolAddress: string };
   poolEthBalance: number;
   poolTokenBalance: number;
   tokenSymbol: string;
@@ -53,54 +65,69 @@ vi.mock('../Liquidity/Liquidity', () => ({
   ),
 }));
 
-// Mock the contexts
+// Mock TypeChain factories
+const mockTokenContract = { symbol: vi.fn() };
+const mockAmmContract = { reserveETH: vi.fn(), reserveSimplest: vi.fn() };
+
+vi.mock('@typechain-types', () => ({
+  Token__factory: {
+    connect: vi.fn(() => mockTokenContract),
+  },
+  AMMPool__factory: {
+    connect: vi.fn(() => mockAmmContract),
+  },
+}));
+
+// Mock wallet context
+const mockEthereumProvider = { getBalance: vi.fn() };
+const mockSigner = { getAddress: vi.fn() } as unknown as ethers.JsonRpcSigner;
+
 const mockWalletContext = {
   account: '0x1234567890abcdef1234567890abcdef12345678',
   isCheckingConnection: false,
+  signer: mockSigner,
+  ethereumProvider: mockEthereumProvider,
 };
-
-const mockBalancesContext = {
-  ethBalance: 5.0,
-  tokenBalance: 1000.0,
-  poolEthBalance: 10.0,
-  poolTokenBalance: 20.0,
-  refreshAllBalances: vi.fn().mockResolvedValue(undefined),
-};
-
-const { mockTokenContract, tokenContract, ammContract } = createMockContracts();
-const mockContractsContext = {
-  tokenContract,
-  ammContract,
-  contractAddresses: { tokenAddress: '0x123', ammPoolAddress: '0x456' },
-};
-
-interface MockProviderProps {
-  children: React.ReactNode;
-}
 
 vi.mock('../../contexts', () => ({
   useWallet: () => mockWalletContext,
-  useBalances: () => mockBalancesContext,
-  useContracts: () => mockContractsContext,
-  ContractProvider: ({ children }: MockProviderProps) => <div data-testid="contract-provider">{children}</div>,
-  BalanceProvider: ({ children }: MockProviderProps) => <div data-testid="balance-provider">{children}</div>,
 }));
+
+// Import mocked functions  
+import { getWalletBalances, getPoolBalances, getTokenSymbol } from '../../utils/balances';
+
+const mockGetWalletBalances = vi.mocked(getWalletBalances);
+const mockGetPoolBalances = vi.mocked(getPoolBalances);
+const mockGetTokenSymbol = vi.mocked(getTokenSymbol);
 
 describe('ConnectedDashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockTokenContract.symbol.mockResolvedValue('SIMP');
+    
+    // Setup default mock returns
+    mockGetWalletBalances.mockResolvedValue({
+      ethBalance: 5.0,
+      tokenBalance: 1000.0,
+    });
+    
+    mockGetPoolBalances.mockResolvedValue({
+      ethReserve: 10.0,
+      tokenReserve: 20.0,
+    });
+    
+    mockGetTokenSymbol.mockResolvedValue('SIMP');
   });
 
   describe('Rendering', () => {
-    it('should render all main components', async () => {
+    it('should render WalletInfo and contract components', async () => {
       render(<ConnectedDashboard />);
 
-      expect(screen.getByTestId('contract-provider')).toBeInTheDocument();
-      expect(screen.getByTestId('balance-provider')).toBeInTheDocument();
       expect(screen.getByTestId('wallet-info')).toBeInTheDocument();
-      expect(screen.getByTestId('swap')).toBeInTheDocument();
-      expect(screen.getByTestId('liquidity')).toBeInTheDocument();
+      
+      await waitFor(() => {
+        expect(screen.getByTestId('swap')).toBeInTheDocument();
+        expect(screen.getByTestId('liquidity')).toBeInTheDocument();
+      });
     });
 
     it('should pass correct props to WalletInfo component', async () => {
@@ -121,18 +148,42 @@ describe('ConnectedDashboard', () => {
     });
   });
 
-  describe('Token Symbol Fetching', () => {
-    it('should fetch token symbol on mount', async () => {
+  describe('Balance Fetching', () => {
+    it('should fetch balances and token symbol on mount', async () => {
       render(<ConnectedDashboard />);
 
       await waitFor(() => {
-        expect(mockTokenContract.symbol).toHaveBeenCalled();
+        expect(mockGetWalletBalances).toHaveBeenCalledWith(
+          mockEthereumProvider,
+          mockWalletContext.account,
+          mockSigner
+        );
+        expect(mockGetPoolBalances).toHaveBeenCalledWith(mockSigner);
+        expect(mockGetTokenSymbol).toHaveBeenCalledWith(mockSigner);
       });
     });
 
+    it('should handle missing wallet dependencies gracefully', async () => {
+      const originalSigner = mockWalletContext.signer;
+      // @ts-expect-error - Testing null signer case
+      mockWalletContext.signer = null;
+
+      render(<ConnectedDashboard />);
+
+      // Should show zero balances in WalletInfo and "Wallet not connected" for contracts
+      expect(screen.getByText(/0x1234567890abcdef1234567890abcdef12345678 - 0\.0000 ETH \/ 0\.0000 /)).toBeInTheDocument();
+      expect(screen.getByText('Wallet not connected')).toBeInTheDocument();
+
+      // Should not call balance utilities when signer is missing
+      expect(mockGetWalletBalances).not.toHaveBeenCalled();
+      expect(mockGetPoolBalances).not.toHaveBeenCalled();
+      expect(mockGetTokenSymbol).not.toHaveBeenCalled();
+
+      mockWalletContext.signer = originalSigner;
+    });
 
     it('should update components when token symbol is fetched', async () => {
-      mockTokenContract.symbol.mockResolvedValue('CUSTOM');
+      mockGetTokenSymbol.mockResolvedValue('CUSTOM');
 
       render(<ConnectedDashboard />);
 
@@ -143,31 +194,59 @@ describe('ConnectedDashboard', () => {
   });
 
   describe('Callback Handling', () => {
-    it('should call refreshAllBalances when swap completes', async () => {
+    it('should refresh balances when swap completes', async () => {
       render(<ConnectedDashboard />);
 
-      const swapButton = screen.getByText('Complete Swap');
-      swapButton.click();
+      // Wait for initial load
+      await waitFor(() => {
+        expect(screen.getByText('Complete Swap')).toBeInTheDocument();
+      });
+
+      // Clear previous calls
+      vi.clearAllMocks();
+      
+      // Setup new mock values
+      mockGetWalletBalances.mockResolvedValue({
+        ethBalance: 4.0,
+        tokenBalance: 1100.0,
+      });
+
+      act(() => {
+        screen.getByText('Complete Swap').click();
+      });
 
       await waitFor(() => {
-        expect(mockBalancesContext.refreshAllBalances).toHaveBeenCalled();
+        expect(mockGetWalletBalances).toHaveBeenCalled();
+        expect(mockGetPoolBalances).toHaveBeenCalled();
+        expect(mockGetTokenSymbol).toHaveBeenCalled();
       });
     });
 
-    it('should call refreshAllBalances when liquidity operation completes', async () => {
+    it('should refresh balances when liquidity operation completes', async () => {
       render(<ConnectedDashboard />);
 
-      const liquidityButton = screen.getByText('Complete Liquidity');
-      liquidityButton.click();
+      // Wait for initial load
+      await waitFor(() => {
+        expect(screen.getByText('Complete Liquidity')).toBeInTheDocument();
+      });
+
+      // Clear previous calls
+      vi.clearAllMocks();
+
+      act(() => {
+        screen.getByText('Complete Liquidity').click();
+      });
 
       await waitFor(() => {
-        expect(mockBalancesContext.refreshAllBalances).toHaveBeenCalled();
+        expect(mockGetWalletBalances).toHaveBeenCalled();
+        expect(mockGetPoolBalances).toHaveBeenCalled();
+        expect(mockGetTokenSymbol).toHaveBeenCalled();
       });
     });
   });
 
   describe('Loading States', () => {
-    it('should show checking connection state in WalletInfo', async () => {
+    it('should show checking connection state in WalletInfo', () => {
       mockWalletContext.isCheckingConnection = true;
 
       render(<ConnectedDashboard />);
@@ -176,16 +255,21 @@ describe('ConnectedDashboard', () => {
     });
   });
 
-  describe('Provider Structure', () => {
-    it('should wrap content with ContractProvider and BalanceProvider', () => {
+  describe('Error Handling', () => {
+    it('should handle balance fetching errors gracefully', async () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      
+      mockGetWalletBalances.mockRejectedValue(new Error('Network error'));
+      mockGetPoolBalances.mockResolvedValue({ ethReserve: 10.0, tokenReserve: 20.0 });
+      mockGetTokenSymbol.mockResolvedValue('SIMP');
+
       render(<ConnectedDashboard />);
 
-      const contractProvider = screen.getByTestId('contract-provider');
-      const balanceProvider = screen.getByTestId('balance-provider');
-      const walletInfo = screen.getByTestId('wallet-info');
+      await waitFor(() => {
+        expect(consoleSpy).toHaveBeenCalledWith('Failed to fetch balances: Network error');
+      });
 
-      expect(contractProvider).toContainElement(balanceProvider);
-      expect(balanceProvider).toContainElement(walletInfo);
+      consoleSpy.mockRestore();
     });
   });
 });
