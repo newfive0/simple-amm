@@ -41,7 +41,9 @@ describe('ConnectWallet', () => {
       fireEvent.click(button);
     });
     
-    expect(mockConnectWallet).toHaveBeenCalledTimes(1);
+    await waitFor(() => {
+      expect(mockConnectWallet).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('should show loading state when connecting', async () => {
