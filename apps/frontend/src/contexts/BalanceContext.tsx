@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { ethers } from 'ethers';
 import { useWallet } from './WalletContext';
-import { useContracts } from './ContractContext';
+import { Token__factory, AMMPool__factory } from '@typechain-types';
+import { config } from '../config';
 
 interface BalanceContextType {
   ethBalance: number;
@@ -16,8 +17,7 @@ interface BalanceContextType {
 const BalanceContext = createContext<BalanceContextType | undefined>(undefined);
 
 export const BalanceProvider = ({ children }: { children: ReactNode }) => {
-  const { ethereumProvider, account } = useWallet();
-  const { tokenContract, ammContract } = useContracts();
+  const { ethereumProvider, account, signer } = useWallet();
   
   // Throw errors during initialization if required dependencies are missing
   if (!ethereumProvider) {
@@ -26,11 +26,8 @@ export const BalanceProvider = ({ children }: { children: ReactNode }) => {
   if (!account) {
     throw new Error('BalanceProvider requires an account. Please connect your wallet.');
   }
-  if (!tokenContract) {
-    throw new Error('BalanceProvider requires a token contract. Please ensure contracts are loaded.');
-  }
-  if (!ammContract) {
-    throw new Error('BalanceProvider requires an AMM contract. Please ensure contracts are loaded.');
+  if (!signer) {
+    throw new Error('BalanceProvider requires a signer. Please connect your wallet.');
   }
   
   const [ethBalance, setEthBalance] = useState<number>(0);
@@ -41,6 +38,7 @@ export const BalanceProvider = ({ children }: { children: ReactNode }) => {
   // Refresh user balances
   const refreshBalances = useCallback(async () => {
     try {
+      const tokenContract = Token__factory.connect(config.contracts.tokenAddress, signer);
       const [ethBal, tokenBal] = await Promise.all([
         ethereumProvider.getBalance(account),
         tokenContract.balanceOf(account),
@@ -52,11 +50,12 @@ export const BalanceProvider = ({ children }: { children: ReactNode }) => {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       alert(`Failed to refresh balances: ${errorMessage}`);
     }
-  }, [ethereumProvider, account, tokenContract]);
+  }, [ethereumProvider, account, signer]);
 
   // Refresh pool balances
   const refreshPoolBalances = useCallback(async () => {
     try {
+      const ammContract = AMMPool__factory.connect(config.contracts.ammPoolAddress, signer);
       const [ethReserve, tokenReserve] = await Promise.all([
         ammContract.reserveETH(),
         ammContract.reserveSimplest(),
@@ -68,7 +67,7 @@ export const BalanceProvider = ({ children }: { children: ReactNode }) => {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       alert(`Failed to refresh pool balances: ${errorMessage}`);
     }
-  }, [ammContract]);
+  }, [signer]);
 
   // Refresh all balances
   const refreshAllBalances = useCallback(async () => {

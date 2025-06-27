@@ -1,27 +1,29 @@
 import { useState, useEffect } from 'react';
-import { useWallet, useContracts, useBalances, ContractProvider, BalanceProvider } from '../../contexts';
+import { useWallet, useBalances, BalanceProvider } from '../../contexts';
 import { WalletInfo, Swap, Liquidity } from '../';
+import { Token__factory, AMMPool__factory } from '@typechain-types';
+import { config } from '../../config';
 
 export const ConnectedDashboard = () => {
   return (
-    <ContractProvider>
-      <BalanceProvider>
-        <DashboardContent />
-      </BalanceProvider>
-    </ContractProvider>
+    <BalanceProvider>
+      <DashboardContent />
+    </BalanceProvider>
   );
 };
 
 const DashboardContent = () => {
-  const { account, isCheckingConnection } = useWallet();
-  const { tokenContract } = useContracts();
+  const { account, isCheckingConnection, signer } = useWallet();
   const { ethBalance, tokenBalance, poolEthBalance, poolTokenBalance, refreshAllBalances } = useBalances();
   const [tokenSymbol, setTokenSymbol] = useState<string>('');
 
   // Fetch token symbol from contract
   useEffect(() => {
     const fetchTokenInfo = async () => {
+      if (!signer) return;
+      
       try {
+        const tokenContract = Token__factory.connect(config.contracts.tokenAddress, signer);
         const symbol = await tokenContract.symbol();
         setTokenSymbol(symbol);
       } catch (error) {
@@ -30,7 +32,7 @@ const DashboardContent = () => {
     };
 
     fetchTokenInfo();
-  }, [tokenContract]);
+  }, [signer]);
 
   const handleSwapComplete = async () => {
     await refreshAllBalances();
@@ -80,7 +82,15 @@ const ContractsSection = ({
   onSwapComplete,
   onLiquidityComplete,
 }: ContractsSectionProps) => {
-  const { ammContract, tokenContract, contractAddresses } = useContracts();
+  const { signer } = useWallet();
+
+  if (!signer) {
+    return <div>Wallet not connected</div>;
+  }
+
+  const tokenContract = Token__factory.connect(config.contracts.tokenAddress, signer);
+  const ammContract = AMMPool__factory.connect(config.contracts.ammPoolAddress, signer);
+  const contractAddresses = config.contracts;
 
   return (
     <>
