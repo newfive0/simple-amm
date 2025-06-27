@@ -8,7 +8,7 @@ const TestComponent = () => {
     ethereumProvider,
     signer,
     account,
-    error,
+    errorMessage,
     connectWallet,
   } = useWallet();
 
@@ -17,7 +17,7 @@ const TestComponent = () => {
       <div data-testid="ethereum-provider">{ethereumProvider ? 'connected' : 'null'}</div>
       <div data-testid="signer">{signer ? 'available' : 'null'}</div>
       <div data-testid="account">{account}</div>
-      <div data-testid="error">{error || 'null'}</div>
+      <div data-testid="errorMessage">{errorMessage || 'null'}</div>
       <button onClick={connectWallet} data-testid="connect-wallet">
         Connect Wallet
       </button>
@@ -91,8 +91,6 @@ describe('WalletContext', () => {
     });
 
     it('should handle missing ethereum provider gracefully', async () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
       Object.defineProperty(window, 'ethereum', {
         value: undefined,
         writable: true,
@@ -104,17 +102,40 @@ describe('WalletContext', () => {
         </WalletProvider>
       );
 
-      // Wait for initial connection check to complete
+      // Wait for initial connection check to complete and show wallet required error
       await waitFor(() => {
         expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
+        expect(screen.getByTestId('errorMessage')).toHaveTextContent('Ethereum wallet required. Please install a Web3 wallet extension.');
       });
 
-      // Should remain disconnected and log error
+      // Should remain disconnected
       expect(screen.getByTestId('signer')).toHaveTextContent('null');
       expect(screen.getByTestId('account')).toHaveTextContent('');
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to set up account change listener:', expect.any(Error));
+    });
 
-      consoleErrorSpy.mockRestore();
+    it('should show wallet required error when trying to connect without MetaMask', async () => {
+      Object.defineProperty(window, 'ethereum', {
+        value: undefined,
+        writable: true,
+      });
+
+      render(
+        <WalletProvider>
+          <TestComponent />
+        </WalletProvider>
+      );
+
+      // Try to connect wallet without MetaMask
+      act(() => {
+        screen.getByTestId('connect-wallet').click();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('errorMessage')).toHaveTextContent('Ethereum wallet required. Please install a Web3 wallet extension.');
+        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
+        expect(screen.getByTestId('signer')).toHaveTextContent('null');
+        expect(screen.getByTestId('account')).toHaveTextContent('');
+      });
     });
   });
 
@@ -161,7 +182,7 @@ describe('WalletContext', () => {
         expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
         expect(screen.getByTestId('signer')).toHaveTextContent('null');
         expect(screen.getByTestId('account')).toHaveTextContent('');
-        expect(screen.getByTestId('error')).toHaveTextContent('User rejected the request');
+        expect(screen.getByTestId('errorMessage')).toHaveTextContent('User rejected the request');
       });
     });
 
@@ -439,7 +460,7 @@ describe('WalletContext', () => {
         expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
         expect(screen.getByTestId('signer')).toHaveTextContent('null');
         expect(screen.getByTestId('account')).toHaveTextContent('');
-        expect(screen.getByTestId('error')).toHaveTextContent('Signer error');
+        expect(screen.getByTestId('errorMessage')).toHaveTextContent('Signer error');
       });
     });
 
@@ -458,7 +479,7 @@ describe('WalletContext', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('error')).toHaveTextContent('User rejected the request');
+        expect(screen.getByTestId('errorMessage')).toHaveTextContent('User rejected the request');
       });
 
       // Set up successful connection for retry
@@ -471,7 +492,7 @@ describe('WalletContext', () => {
 
       await waitFor(() => {
         expect(screen.getByTestId('account')).toHaveTextContent('0x1234567890abcdef1234567890abcdef12345678');
-        expect(screen.getByTestId('error')).toHaveTextContent('null');
+        expect(screen.getByTestId('errorMessage')).toHaveTextContent('null');
       });
     });
 

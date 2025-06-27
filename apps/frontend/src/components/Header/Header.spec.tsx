@@ -21,7 +21,7 @@ describe('Header Component', () => {
       account: '',
       ethereumProvider: null,
       signer: null,
-      error: null,
+      errorMessage: "",
       connectWallet: vi.fn()
     };
     
@@ -38,7 +38,7 @@ describe('Header Component', () => {
       account: '0x123',
       ethereumProvider: null,
       signer: null,
-      error: null,
+      errorMessage: "",
       connectWallet: vi.fn()
     };
     
@@ -55,7 +55,7 @@ describe('Header Component', () => {
       account: '',
       ethereumProvider: null,
       signer: null,
-      error: 'User rejected the request',
+      errorMessage: 'User rejected the request',
       connectWallet: vi.fn()
     };
     
@@ -67,12 +67,12 @@ describe('Header Component', () => {
     expect(screen.getByText('User rejected the request')).toBeInTheDocument();
   });
 
-  it('should not display error section when error is null', () => {
+  it('should not display error section when error is empty', () => {
     const mockWalletContext: WalletContextType = {
       account: '',
       ethereumProvider: null,
       signer: null,
-      error: null,
+      errorMessage: "",
       connectWallet: vi.fn()
     };
     
@@ -82,5 +82,23 @@ describe('Header Component', () => {
     
     expect(screen.getByText('Very Simple AMM')).toBeInTheDocument();
     expect(screen.queryByText('User rejected the request')).not.toBeInTheDocument();
+  });
+
+  it('should not display connect button when there is an error message', () => {
+    const mockWalletContext: WalletContextType = {
+      account: '',
+      ethereumProvider: null,
+      signer: null,
+      errorMessage: 'Ethereum wallet required. Please install a Web3 wallet extension.',
+      connectWallet: vi.fn()
+    };
+    
+    vi.mocked(useWallet).mockReturnValue(mockWalletContext);
+    
+    render(<Header />);
+    
+    expect(screen.getByText('Very Simple AMM')).toBeInTheDocument();
+    expect(screen.getByText('Ethereum wallet required. Please install a Web3 wallet extension.')).toBeInTheDocument();
+    expect(screen.queryByText('Connect Wallet')).not.toBeInTheDocument();
   });
 });

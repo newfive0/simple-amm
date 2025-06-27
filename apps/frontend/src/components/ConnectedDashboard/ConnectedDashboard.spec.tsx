@@ -85,7 +85,7 @@ const mockWalletContext = {
   account: '0x1234567890abcdef1234567890abcdef12345678',
   signer: mockSigner,
   ethereumProvider: mockEthereumProvider,
-  error: null,
+  errorMessage: "",
   connectWallet: vi.fn(),
 };
 

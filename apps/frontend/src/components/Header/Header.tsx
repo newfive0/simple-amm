@@ -3,17 +3,17 @@ import { ConnectWallet } from '../ConnectWallet';
 import styles from './Header.module.scss';
 
 export const Header = () => {
-  const { account, error } = useWallet();
+  const { account, errorMessage } = useWallet();
 
   return (
     <div className={styles.header}>
       <h1 className={styles.title}>Very Simple AMM</h1>
-      {error && (
+      {errorMessage && (
         <div className={styles.error}>
-          {error}
+          {errorMessage}
         </div>
       )}
-      {!account && <ConnectWallet />}
+      {!account && !errorMessage && <ConnectWallet />}
     </div>
   );
 };
