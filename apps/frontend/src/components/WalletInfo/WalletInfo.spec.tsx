@@ -73,4 +73,24 @@ describe('WalletInfo', () => {
       expect(screen.queryByText('Connected Account:')).not.toBeInTheDocument();
     });
   });
+
+  describe('Disconnected State', () => {
+    it('should show "not connected" for both account and balance when account is empty', () => {
+      render(<WalletInfo {...defaultProps} account="" />);
+      
+      // Should show labels
+      expect(screen.getByText('Connected Account:', { exact: false })).toBeInTheDocument();
+      expect(screen.getByText('Balance:', { exact: false })).toBeInTheDocument();
+      
+      // Should show "not connected" for both account and balance
+      expect(screen.getAllByText('not connected')).toHaveLength(2);
+      
+      // Should not show actual account or balance values
+      expect(screen.queryByText(defaultProps.account)).not.toBeInTheDocument();
+      expect(screen.queryByText(/SIMP/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/ETH/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/1000\.9877/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/5\.1235/)).not.toBeInTheDocument();
+    });
+  });
 });
