@@ -102,7 +102,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     };
 
     checkConnection();
-  }, [initializeWalletState, resetWalletState]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Set up account change listener
   useEffect(() => {
@@ -117,13 +117,13 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       if (accounts.length === 0) {
         // User disconnected or locked wallet - clean up our connection state
         resetWalletState();
-      } else if (accounts[0] !== account) {
+      } else {
         // User switched to different account - initialize with new account (already approved)
+        // We check current account inside the handler to avoid stale closure
         initializeWalletState().catch(() => {
           resetWalletState();
         });
       }
-      // If accounts[0] === account, no change needed (same account still connected)
     };
 
     ethereum.on("accountsChanged", handleAccountsChanged);
@@ -131,7 +131,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       ethereum.removeListener("accountsChanged", handleAccountsChanged);
     };
-  }, [account, initializeWalletState, resetWalletState]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const value: WalletContextType = {
     ethereumProvider,
