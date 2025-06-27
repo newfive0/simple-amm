@@ -21,7 +21,6 @@ describe('Header Component', () => {
       account: '',
       ethereumProvider: null,
       signer: null,
-      isCheckingConnection: false,
       error: null,
       connectWallet: vi.fn()
     };
@@ -39,7 +38,6 @@ describe('Header Component', () => {
       account: '0x123',
       ethereumProvider: null,
       signer: null,
-      isCheckingConnection: false,
       error: null,
       connectWallet: vi.fn()
     };
@@ -57,7 +55,6 @@ describe('Header Component', () => {
       account: '',
       ethereumProvider: null,
       signer: null,
-      isCheckingConnection: false,
       error: 'User rejected the request',
       connectWallet: vi.fn()
     };
@@ -75,7 +72,6 @@ describe('Header Component', () => {
       account: '',
       ethereumProvider: null,
       signer: null,
-      isCheckingConnection: false,
       error: null,
       connectWallet: vi.fn()
     };

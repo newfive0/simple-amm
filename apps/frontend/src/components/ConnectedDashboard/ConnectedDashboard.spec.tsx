@@ -16,7 +16,6 @@ interface MockWalletInfoProps {
   ethBalance: number;
   tokenBalance: number;
   tokenSymbol: string;
-  isCheckingConnection: boolean;
 }
 
 interface MockSwapProps {
@@ -40,9 +39,9 @@ interface MockLiquidityProps {
 }
 
 vi.mock('../WalletInfo/WalletInfo', () => ({
-  WalletInfo: ({ account, ethBalance, tokenBalance, tokenSymbol, isCheckingConnection }: MockWalletInfoProps) => (
+  WalletInfo: ({ account, ethBalance, tokenBalance, tokenSymbol }: MockWalletInfoProps) => (
     <div data-testid="wallet-info">
-      {isCheckingConnection ? 'Checking...' : `${account} - ${ethBalance.toFixed(4)} ETH / ${tokenBalance.toFixed(4)} ${tokenSymbol}`}
+      {account ? `${account} - ${ethBalance.toFixed(4)} ETH / ${tokenBalance.toFixed(4)} ${tokenSymbol}` : 'Not connected'}
     </div>
   ),
 }));
@@ -84,9 +83,10 @@ const mockSigner = { getAddress: vi.fn() } as unknown as ethers.JsonRpcSigner;
 
 const mockWalletContext = {
   account: '0x1234567890abcdef1234567890abcdef12345678',
-  isCheckingConnection: false,
   signer: mockSigner,
   ethereumProvider: mockEthereumProvider,
+  error: null,
+  connectWallet: vi.fn(),
 };
 
 vi.mock('../../contexts', () => ({
@@ -103,6 +103,9 @@ const mockGetTokenSymbol = vi.mocked(getTokenSymbol);
 describe('ConnectedDashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    
+    // Reset wallet context to default state
+    mockWalletContext.signer = mockSigner;
     
     // Setup default mock returns
     mockGetWalletBalances.mockResolvedValue({
@@ -122,9 +125,9 @@ describe('ConnectedDashboard', () => {
     it('should render WalletInfo and contract components', async () => {
       render(<ConnectedDashboard />);
 
-      expect(screen.getByTestId('wallet-info')).toBeInTheDocument();
-      
+      // Wait for async useEffect to complete before checking anything
       await waitFor(() => {
+        expect(screen.getByTestId('wallet-info')).toBeInTheDocument();
         expect(screen.getByTestId('swap')).toBeInTheDocument();
         expect(screen.getByTestId('liquidity')).toBeInTheDocument();
       });
@@ -133,6 +136,7 @@ describe('ConnectedDashboard', () => {
     it('should pass correct props to WalletInfo component', async () => {
       render(<ConnectedDashboard />);
 
+      // Wait for async balance fetching to complete
       await waitFor(() => {
         expect(screen.getByText(/0x1234567890abcdef1234567890abcdef12345678 - 5\.0000 ETH \/ 1000\.0000 SIMP/)).toBeInTheDocument();
       });
@@ -141,6 +145,7 @@ describe('ConnectedDashboard', () => {
     it('should pass correct props to Swap and Liquidity components', async () => {
       render(<ConnectedDashboard />);
 
+      // Wait for async balance fetching to complete
       await waitFor(() => {
         const swapElements = screen.getAllByText('Pool: 10.0000 ETH / 20.0000 SIMP');
         expect(swapElements).toHaveLength(2); // One for Swap, one for Liquidity
@@ -170,9 +175,12 @@ describe('ConnectedDashboard', () => {
 
       render(<ConnectedDashboard />);
 
-      // Should show zero balances in WalletInfo and "Wallet not connected" for contracts
-      expect(screen.getByText(/0x1234567890abcdef1234567890abcdef12345678 - 0\.0000 ETH \/ 0\.0000 /)).toBeInTheDocument();
-      expect(screen.getByText('Wallet not connected')).toBeInTheDocument();
+      // Wait for async useEffect to complete (even though it does nothing with null signer)
+      await waitFor(() => {
+        // Should show zero balances in WalletInfo and "Wallet not connected" for contracts
+        expect(screen.getByText('0x1234567890abcdef1234567890abcdef12345678 - 0.0000 ETH / 0.0000')).toBeInTheDocument();
+        expect(screen.getByText('Wallet not connected')).toBeInTheDocument();
+      });
 
       // Should not call balance utilities when signer is missing
       expect(mockGetWalletBalances).not.toHaveBeenCalled();
@@ -183,7 +191,13 @@ describe('ConnectedDashboard', () => {
     });
 
     it('should update components when token symbol is fetched', async () => {
+      // Ensure signer is available
+      mockWalletContext.signer = mockSigner;
       mockGetTokenSymbol.mockResolvedValue('CUSTOM');
+      mockGetWalletBalances.mockResolvedValue({
+        ethBalance: 5.0,
+        tokenBalance: 1000.0,
+      });
 
       render(<ConnectedDashboard />);
 
@@ -194,6 +208,11 @@ describe('ConnectedDashboard', () => {
   });
 
   describe('Callback Handling', () => {
+    beforeEach(() => {
+      // Ensure signer is available for these tests
+      mockWalletContext.signer = mockSigner;
+    });
+
     it('should refresh balances when swap completes', async () => {
       render(<ConnectedDashboard />);
 
@@ -245,19 +264,13 @@ describe('ConnectedDashboard', () => {
     });
   });
 
-  describe('Loading States', () => {
-    it('should show checking connection state in WalletInfo', () => {
-      mockWalletContext.isCheckingConnection = true;
-
-      render(<ConnectedDashboard />);
-
-      expect(screen.getByText('Checking...')).toBeInTheDocument();
-    });
-  });
 
   describe('Error Handling', () => {
     it('should handle balance fetching errors gracefully', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      
+      // Ensure signer is available for this test
+      mockWalletContext.signer = mockSigner;
       
       mockGetWalletBalances.mockRejectedValue(new Error('Network error'));
       mockGetPoolBalances.mockResolvedValue({ ethReserve: 10.0, tokenReserve: 20.0 });

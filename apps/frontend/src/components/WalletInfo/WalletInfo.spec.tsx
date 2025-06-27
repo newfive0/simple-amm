@@ -7,7 +7,6 @@ const defaultProps = {
   ethBalance: 5.123456789,
   tokenBalance: 1000.987654321,
   tokenSymbol: 'SIMP',
-  isCheckingConnection: false,
 };
 
 describe('WalletInfo', () => {
@@ -28,13 +27,6 @@ describe('WalletInfo', () => {
       expect(screen.getByText(/5\.1235 ETH/)).toBeInTheDocument();
     });
 
-    it('should show checking connection message when isCheckingConnection is true', () => {
-      render(<WalletInfo {...defaultProps} isCheckingConnection={true} />);
-      
-      expect(screen.getByText('Checking wallet connection...')).toBeInTheDocument();
-      expect(screen.queryByText('Account:')).not.toBeInTheDocument();
-      expect(screen.queryByText('Balance:')).not.toBeInTheDocument();
-    });
   });
 
   describe('Account Display', () => {
@@ -55,24 +47,6 @@ describe('WalletInfo', () => {
     });
   });
 
-  describe('Loading State', () => {
-    it('should not show account info when checking connection', () => {
-      render(<WalletInfo {...defaultProps} isCheckingConnection={true} />);
-      
-      expect(screen.queryByText(defaultProps.account)).not.toBeInTheDocument();
-      expect(screen.queryByText(/Balance:/)).not.toBeInTheDocument();
-    });
-
-    it('should only show loading message when checking connection', () => {
-      render(<WalletInfo {...defaultProps} isCheckingConnection={true} />);
-      
-      const loadingMessage = screen.getByText('Checking wallet connection...');
-      expect(loadingMessage).toBeInTheDocument();
-      
-      // Should not show any other content
-      expect(screen.queryByText('Account:')).not.toBeInTheDocument();
-    });
-  });
 
   describe('Disconnected State', () => {
     it('should show "not connected" for both account and balance when account is empty', () => {

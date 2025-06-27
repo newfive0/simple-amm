@@ -8,7 +8,6 @@ const TestComponent = () => {
     ethereumProvider,
     signer,
     account,
-    isCheckingConnection,
     error,
     connectWallet,
   } = useWallet();
@@ -18,7 +17,6 @@ const TestComponent = () => {
       <div data-testid="ethereum-provider">{ethereumProvider ? 'connected' : 'null'}</div>
       <div data-testid="signer">{signer ? 'available' : 'null'}</div>
       <div data-testid="account">{account}</div>
-      <div data-testid="is-checking">{isCheckingConnection.toString()}</div>
       <div data-testid="error">{error || 'null'}</div>
       <button onClick={connectWallet} data-testid="connect-wallet">
         Connect Wallet
@@ -108,11 +106,10 @@ describe('WalletContext', () => {
 
       // Wait for initial connection check to complete
       await waitFor(() => {
-        expect(screen.getByTestId('is-checking')).toHaveTextContent('false');
+        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
       });
 
       // Should remain disconnected and log error
-      expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
       expect(screen.getByTestId('signer')).toHaveTextContent('null');
       expect(screen.getByTestId('account')).toHaveTextContent('');
       expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to set up account change listener:', expect.any(Error));
@@ -251,7 +248,6 @@ describe('WalletContext', () => {
         expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('connected');
         expect(screen.getByTestId('signer')).toHaveTextContent('available');
         expect(screen.getByTestId('account')).toHaveTextContent('0x1234567890abcdef1234567890abcdef12345678');
-        expect(screen.getByTestId('is-checking')).toHaveTextContent('false');
       });
 
       // Should not request accounts, just initialize state
@@ -271,12 +267,10 @@ describe('WalletContext', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId('is-checking')).toHaveTextContent('false');
+        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
+        expect(screen.getByTestId('signer')).toHaveTextContent('null');
+        expect(screen.getByTestId('account')).toHaveTextContent('');
       });
-
-      expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
-      expect(screen.getByTestId('signer')).toHaveTextContent('null');
-      expect(screen.getByTestId('account')).toHaveTextContent('');
     });
 
     it('should handle auto-connection failure gracefully', async () => {
@@ -288,16 +282,12 @@ describe('WalletContext', () => {
         </WalletProvider>
       );
 
-      // The useEffect will complete and set isCheckingConnection to false
-      // after handling the error properly
+      // The useEffect will complete after handling the error properly
       await waitFor(() => {
-        expect(screen.getByTestId('is-checking')).toHaveTextContent('false');
+        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
+        expect(screen.getByTestId('signer')).toHaveTextContent('null');
+        expect(screen.getByTestId('account')).toHaveTextContent('');
       });
-
-      // State should remain disconnected after failed initialization
-      expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
-      expect(screen.getByTestId('signer')).toHaveTextContent('null');
-      expect(screen.getByTestId('account')).toHaveTextContent('');
     });
   });
 
@@ -311,13 +301,11 @@ describe('WalletContext', () => {
 
       // Wait for initial state updates to complete
       await waitFor(() => {
-        expect(screen.getByTestId('is-checking')).toHaveTextContent('false');
+        expect(mockEthereum.on).toHaveBeenCalledWith(
+          'accountsChanged',
+          expect.any(Function)
+        );
       });
-
-      expect(mockEthereum.on).toHaveBeenCalledWith(
-        'accountsChanged',
-        expect.any(Function)
-      );
     });
 
     it('should disconnect when accounts array is empty', async () => {

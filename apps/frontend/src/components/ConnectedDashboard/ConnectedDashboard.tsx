@@ -10,7 +10,7 @@ export const ConnectedDashboard = () => {
 };
 
 const DashboardContent = () => {
-  const { account, isCheckingConnection, signer, ethereumProvider } = useWallet();
+  const { account, signer, ethereumProvider } = useWallet();
   const [walletBalances, setWalletBalances] = useState<WalletBalances>({ ethBalance: 0, tokenBalance: 0 });
   const [poolBalances, setPoolBalances] = useState<PoolBalances>({ ethReserve: 0, tokenReserve: 0 });
   const [tokenSymbol, setTokenSymbol] = useState<string>('');
@@ -63,7 +63,6 @@ const DashboardContent = () => {
         ethBalance={walletBalances.ethBalance}
         tokenBalance={walletBalances.tokenBalance}
         tokenSymbol={tokenSymbol}
-        isCheckingConnection={isCheckingConnection}
       />
 
       <ContractsSection 

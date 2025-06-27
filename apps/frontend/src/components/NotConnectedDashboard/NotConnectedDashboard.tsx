@@ -2,7 +2,7 @@ import { useWallet } from '../../contexts';
 import { WalletInfo, DisabledSwap } from '../';
 
 export const NotConnectedDashboard = () => {
-  const { account, isCheckingConnection } = useWallet();
+  const { account } = useWallet();
 
   return (
     <div style={{
@@ -15,7 +15,6 @@ export const NotConnectedDashboard = () => {
         ethBalance={0}
         tokenBalance={0}
         tokenSymbol=""
-        isCheckingConnection={isCheckingConnection}
       />
       <DisabledSwap />
     </div>

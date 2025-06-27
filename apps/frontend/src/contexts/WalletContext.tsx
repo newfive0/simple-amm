@@ -12,7 +12,6 @@ export interface WalletContextType {
   ethereumProvider: ethers.BrowserProvider | null;
   signer: ethers.JsonRpcSigner | null;
   account: string;
-  isCheckingConnection: boolean;
   error: string | null;
   connectWallet: () => Promise<void>;
 }
@@ -37,7 +36,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     ethereumProvider: null as ethers.BrowserProvider | null,
     signer: null as ethers.JsonRpcSigner | null,
     account: "",
-    isCheckingConnection: true,
     error: null as string | null,
   });
 
@@ -75,13 +73,12 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
 
   // Reset wallet state to disconnected
   const resetWalletState = useCallback(() => {
-    setWalletState(prev => ({
-      ...prev,
+    setWalletState({
       ethereumProvider: null,
       signer: null,
       account: "",
       error: null,
-    }));
+    });
   }, []);
 
 
@@ -111,8 +108,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       } catch {
         // Reset state on failure (wallet not connected or permission revoked)
         resetWalletState();
-      } finally {
-        setWalletState(prev => ({ ...prev, isCheckingConnection: false }));
       }
     };
 
@@ -157,7 +152,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     ethereumProvider: walletState.ethereumProvider,
     signer: walletState.signer,
     account: walletState.account,
-    isCheckingConnection: walletState.isCheckingConnection,
     error: walletState.error,
     connectWallet,
   };
