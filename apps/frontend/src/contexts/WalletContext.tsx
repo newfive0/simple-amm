@@ -98,7 +98,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       const errorMessage = error instanceof Error ? error.message : 'Connection failed';
       setWalletState(prev => ({ ...prev, error: errorMessage }));
       // Don't re-throw - handle error silently to prevent unhandled rejections in tests
-      console.error('Wallet connection failed:', error);
     }
   }, [requestWalletConnection, initializeWalletState, resetWalletState]);
 
