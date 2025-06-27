@@ -14,7 +14,6 @@ interface WalletContextType {
   account: string;
   isCheckingConnection: boolean;
   connectWallet: () => Promise<void>;
-  disconnectWallet: () => void;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -22,7 +21,9 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined);
 // Type guard to ensure window.ethereum exists
 const ensureEthereumWallet = (): EIP1193Provider => {
   if (!window.ethereum) {
-    throw new Error('Ethereum wallet required. Please install a Web3 wallet extension.');
+    throw new Error(
+      "Ethereum wallet required. Please install a Web3 wallet extension."
+    );
   }
   return window.ethereum;
 };
@@ -30,22 +31,24 @@ const ensureEthereumWallet = (): EIP1193Provider => {
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
   // Check if wallet is available immediately when component initializes
   ensureEthereumWallet();
-  
-  const [ethereumProvider, setEthereumProvider] = useState<ethers.BrowserProvider | null>(null);
+
+  const [ethereumProvider, setEthereumProvider] =
+    useState<ethers.BrowserProvider | null>(null);
   const [signer, setSigner] = useState<ethers.JsonRpcSigner | null>(null);
-  const [account, setAccount] = useState<string>('');
-  const [isCheckingConnection, setIsCheckingConnection] = useState<boolean>(true);
+  const [account, setAccount] = useState<string>("");
+  const [isCheckingConnection, setIsCheckingConnection] =
+    useState<boolean>(true);
 
   // Request wallet connection (permission)
   const requestWalletConnection = useCallback(async () => {
     const ethereum = ensureEthereumWallet();
 
     const accounts = await ethereum.request({
-      method: 'eth_requestAccounts',
+      method: "eth_requestAccounts",
     });
 
     if (!Array.isArray(accounts) || accounts.length === 0) {
-      throw new Error('No accounts returned');
+      throw new Error("No accounts returned");
     }
 
     return accounts;
@@ -56,7 +59,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     const ethereum = ensureEthereumWallet();
 
     const ethProvider = new ethers.BrowserProvider(ethereum);
-    const ethSigner = await ethProvider.getSigner();
+    const ethSigner = await ethProvider.getSigner(); // Gets signer for accounts[0] (primary account)
     const userAddress = await ethSigner.getAddress();
 
     setEthereumProvider(ethProvider);
@@ -64,52 +67,71 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     setAccount(userAddress);
   }, []);
 
-  // Connect wallet function (combines both actions)
-  const connectWallet = useCallback(async () => {
-    await requestWalletConnection();
-    await initializeWalletState();
-    window.localStorage.setItem('walletConnected', 'true');
-  }, [requestWalletConnection, initializeWalletState]);
-
-  // Disconnect wallet function
-  const disconnectWallet = useCallback(() => {
+  // Reset wallet state to disconnected
+  const resetWalletState = useCallback(() => {
     setEthereumProvider(null);
     setSigner(null);
-    setAccount('');
-    window.localStorage.removeItem('walletConnected');
+    setAccount("");
   }, []);
+
+  // Connect wallet function (combines both actions)
+  const connectWallet = useCallback(async () => {
+    try {
+      await requestWalletConnection();
+      await initializeWalletState();
+    } catch (error) {
+      // Reset state on connection failure
+      resetWalletState();
+      throw error; // Re-throw to allow error handling in UI
+    }
+  }, [requestWalletConnection, initializeWalletState, resetWalletState]);
 
   // Check for existing wallet connection on page load
   useEffect(() => {
-    const checkWalletConnection = async () => {
-      if (window.localStorage.getItem('walletConnected') === 'true') {
-        // Only initialize state, don't request permission again
+    const checkConnection = async () => {
+      try {
+        // Try to initialize wallet state - if wallet was previously connected,
+        // this will succeed silently. If not connected, it will fail and reset state.
         await initializeWalletState();
+      } catch {
+        // Reset state on failure (wallet not connected or permission revoked)
+        resetWalletState();
+      } finally {
+        setIsCheckingConnection(false);
       }
-      setIsCheckingConnection(false);
     };
 
-    checkWalletConnection();
-  }, [initializeWalletState]);
+    checkConnection();
+  }, [initializeWalletState, resetWalletState]);
 
   // Set up account change listener
   useEffect(() => {
     const ethereum = ensureEthereumWallet();
-    
+
     const handleAccountsChanged = (accounts: string[]) => {
+      // Standard EIP-1193 accountsChanged event provides array of connected account addresses:
+      // - Empty array []: User disconnected wallet or locked their wallet
+      // - One or more addresses: Currently connected accounts (we use accounts[0])
+      // - Multiple accounts: User has multiple accounts connected (rare, most dapps use first)
+
       if (accounts.length === 0) {
-        disconnectWallet();
+        // User disconnected or locked wallet - clean up our connection state
+        resetWalletState();
       } else if (accounts[0] !== account) {
-        connectWallet();
+        // User switched to different account - initialize with new account (already approved)
+        initializeWalletState().catch(() => {
+          resetWalletState();
+        });
       }
+      // If accounts[0] === account, no change needed (same account still connected)
     };
 
-    ethereum.on('accountsChanged', handleAccountsChanged);
+    ethereum.on("accountsChanged", handleAccountsChanged);
 
     return () => {
-      ethereum.removeListener('accountsChanged', handleAccountsChanged);
+      ethereum.removeListener("accountsChanged", handleAccountsChanged);
     };
-  }, [account, connectWallet, disconnectWallet]);
+  }, [account, initializeWalletState, resetWalletState]);
 
   const value: WalletContextType = {
     ethereumProvider,
@@ -117,11 +139,12 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     account,
     isCheckingConnection,
     connectWallet,
-    disconnectWallet,
   };
 
-  return <WalletContext.Provider value={value}>{children}</WalletContext.Provider>;
-}
+  return (
+    <WalletContext.Provider value={value}>{children}</WalletContext.Provider>
+  );
+};
 
 export const useWallet = () => {
   const context = useContext(WalletContext);
