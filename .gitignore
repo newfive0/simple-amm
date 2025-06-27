@@ -67,7 +67,10 @@ frontend.log
 libs/contracts/hardhat.log
 apps/e2e/hardhat.log
 
-# TypeChain generated types (build artifacts)
+# Build artifacts and auto-generated files
+apps/frontend/artifacts/
+
+# Legacy TypeChain locations (cleanup)
 typechain-types/
 **/typechain-types/
 

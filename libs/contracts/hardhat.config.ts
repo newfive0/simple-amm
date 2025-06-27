@@ -10,7 +10,7 @@ const config: HardhatUserConfig = {
     tests: './test',
   },
   typechain: {
-    outDir: '../../apps/frontend/src/typechain-types',
+    outDir: '../../apps/frontend/artifacts/typechain-types',
     target: 'ethers-v6',
   },
 };

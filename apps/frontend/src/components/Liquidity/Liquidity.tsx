@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ethers } from 'ethers';
-import { Token, AMMPool } from '../../typechain-types';
+import { Token, AMMPool } from '@typechain-types';
 import styles from './Liquidity.module.scss';
 
 interface InputFieldProps {

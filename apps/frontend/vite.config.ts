@@ -1,10 +1,12 @@
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/frontend',
+  envDir: './artifacts', // Load environment files from artifacts directory
   server: {
     port: 4200,
     host: 'localhost',
@@ -14,6 +16,11 @@ export default defineConfig(() => ({
     host: 'localhost',
   },
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@typechain-types': path.resolve(__dirname, './artifacts/typechain-types'),
+    },
+  },
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
@@ -36,6 +43,11 @@ export default defineConfig(() => ({
     coverage: {
       reportsDirectory: './test-output/vitest/coverage',
       provider: 'v8' as const,
+    },
+    env: {
+      VITE_TOKEN_ADDRESS: '0x123',
+      VITE_AMM_POOL_ADDRESS: '0x456',
+      VITE_NETWORK_CHAIN_ID: '31337',
     },
   },
 }));

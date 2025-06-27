@@ -2,7 +2,7 @@
  * Common mock utilities and test helpers for testing
  */
 import { vi } from 'vitest';
-import { Token, AMMPool } from './typechain-types';
+import { Token, AMMPool } from '@typechain-types';
 
 /**
  * Creates a deferred promise that can be resolved externally

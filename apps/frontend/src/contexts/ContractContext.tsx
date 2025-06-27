@@ -1,6 +1,6 @@
 import { createContext, useContext, ReactNode } from 'react';
 import { useWallet } from './WalletContext';
-import { Token__factory, AMMPool__factory, Token, AMMPool } from '../typechain-types';
+import { Token__factory, AMMPool__factory, Token, AMMPool } from '@typechain-types';
 
 interface ContractAddresses {
   tokenAddress: string;
@@ -15,21 +15,21 @@ interface ContractContextType {
 
 const ContractContext = createContext<ContractContextType | undefined>(undefined);
 
-// Function to read contract addresses from deployment artifacts synchronously
-const getContractAddresses = (): ContractAddresses => {
-  // This will be available since the artifacts are copied to public during build
-  const request = new XMLHttpRequest();
-  request.open('GET', '/deployed_addresses.json', false); // synchronous
-  request.send();
-  
-  if (request.status !== 200) {
-    throw new Error('Failed to load contract addresses. Ensure contracts are deployed.');
+// Function to read contract addresses from environment variables
+export const getContractAddresses = (): ContractAddresses => {
+  const tokenAddress = import.meta.env.VITE_TOKEN_ADDRESS;
+  const ammPoolAddress = import.meta.env.VITE_AMM_POOL_ADDRESS;
+
+  if (!tokenAddress || !ammPoolAddress) {
+    throw new Error(
+      'Contract addresses not found. Ensure contracts are deployed and environment variables are set. ' +
+      'Run: nx copy-artifacts contracts'
+    );
   }
-  
-  const data = JSON.parse(request.responseText);
+
   return {
-    tokenAddress: data['TokenModule#SimplestToken'],
-    ammPoolAddress: data['AMMPoolModule#AMMPool'],
+    tokenAddress,
+    ammPoolAddress,
   };
 };
 

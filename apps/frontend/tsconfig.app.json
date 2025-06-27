@@ -11,7 +11,11 @@
       "@nx/react/typings/image.d.ts",
       "vite/client"
     ],
-    "rootDir": "src"
+    "resolveJsonModule": true,
+    "paths": {
+      "@typechain-types": ["./artifacts/typechain-types"],
+      "@typechain-types/*": ["./artifacts/typechain-types/*"]
+    }
   },
   "exclude": [
     "out-tsc",
@@ -32,5 +36,5 @@
     "eslint.config.cjs",
     "eslint.config.mjs"
   ],
-  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx"]
+  "include": ["src/**/*.js", "src/**/*.jsx", "src/**/*.ts", "src/**/*.tsx", "src/**/*.json", "artifacts/**/*.ts"]
 }
