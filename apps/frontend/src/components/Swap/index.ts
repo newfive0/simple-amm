@@ -1,2 +1,2 @@
-export { Swap } from './Swap';
+export { Swap, DisabledSwap } from './Swap';
 export { default } from './Swap';

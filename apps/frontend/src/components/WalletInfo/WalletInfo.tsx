@@ -26,10 +26,10 @@ export const WalletInfo = ({
   return (
     <div className={styles.walletInfo}>
       <p>
-        <strong>Connected Account:</strong> {account || 'not connected'}
+        <strong>Your Account:</strong> {account || 'Not connected'}
       </p>
       <p>
-        <strong>Balance:</strong> {account ? `${tokenBalance.toFixed(4)} ${tokenSymbol} / ${ethBalance.toFixed(4)} ETH` : 'not connected'}
+        <strong>Balance:</strong> {account ? `${tokenBalance.toFixed(4)} ${tokenSymbol} / ${ethBalance.toFixed(4)} ETH` : 'N/A'}
       </p>
     </div>
   );

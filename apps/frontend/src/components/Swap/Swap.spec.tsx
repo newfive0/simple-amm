@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ethers } from 'ethers';
-import { Swap } from './Swap';
+import { Swap, DisabledSwap } from './Swap';
 import { 
   createDeferredTransactionPromise, 
   createMockContracts, 
@@ -396,5 +396,28 @@ describe('Swap Component', () => {
       fireEvent.change(tokenInput, { target: { value: '1' } });
       expect(screen.getByText(/≈ 0\.476190 ETH/)).toBeInTheDocument();
     });
+  });
+});
+
+describe('DisabledSwap Component', () => {
+  it('should render disabled swap component with all elements disabled', () => {
+    render(<DisabledSwap />);
+    
+    // Check rendering
+    expect(screen.getByText('Swap Tokens')).toBeInTheDocument();
+    expect(screen.getByText('Swap Direction')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('ETH → SIMP')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Enter ETH amount')).toBeInTheDocument();
+    expect(screen.getByText('Please connect wallet')).toBeInTheDocument();
+    expect(screen.getByText('≈ 0 SIMP')).toBeInTheDocument();
+    
+    // Check disabled state
+    const select = screen.getByDisplayValue('ETH → SIMP');
+    const input = screen.getByPlaceholderText('Enter ETH amount');
+    const button = screen.getByText('Please connect wallet');
+    
+    expect(select).toBeDisabled();
+    expect(input).toBeDisabled();
+    expect(button).toBeDisabled();
   });
 });

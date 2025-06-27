@@ -15,7 +15,7 @@ describe('WalletInfo', () => {
     it('should render wallet info when connected', () => {
       render(<WalletInfo {...defaultProps} />);
       
-      expect(screen.getByText('Connected Account:', { exact: false })).toBeInTheDocument();
+      expect(screen.getByText('Account:', { exact: false })).toBeInTheDocument();
       expect(screen.getByText(defaultProps.account)).toBeInTheDocument();
       expect(screen.getByText('Balance:', { exact: false })).toBeInTheDocument();
     });
@@ -32,7 +32,7 @@ describe('WalletInfo', () => {
       render(<WalletInfo {...defaultProps} isCheckingConnection={true} />);
       
       expect(screen.getByText('Checking wallet connection...')).toBeInTheDocument();
-      expect(screen.queryByText('Connected Account:')).not.toBeInTheDocument();
+      expect(screen.queryByText('Account:')).not.toBeInTheDocument();
       expect(screen.queryByText('Balance:')).not.toBeInTheDocument();
     });
   });
@@ -70,7 +70,7 @@ describe('WalletInfo', () => {
       expect(loadingMessage).toBeInTheDocument();
       
       // Should not show any other content
-      expect(screen.queryByText('Connected Account:')).not.toBeInTheDocument();
+      expect(screen.queryByText('Account:')).not.toBeInTheDocument();
     });
   });
 
@@ -79,11 +79,12 @@ describe('WalletInfo', () => {
       render(<WalletInfo {...defaultProps} account="" />);
       
       // Should show labels
-      expect(screen.getByText('Connected Account:', { exact: false })).toBeInTheDocument();
+      expect(screen.getByText('Account:', { exact: false })).toBeInTheDocument();
       expect(screen.getByText('Balance:', { exact: false })).toBeInTheDocument();
       
-      // Should show "not connected" for both account and balance
-      expect(screen.getAllByText('not connected')).toHaveLength(2);
+      // Should show "Not connected" and "N/A" for account and balance respectively
+      expect(screen.getByText('Not connected')).toBeInTheDocument();
+      expect(screen.getByText('N/A')).toBeInTheDocument();
       
       // Should not show actual account or balance values
       expect(screen.queryByText(defaultProps.account)).not.toBeInTheDocument();

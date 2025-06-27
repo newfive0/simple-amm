@@ -22,9 +22,9 @@ describe('ConnectWallet', () => {
     expect(baseElement).toBeTruthy();
   });
 
-  it('should display the correct message', () => {
+  it('should display the connect button text', () => {
     const { getByText } = render(<ConnectWallet />);
-    expect(getByText('Connect your wallet to start trading')).toBeTruthy();
+    expect(getByText('Connect Wallet')).toBeTruthy();
   });
 
   it('should display the connect button', () => {

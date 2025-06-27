@@ -8,7 +8,7 @@ declare global {
   }
 }
 
-interface WalletContextType {
+export interface WalletContextType {
   ethereumProvider: ethers.BrowserProvider | null;
   signer: ethers.JsonRpcSigner | null;
   account: string;

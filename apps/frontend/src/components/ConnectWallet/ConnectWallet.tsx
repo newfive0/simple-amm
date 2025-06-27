@@ -26,16 +26,13 @@ export const ConnectWallet = () => {
   };
 
   return (
-    <div className={styles.container}>
-      <p className={styles.message}>Connect your wallet to start trading</p>
-      <button 
-        className={styles.connectButton}
-        onClick={handleConnectWallet}
-        disabled={isLoading}
-      >
-        {isLoading ? 'Connecting...' : 'Connect Wallet'}
-      </button>
-    </div>
+    <button 
+      className={styles.connectButton}
+      onClick={handleConnectWallet}
+      disabled={isLoading}
+    >
+      {isLoading ? 'Connecting...' : 'Connect Wallet'}
+    </button>
   );
 };
 

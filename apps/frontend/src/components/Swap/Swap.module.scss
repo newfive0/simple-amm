@@ -85,25 +85,10 @@
   color: white;
   border: none;
   cursor: pointer;
+  background-color: #28a745;
 
   &:disabled {
     background-color: #6c757d;
     cursor: not-allowed;
-  }
-
-  &.ethToToken {
-    background-color: #28a745;
-
-    &:disabled {
-      background-color: #6c757d;
-    }
-  }
-
-  &.tokenToEth {
-    background-color: #28a745;
-
-    &:disabled {
-      background-color: #6c757d;
-    }
   }
 }

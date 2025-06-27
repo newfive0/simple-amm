@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { ChangeEvent } from 'react';
 import { ethers } from 'ethers';
 import { Token, AMMPool } from '@typechain-types';
 import styles from './Swap.module.scss';
@@ -10,10 +11,10 @@ interface SwapInputProps {
   placeholder: string;
   onClick: () => void;
   buttonText: string;
-  buttonClass: string;
   isLoading: boolean;
   expectedOutput?: string;
   outputLabel?: string;
+  disabled?: boolean;
 }
 
 const SwapInput = ({ 
@@ -22,11 +23,11 @@ const SwapInput = ({
   onChange, 
   placeholder, 
   onClick, 
-  buttonText, 
-  buttonClass,
+  buttonText,
   isLoading,
   expectedOutput,
-  outputLabel
+  outputLabel,
+  disabled = false
 }: SwapInputProps) => (
   <div className={styles.swapInput}>
     <div className={styles.inputField}>
@@ -36,10 +37,11 @@ const SwapInput = ({
           type="number"
           step="0.01"
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => !disabled && onChange(e.target.value)}
           placeholder={placeholder}
           autoFocus={false}
           className={styles.inputLeft}
+          disabled={disabled}
         />
         <div className={styles.expectedOutput}>
           {expectedOutput && outputLabel ? `≈ ${expectedOutput} ${outputLabel}` : `≈ 0 ${outputLabel || 'SIMP'}`}
@@ -48,11 +50,38 @@ const SwapInput = ({
     </div>
     <button
       onClick={onClick}
-      disabled={isLoading || !value}
-      className={`${styles.swapButton} ${buttonClass}`}
+      disabled={disabled || isLoading || !value}
+      className={styles.swapButton}
     >
       {isLoading ? 'Waiting...' : buttonText}
     </button>
+  </div>
+);
+
+// Shared SwapDirectionSelector component
+interface SwapDirectionSelectorProps {
+  value: 'eth-to-token' | 'token-to-eth';
+  onChange: (e: ChangeEvent<HTMLSelectElement>) => void;
+  tokenSymbol: string;
+  disabled?: boolean;
+}
+
+const SwapDirectionSelectorComponent = ({
+  value,
+  onChange,
+  tokenSymbol,
+  disabled = false
+}: SwapDirectionSelectorProps) => (
+  <div className={styles.swapDirection}>
+    <label>Swap Direction</label>
+    <select
+      value={value}
+      onChange={disabled ? undefined : onChange}
+      disabled={disabled}
+    >
+      <option value="eth-to-token">ETH → {tokenSymbol}</option>
+      <option value="token-to-eth">{tokenSymbol} → ETH</option>
+    </select>
   </div>
 );
 
@@ -166,16 +195,12 @@ export const Swap = ({
   };
 
   const SwapDirectionSelector = () => (
-    <div className={styles.swapDirection}>
-      <label>Swap Direction</label>
-      <select
-        value={swapDirection}
-        onChange={(e) => setSwapDirection(e.target.value as 'eth-to-token' | 'token-to-eth')}
-      >
-        <option value="eth-to-token">ETH → SIMP</option>
-        <option value="token-to-eth">SIMP → ETH</option>
-      </select>
-    </div>
+    <SwapDirectionSelectorComponent
+      value={swapDirection}
+      onChange={(e) => setSwapDirection(e.target.value as 'eth-to-token' | 'token-to-eth')}
+      tokenSymbol={tokenSymbol}
+      disabled={false}
+    />
   );
 
 
@@ -192,7 +217,6 @@ export const Swap = ({
           placeholder="Enter ETH amount"
           onClick={swapETHForTokens}
           buttonText="Swap ETH for SIMP"
-          buttonClass={styles.ethToToken}
           isLoading={isLoading}
           expectedOutput={calculateSwapOutput(ethAmount, true)}
           outputLabel={tokenSymbol}
@@ -206,12 +230,38 @@ export const Swap = ({
           placeholder="Enter SIMP amount"
           onClick={swapTokensForETH}
           buttonText="Swap SIMP for ETH"
-          buttonClass={styles.tokenToEth}
           isLoading={isLoading}
           expectedOutput={calculateSwapOutput(tokenAmount, false)}
           outputLabel="ETH"
         />
       )}
+    </div>
+  );
+};
+
+// DisabledSwap component for when wallet is not connected
+export const DisabledSwap = () => {
+  return (
+    <div className={styles.swap}>
+      <h2>Swap Tokens</h2>
+      <SwapDirectionSelectorComponent
+        value="eth-to-token"
+        onChange={() => {}}
+        tokenSymbol="SIMP"
+        disabled={true}
+      />
+      <SwapInput
+        label="ETH Amount"
+        value=""
+        onChange={() => {}}
+        placeholder="Enter ETH amount"
+        onClick={() => {}}
+        buttonText="Please connect wallet"
+        isLoading={false}
+        expectedOutput=""
+        outputLabel="SIMP"
+        disabled={true}
+      />
     </div>
   );
 };

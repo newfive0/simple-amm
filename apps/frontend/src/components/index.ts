@@ -1,6 +1,8 @@
 export { WalletInfo } from './WalletInfo';
-export { Swap } from './Swap';
+export { Swap, DisabledSwap } from './Swap';
 export { Liquidity } from './Liquidity';
 export { ConnectWallet } from './ConnectWallet';
 export { ErrorBoundary } from './ErrorBoundary';
 export { ConnectedDashboard } from './ConnectedDashboard';
+export { NotConnectedDashboard } from './NotConnectedDashboard';
+export { Header } from './Header';
