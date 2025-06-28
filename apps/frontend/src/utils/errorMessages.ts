@@ -4,16 +4,6 @@
 export const WALLET_REQUIRED_ERROR =
   'Ethereum wallet required. Please install a Web3 wallet extension.';
 
-// Known wallet error codes
-const WALLET_ERROR_CODES = {
-  RESOURCE_UNAVAILABLE: -32002, // Resource unavailable (e.g., request already pending)
-  USER_REJECTED: 4001, // User rejected the request
-  UNAUTHORIZED: 4100, // The requested account is not exposed
-  UNSUPPORTED_METHOD: 4200, // The requested method is not supported
-  DISCONNECTED: 4900, // The provider is disconnected from all chains
-  CHAIN_DISCONNECTED: 4901, // The provider is disconnected from the specified chain
-} as const;
-
 /**
  * Formats wallet error messages with user-friendly text and refresh instruction
  * @param error - The error object or message
@@ -21,12 +11,14 @@ const WALLET_ERROR_CODES = {
  */
 export const getFriendlyMessage = (error: unknown): string => {
   const baseMessage = extractErrorMessage(error);
-  const errorCode = extractErrorCode(error);
 
-  // Handle specific error cases
+  // Handle specific error cases for pending requests
+  // Check for "already pending" messages (can come as Error objects or RPC errors)
+  const lowerMessage = baseMessage.toLowerCase();
   if (
-    errorCode === WALLET_ERROR_CODES.RESOURCE_UNAVAILABLE &&
-    baseMessage.includes('already pending')
+    lowerMessage.includes('already pending') ||
+    lowerMessage.includes('request already pending') ||
+    lowerMessage.includes('permissions request already pending')
   ) {
     return 'Please check your wallet and approve the pending request.';
   }
@@ -57,17 +49,4 @@ const extractErrorMessage = (error: unknown): string => {
 
   // Fallback
   return 'Unknown error.';
-};
-
-/**
- * Extracts error code from error object
- */
-const extractErrorCode = (error: unknown): number | null => {
-  // Handle objects with code property
-  if (error && typeof error === 'object' && 'code' in error) {
-    const code = (error as { code: unknown }).code;
-    return typeof code === 'number' ? code : null;
-  }
-
-  return null;
 };

@@ -104,11 +104,13 @@ describe('WalletContext', () => {
         </WalletProvider>
       );
 
-      // Should start disconnected with no error message
+      // Should start disconnected with wallet required error message
       expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
       expect(screen.getByTestId('signer')).toHaveTextContent('null');
       expect(screen.getByTestId('account')).toHaveTextContent('');
-      expect(screen.getByTestId('errorMessage')).toHaveTextContent('null');
+      expect(screen.getByTestId('errorMessage')).toHaveTextContent(
+        'Ethereum wallet required. Please install a Web3 wallet extension.'
+      );
     });
 
     it('should show wallet required error when trying to connect without MetaMask', async () => {

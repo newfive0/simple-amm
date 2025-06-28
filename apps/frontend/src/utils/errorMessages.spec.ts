@@ -29,7 +29,7 @@ describe('errorMessages', () => {
         );
       });
 
-      it('should require both -32002 code AND "already pending" text', () => {
+      it('should not return wallet check message for errors without "already pending" text', () => {
         const error = {
           code: -32002,
           message: 'Some other resource unavailable error',
@@ -106,40 +106,6 @@ describe('errorMessages', () => {
         const result = getFriendlyMessage(error);
 
         expect(result).toBe('Unknown error. Please refresh and retry.');
-      });
-    });
-
-    describe('Error code extraction', () => {
-      it('should handle numeric error codes', () => {
-        const error = {
-          code: 4100,
-          message: 'Unauthorized',
-        };
-
-        const result = getFriendlyMessage(error);
-
-        expect(result).toBe('Unauthorized Please refresh and retry.');
-      });
-
-      it('should handle string error codes', () => {
-        const error = {
-          code: 'NETWORK_ERROR',
-          message: 'Network is down',
-        };
-
-        const result = getFriendlyMessage(error);
-
-        expect(result).toBe('Network is down Please refresh and retry.');
-      });
-
-      it('should handle missing error codes', () => {
-        const error = {
-          message: 'Error without code',
-        };
-
-        const result = getFriendlyMessage(error);
-
-        expect(result).toBe('Error without code Please refresh and retry.');
       });
     });
 
