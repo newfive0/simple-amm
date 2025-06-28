@@ -2,14 +2,20 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .title {
-  margin: 0;
+  margin: 0 0 0 20px;
+  font-size: 1.8em;
 }
 
 .error {
+  background-color: #fef2f2;
+  border: 1px solid #dc2626;
+  padding: 12px;
   color: #dc2626;
   font-size: 14px;
+  box-sizing: border-box;
+  margin-top: 8px;
 }

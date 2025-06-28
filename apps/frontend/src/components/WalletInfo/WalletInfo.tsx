@@ -16,7 +16,7 @@ export const WalletInfo = ({
   return (
     <div className={styles.walletInfo}>
       <p>
-        <strong>Your Account:</strong> {account || 'Not connected'}
+        <strong>Your Account:</strong> {account || 'Not Connected'}
       </p>
       <p>
         <strong>Balance:</strong>{' '}

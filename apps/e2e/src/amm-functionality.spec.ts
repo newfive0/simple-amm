@@ -5,6 +5,50 @@ import basicSetup from '../test/wallet-setup/basic.setup';
 const test = testWithSynpress(metaMaskFixtures(basicSetup));
 const { expect } = test;
 
+test('should display AMM page with disabled elements before connection', async ({
+  page,
+}) => {
+  await page.goto('/');
+
+  // Wait for the main heading to be visible
+  await expect(
+    page.locator('h1').filter({ hasText: 'Very Simple AMM' })
+  ).toBeVisible();
+
+  // Wait for the connect wallet button in header to be visible
+  await expect(
+    page.getByRole('button', { name: 'Connect Wallet', exact: true })
+  ).toBeVisible({
+    timeout: 5000,
+  });
+
+  await expect(page.getByText('Your Account: Not Connected')).toBeVisible({
+    timeout: 10000,
+  });
+
+  // Wait for disabled swap and liquidity elements to be visible
+  const swapSection = page
+    .locator('h2')
+    .filter({ hasText: 'Swap Tokens' })
+    .locator('..');
+  await expect(
+    swapSection.getByRole('button', { name: 'Please connect wallet' })
+  ).toBeVisible();
+
+  const liquiditySection = page
+    .locator('h2')
+    .filter({ hasText: 'Add Liquidity' })
+    .locator('..');
+  await expect(
+    liquiditySection.getByRole('button', { name: 'Please connect wallet' })
+  ).toBeVisible();
+
+  // Take screenshot of the initial AMM state before connection
+  await expect(page).toHaveScreenshot('amm-before-connection.png', {
+    fullPage: true,
+  });
+});
+
 test.describe('AMM Functionality', () => {
   test('should add liquidity then perform swaps', async ({
     context,

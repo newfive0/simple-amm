@@ -62,8 +62,8 @@ describe('WalletInfo', () => {
         screen.getByText('Balance:', { exact: false })
       ).toBeInTheDocument();
 
-      // Should show "Not connected" and "N/A" for account and balance respectively
-      expect(screen.getByText('Not connected')).toBeInTheDocument();
+      // Should show "Not Connected" and "N/A" for account and balance respectively
+      expect(screen.getByText('Not Connected')).toBeInTheDocument();
       expect(screen.getByText('N/A')).toBeInTheDocument();
 
       // Should not show actual account or balance values

@@ -48,7 +48,7 @@ vi.mock('../WalletInfo/WalletInfo', () => ({
     <div data-testid="wallet-info">
       {account
         ? `${account} - ${ethBalance.toFixed(4)} ETH / ${tokenBalance.toFixed(4)} ${tokenSymbol}`
-        : 'Not connected'}
+        : 'Not Connected'}
     </div>
   ),
 }));
