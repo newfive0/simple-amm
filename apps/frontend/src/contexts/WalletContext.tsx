@@ -8,7 +8,10 @@ import {
 } from 'react';
 import { ethers } from 'ethers';
 import { EIP1193Provider } from 'eip-1193';
-import { getFriendlyMessage } from '../utils/errorMessages';
+import {
+  getFriendlyMessage,
+  WALLET_REQUIRED_ERROR,
+} from '../utils/errorMessages';
 
 declare global {
   interface Window {
@@ -26,16 +29,12 @@ export interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
-// Error message constants
-const WALLET_REQUIRED_ERROR =
-  'Ethereum wallet required. Please install a Web3 wallet extension.';
-
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [walletState, setWalletState] = useState({
     ethereumProvider: null as ethers.BrowserProvider | null,
     signer: null as ethers.JsonRpcSigner | null,
     account: '',
-    errorMessage: '',
+    errorMessage: !window.ethereum ? WALLET_REQUIRED_ERROR : '',
   });
 
   // Request wallet connection (permission)

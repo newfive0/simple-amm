@@ -1,5 +1,9 @@
 // Utility for handling wallet error messages with user-friendly formatting
 
+// Error message constants
+export const WALLET_REQUIRED_ERROR =
+  'Ethereum wallet required. Please install a Web3 wallet extension.';
+
 // Known wallet error codes
 const WALLET_ERROR_CODES = {
   RESOURCE_UNAVAILABLE: -32002, // Resource unavailable (e.g., request already pending)
