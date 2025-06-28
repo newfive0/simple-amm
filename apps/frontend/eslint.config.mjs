@@ -1,9 +1,15 @@
-const tseslint = require('@typescript-eslint/eslint-plugin');
-const tsParser = require('@typescript-eslint/parser');
-const js = require('@eslint/js');
-const reactHooksPlugin = require('eslint-plugin-react-hooks');
+import tseslint from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
+import js from '@eslint/js';
+import reactHooksPlugin from 'eslint-plugin-react-hooks';
+import prettierPlugin from 'eslint-plugin-prettier';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 
-module.exports = [
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const config = [
   {
     ignores: [
       'node_modules/**',
@@ -69,6 +75,7 @@ module.exports = [
     plugins: {
       '@typescript-eslint': tseslint,
       'react-hooks': reactHooksPlugin,
+      prettier: prettierPlugin,
     },
     rules: {
       ...tseslint.configs.recommended.rules,
@@ -77,6 +84,18 @@ module.exports = [
       '@typescript-eslint/no-explicit-any': 'warn',
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+      'prettier/prettier': [
+        'error',
+        {
+          semi: true,
+          singleQuote: true,
+          tabWidth: 2,
+          trailingComma: 'es5',
+          printWidth: 80,
+        },
+      ],
     },
   },
 ];
+
+export default config;

@@ -7,7 +7,12 @@ export const ConnectWallet = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const isResourceUnavailableError = (error: unknown): boolean => {
-    return !!(error && typeof error === 'object' && 'code' in error && error.code === -32002);
+    return !!(
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error.code === -32002
+    );
   };
 
   const handleConnectWallet = async () => {
@@ -16,7 +21,9 @@ export const ConnectWallet = () => {
       await connectWallet();
     } catch (error: unknown) {
       if (isResourceUnavailableError(error)) {
-        alert('Connection error occurred. Your wallet may be processing another request. Please check your wallet.');
+        alert(
+          'Connection error occurred. Your wallet may be processing another request. Please check your wallet.'
+        );
       } else {
         alert('Failed to connect wallet. Please try again.');
       }
@@ -26,7 +33,7 @@ export const ConnectWallet = () => {
   };
 
   return (
-    <button 
+    <button
       className={styles.connectButton}
       onClick={handleConnectWallet}
       disabled={isLoading}

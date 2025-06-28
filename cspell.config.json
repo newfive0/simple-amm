@@ -43,7 +43,8 @@
     "localhost",
     "ignition",
     "synpress",
-    "playwright"
+    "playwright",
+    "synthetixio"
   ],
   "ignorePaths": [
     "node_modules/**",

@@ -4,17 +4,14 @@ import { WalletProvider, useWallet } from './WalletContext';
 
 // Create test component to consume context
 const TestComponent = () => {
-  const {
-    ethereumProvider,
-    signer,
-    account,
-    errorMessage,
-    connectWallet,
-  } = useWallet();
+  const { ethereumProvider, signer, account, errorMessage, connectWallet } =
+    useWallet();
 
   return (
     <div>
-      <div data-testid="ethereum-provider">{ethereumProvider ? 'connected' : 'null'}</div>
+      <div data-testid="ethereum-provider">
+        {ethereumProvider ? 'connected' : 'null'}
+      </div>
       <div data-testid="signer">{signer ? 'available' : 'null'}</div>
       <div data-testid="account">{account}</div>
       <div data-testid="errorMessage">{errorMessage || 'null'}</div>
@@ -47,12 +44,11 @@ const mockEthereum = {
   removeListener: vi.fn(),
 };
 
-
 describe('WalletContext', () => {
   // Helper to get the accountsChanged handler that was registered with ethereum.on()
   const getAccountsChangedHandler = () => {
     const handler = mockEthereum.on.mock.calls.find(
-      call => call[0] === 'accountsChanged'
+      (call) => call[0] === 'accountsChanged'
     )?.[1];
     if (!handler) {
       throw new Error('accountsChanged handler not found');
@@ -62,7 +58,7 @@ describe('WalletContext', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Set up window.ethereum mock
     Object.defineProperty(window, 'ethereum', {
       value: mockEthereum,
@@ -71,8 +67,12 @@ describe('WalletContext', () => {
 
     // Set up default mock returns
     mockBrowserProvider.getSigner.mockResolvedValue(mockSigner);
-    mockSigner.getAddress.mockResolvedValue('0x1234567890abcdef1234567890abcdef12345678');
-    mockEthereum.request.mockResolvedValue(['0x1234567890abcdef1234567890abcdef12345678']);
+    mockSigner.getAddress.mockResolvedValue(
+      '0x1234567890abcdef1234567890abcdef12345678'
+    );
+    mockEthereum.request.mockResolvedValue([
+      '0x1234567890abcdef1234567890abcdef12345678',
+    ]);
   });
 
   afterEach(() => {
@@ -81,8 +81,10 @@ describe('WalletContext', () => {
 
   describe('Provider Setup', () => {
     it('should throw error when useWallet is used outside provider', () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
       expect(() => render(<TestComponent />)).toThrow(
         'useWallet must be used within a WalletProvider'
       );
@@ -104,8 +106,12 @@ describe('WalletContext', () => {
 
       // Wait for initial connection check to complete and show wallet required error
       await waitFor(() => {
-        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
-        expect(screen.getByTestId('errorMessage')).toHaveTextContent('Ethereum wallet required. Please install a Web3 wallet extension.');
+        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
+          'null'
+        );
+        expect(screen.getByTestId('errorMessage')).toHaveTextContent(
+          'Ethereum wallet required. Please install a Web3 wallet extension.'
+        );
       });
 
       // Should remain disconnected
@@ -131,8 +137,12 @@ describe('WalletContext', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('errorMessage')).toHaveTextContent('Ethereum wallet required. Please install a Web3 wallet extension.');
-        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
+        expect(screen.getByTestId('errorMessage')).toHaveTextContent(
+          'Ethereum wallet required. Please install a Web3 wallet extension.'
+        );
+        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
+          'null'
+        );
         expect(screen.getByTestId('signer')).toHaveTextContent('null');
         expect(screen.getByTestId('account')).toHaveTextContent('');
       });
@@ -153,9 +163,13 @@ describe('WalletContext', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('connected');
+        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
+          'connected'
+        );
         expect(screen.getByTestId('signer')).toHaveTextContent('available');
-        expect(screen.getByTestId('account')).toHaveTextContent('0x1234567890abcdef1234567890abcdef12345678');
+        expect(screen.getByTestId('account')).toHaveTextContent(
+          '0x1234567890abcdef1234567890abcdef12345678'
+        );
       });
 
       expect(mockEthereum.request).toHaveBeenCalledWith({
@@ -166,7 +180,9 @@ describe('WalletContext', () => {
     });
 
     it('should handle wallet connection rejection', async () => {
-      mockEthereum.request.mockRejectedValue(new Error('User rejected the request'));
+      mockEthereum.request.mockRejectedValue(
+        new Error('User rejected the request')
+      );
 
       render(
         <WalletProvider>
@@ -179,10 +195,14 @@ describe('WalletContext', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
+        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
+          'null'
+        );
         expect(screen.getByTestId('signer')).toHaveTextContent('null');
         expect(screen.getByTestId('account')).toHaveTextContent('');
-        expect(screen.getByTestId('errorMessage')).toHaveTextContent('User rejected the request');
+        expect(screen.getByTestId('errorMessage')).toHaveTextContent(
+          'User rejected the request'
+        );
       });
     });
 
@@ -200,7 +220,9 @@ describe('WalletContext', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
+        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
+          'null'
+        );
         expect(screen.getByTestId('signer')).toHaveTextContent('null');
         expect(screen.getByTestId('account')).toHaveTextContent('');
       });
@@ -220,7 +242,9 @@ describe('WalletContext', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
+        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
+          'null'
+        );
         expect(screen.getByTestId('signer')).toHaveTextContent('null');
         expect(screen.getByTestId('account')).toHaveTextContent('');
       });
@@ -241,7 +265,9 @@ describe('WalletContext', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('account')).toHaveTextContent('0x1234567890abcdef1234567890abcdef12345678');
+        expect(screen.getByTestId('account')).toHaveTextContent(
+          '0x1234567890abcdef1234567890abcdef12345678'
+        );
       });
 
       act(() => {
@@ -249,7 +275,9 @@ describe('WalletContext', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
+        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
+          'null'
+        );
         expect(screen.getByTestId('signer')).toHaveTextContent('null');
         expect(screen.getByTestId('account')).toHaveTextContent('');
       });
@@ -266,9 +294,13 @@ describe('WalletContext', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('connected');
+        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
+          'connected'
+        );
         expect(screen.getByTestId('signer')).toHaveTextContent('available');
-        expect(screen.getByTestId('account')).toHaveTextContent('0x1234567890abcdef1234567890abcdef12345678');
+        expect(screen.getByTestId('account')).toHaveTextContent(
+          '0x1234567890abcdef1234567890abcdef12345678'
+        );
       });
 
       // Should not request accounts, just initialize state
@@ -279,7 +311,9 @@ describe('WalletContext', () => {
 
     it('should finish checking connection when wallet not previously connected', async () => {
       // Simulate failed auto-connection (wallet not connected from previous session)
-      mockBrowserProvider.getSigner.mockRejectedValue(new Error('No permission'));
+      mockBrowserProvider.getSigner.mockRejectedValue(
+        new Error('No permission')
+      );
 
       render(
         <WalletProvider>
@@ -288,14 +322,18 @@ describe('WalletContext', () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
+        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
+          'null'
+        );
         expect(screen.getByTestId('signer')).toHaveTextContent('null');
         expect(screen.getByTestId('account')).toHaveTextContent('');
       });
     });
 
     it('should handle auto-connection failure gracefully', async () => {
-      mockBrowserProvider.getSigner.mockRejectedValue(new Error('Connection failed'));
+      mockBrowserProvider.getSigner.mockRejectedValue(
+        new Error('Connection failed')
+      );
 
       render(
         <WalletProvider>
@@ -305,7 +343,9 @@ describe('WalletContext', () => {
 
       // The useEffect will complete after handling the error properly
       await waitFor(() => {
-        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
+        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
+          'null'
+        );
         expect(screen.getByTestId('signer')).toHaveTextContent('null');
         expect(screen.getByTestId('account')).toHaveTextContent('');
       });
@@ -342,7 +382,9 @@ describe('WalletContext', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('account')).toHaveTextContent('0x1234567890abcdef1234567890abcdef12345678');
+        expect(screen.getByTestId('account')).toHaveTextContent(
+          '0x1234567890abcdef1234567890abcdef12345678'
+        );
       });
 
       act(() => {
@@ -350,7 +392,9 @@ describe('WalletContext', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
+        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
+          'null'
+        );
         expect(screen.getByTestId('signer')).toHaveTextContent('null');
         expect(screen.getByTestId('account')).toHaveTextContent('');
       });
@@ -369,7 +413,9 @@ describe('WalletContext', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('account')).toHaveTextContent('0x1234567890abcdef1234567890abcdef12345678');
+        expect(screen.getByTestId('account')).toHaveTextContent(
+          '0x1234567890abcdef1234567890abcdef12345678'
+        );
       });
 
       // Set up new account for reconnection
@@ -442,7 +488,9 @@ describe('WalletContext', () => {
 
   describe('Error Handling', () => {
     it('should handle signer initialization errors', async () => {
-      mockBrowserProvider.getSigner.mockRejectedValue(new Error('Signer error'));
+      mockBrowserProvider.getSigner.mockRejectedValue(
+        new Error('Signer error')
+      );
 
       render(
         <WalletProvider>
@@ -457,15 +505,21 @@ describe('WalletContext', () => {
 
       // Wait for the error to be handled and state to be reset
       await waitFor(() => {
-        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
+        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
+          'null'
+        );
         expect(screen.getByTestId('signer')).toHaveTextContent('null');
         expect(screen.getByTestId('account')).toHaveTextContent('');
-        expect(screen.getByTestId('errorMessage')).toHaveTextContent('Signer error');
+        expect(screen.getByTestId('errorMessage')).toHaveTextContent(
+          'Signer error'
+        );
       });
     });
 
     it('should clear error when attempting new connection', async () => {
-      mockEthereum.request.mockRejectedValue(new Error('User rejected the request'));
+      mockEthereum.request.mockRejectedValue(
+        new Error('User rejected the request')
+      );
 
       render(
         <WalletProvider>
@@ -479,11 +533,15 @@ describe('WalletContext', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('errorMessage')).toHaveTextContent('User rejected the request');
+        expect(screen.getByTestId('errorMessage')).toHaveTextContent(
+          'User rejected the request'
+        );
       });
 
       // Set up successful connection for retry
-      mockEthereum.request.mockResolvedValue(['0x1234567890abcdef1234567890abcdef12345678']);
+      mockEthereum.request.mockResolvedValue([
+        '0x1234567890abcdef1234567890abcdef12345678',
+      ]);
 
       // Try connecting again - should clear previous error
       act(() => {
@@ -491,7 +549,9 @@ describe('WalletContext', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('account')).toHaveTextContent('0x1234567890abcdef1234567890abcdef12345678');
+        expect(screen.getByTestId('account')).toHaveTextContent(
+          '0x1234567890abcdef1234567890abcdef12345678'
+        );
         expect(screen.getByTestId('errorMessage')).toHaveTextContent('null');
       });
     });
@@ -510,7 +570,9 @@ describe('WalletContext', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
+        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
+          'null'
+        );
         expect(screen.getByTestId('signer')).toHaveTextContent('null');
         expect(screen.getByTestId('account')).toHaveTextContent('');
       });
@@ -529,7 +591,9 @@ describe('WalletContext', () => {
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('account')).toHaveTextContent('0x1234567890abcdef1234567890abcdef12345678');
+        expect(screen.getByTestId('account')).toHaveTextContent(
+          '0x1234567890abcdef1234567890abcdef12345678'
+        );
       });
 
       // Remove ethereum provider
@@ -539,14 +603,18 @@ describe('WalletContext', () => {
       });
 
       // This should throw during the next initialization attempt
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
       act(() => {
         screen.getByTestId('connect-wallet').click();
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('connected');
+        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
+          'connected'
+        );
       });
 
       consoleErrorSpy.mockRestore();

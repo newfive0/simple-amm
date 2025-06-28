@@ -17,17 +17,17 @@ interface SwapInputProps {
   disabled?: boolean;
 }
 
-const SwapInput = ({ 
-  label, 
-  value, 
-  onChange, 
-  placeholder, 
-  onClick, 
+const SwapInput = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  onClick,
   buttonText,
   isLoading,
   expectedOutput,
   outputLabel,
-  disabled = false
+  disabled = false,
 }: SwapInputProps) => (
   <div className={styles.swapInput}>
     <div className={styles.inputField}>
@@ -44,7 +44,9 @@ const SwapInput = ({
           disabled={disabled}
         />
         <div className={styles.expectedOutput}>
-          {expectedOutput && outputLabel ? `≈ ${expectedOutput} ${outputLabel}` : `≈ 0 ${outputLabel || 'SIMP'}`}
+          {expectedOutput && outputLabel
+            ? `≈ ${expectedOutput} ${outputLabel}`
+            : `≈ 0 ${outputLabel || 'SIMP'}`}
         </div>
       </div>
     </div>
@@ -70,7 +72,7 @@ const SwapDirectionSelectorComponent = ({
   value,
   onChange,
   tokenSymbol,
-  disabled = false
+  disabled = false,
 }: SwapDirectionSelectorProps) => (
   <div className={styles.swapDirection}>
     <label>Swap Direction</label>
@@ -114,21 +116,25 @@ export const Swap = ({
     'eth-to-token' | 'token-to-eth'
   >('eth-to-token');
 
-  const calculateSwapOutput = (inputAmount: string, isEthToToken: boolean): string => {
+  const calculateSwapOutput = (
+    inputAmount: string,
+    isEthToToken: boolean
+  ): string => {
     if (!inputAmount || inputAmount === '0') return '';
-    
+
     if (poolEthBalance === 0 || poolTokenBalance === 0) return '';
-    
+
     const input = parseFloat(inputAmount);
     if (isNaN(input)) return '';
-    
+
     // Using constant product formula: x * y = k
     // For swap: newY = k / (x + inputX) = (x * y) / (x + inputX)
     // Output = y - newY = y - (x * y) / (x + inputX) = (y * inputX) / (x + inputX)
-    
+
     if (isEthToToken) {
       // ETH input -> Token output
-      const outputTokens = (poolTokenBalance * input) / (poolEthBalance + input);
+      const outputTokens =
+        (poolTokenBalance * input) / (poolEthBalance + input);
       return outputTokens.toFixed(6);
     } else {
       // Token input -> ETH output
@@ -138,7 +144,8 @@ export const Swap = ({
   };
 
   const handleError = (error: unknown) => {
-    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    const message =
+      error instanceof Error ? error.message : 'Unknown error occurred';
     alert(`Swap failed: ${message}`);
   };
 
@@ -163,7 +170,7 @@ export const Swap = ({
   const approveTokenSpending = async (amount: string) => {
     const approveTx = await tokenContract.approve(
       contractAddresses.ammPoolAddress,
-      ethers.parseEther(amount),
+      ethers.parseEther(amount)
     );
     await approveTx.wait();
   };
@@ -172,11 +179,9 @@ export const Swap = ({
     if (!ethAmount) return;
 
     await executeSwapTransaction(async () => {
-      const tx = await ammContract.swap(
-        ethers.ZeroAddress,
-        0,
-        { value: ethers.parseEther(ethAmount) },
-      );
+      const tx = await ammContract.swap(ethers.ZeroAddress, 0, {
+        value: ethers.parseEther(ethAmount),
+      });
       await tx.wait();
     });
   };
@@ -188,7 +193,7 @@ export const Swap = ({
       await approveTokenSpending(tokenAmount);
       const tx = await ammContract.swap(
         contractAddresses.tokenAddress,
-        ethers.parseEther(tokenAmount),
+        ethers.parseEther(tokenAmount)
       );
       await tx.wait();
     });
@@ -197,12 +202,13 @@ export const Swap = ({
   const SwapDirectionSelector = () => (
     <SwapDirectionSelectorComponent
       value={swapDirection}
-      onChange={(e) => setSwapDirection(e.target.value as 'eth-to-token' | 'token-to-eth')}
+      onChange={(e) =>
+        setSwapDirection(e.target.value as 'eth-to-token' | 'token-to-eth')
+      }
       tokenSymbol={tokenSymbol}
       disabled={false}
     />
   );
-
 
   return (
     <div className={styles.swap}>

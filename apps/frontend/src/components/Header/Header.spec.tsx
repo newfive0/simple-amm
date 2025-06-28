@@ -21,14 +21,14 @@ describe('Header Component', () => {
       account: '',
       ethereumProvider: null,
       signer: null,
-      errorMessage: "",
-      connectWallet: vi.fn()
+      errorMessage: '',
+      connectWallet: vi.fn(),
     };
-    
+
     vi.mocked(useWallet).mockReturnValue(mockWalletContext);
-    
+
     render(<Header />);
-    
+
     expect(screen.getByText('Very Simple AMM')).toBeInTheDocument();
     expect(screen.getByText('Connect Wallet')).toBeInTheDocument();
   });
@@ -38,14 +38,14 @@ describe('Header Component', () => {
       account: '0x123',
       ethereumProvider: null,
       signer: null,
-      errorMessage: "",
-      connectWallet: vi.fn()
+      errorMessage: '',
+      connectWallet: vi.fn(),
     };
-    
+
     vi.mocked(useWallet).mockReturnValue(mockWalletContext);
-    
+
     render(<Header />);
-    
+
     expect(screen.getByText('Very Simple AMM')).toBeInTheDocument();
     expect(screen.queryByText('Connect Wallet')).not.toBeInTheDocument();
   });
@@ -56,13 +56,13 @@ describe('Header Component', () => {
       ethereumProvider: null,
       signer: null,
       errorMessage: 'User rejected the request',
-      connectWallet: vi.fn()
+      connectWallet: vi.fn(),
     };
-    
+
     vi.mocked(useWallet).mockReturnValue(mockWalletContext);
-    
+
     render(<Header />);
-    
+
     expect(screen.getByText('Very Simple AMM')).toBeInTheDocument();
     expect(screen.getByText('User rejected the request')).toBeInTheDocument();
   });
@@ -72,16 +72,18 @@ describe('Header Component', () => {
       account: '',
       ethereumProvider: null,
       signer: null,
-      errorMessage: "",
-      connectWallet: vi.fn()
+      errorMessage: '',
+      connectWallet: vi.fn(),
     };
-    
+
     vi.mocked(useWallet).mockReturnValue(mockWalletContext);
-    
+
     render(<Header />);
-    
+
     expect(screen.getByText('Very Simple AMM')).toBeInTheDocument();
-    expect(screen.queryByText('User rejected the request')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('User rejected the request')
+    ).not.toBeInTheDocument();
   });
 
   it('should not display connect button when there is an error message', () => {
@@ -89,16 +91,21 @@ describe('Header Component', () => {
       account: '',
       ethereumProvider: null,
       signer: null,
-      errorMessage: 'Ethereum wallet required. Please install a Web3 wallet extension.',
-      connectWallet: vi.fn()
+      errorMessage:
+        'Ethereum wallet required. Please install a Web3 wallet extension.',
+      connectWallet: vi.fn(),
     };
-    
+
     vi.mocked(useWallet).mockReturnValue(mockWalletContext);
-    
+
     render(<Header />);
-    
+
     expect(screen.getByText('Very Simple AMM')).toBeInTheDocument();
-    expect(screen.getByText('Ethereum wallet required. Please install a Web3 wallet extension.')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'Ethereum wallet required. Please install a Web3 wallet extension.'
+      )
+    ).toBeInTheDocument();
     expect(screen.queryByText('Connect Wallet')).not.toBeInTheDocument();
   });
 });

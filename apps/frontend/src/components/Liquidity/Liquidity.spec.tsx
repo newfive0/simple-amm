@@ -1,15 +1,15 @@
 import { render, fireEvent, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import { Liquidity } from './Liquidity';
-import { 
-  createDeferredTransactionPromise, 
-  createMockContracts, 
-  mockContractAddresses
+import {
+  createDeferredTransactionPromise,
+  createMockContracts,
+  mockContractAddresses,
 } from '../../test-mocks';
 
-
 // Create mock contracts
-const { mockTokenContract, mockAmmContract, tokenContract, ammContract } = createMockContracts();
+const { mockTokenContract, mockAmmContract, tokenContract, ammContract } =
+  createMockContracts();
 
 const mockOnLiquidityComplete = vi.fn();
 
@@ -26,8 +26,12 @@ const defaultProps = {
 describe('Liquidity', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockTokenContract.approve.mockResolvedValue({ wait: vi.fn().mockResolvedValue({}) });
-    mockAmmContract.addLiquidity.mockResolvedValue({ wait: vi.fn().mockResolvedValue({}) });
+    mockTokenContract.approve.mockResolvedValue({
+      wait: vi.fn().mockResolvedValue({}),
+    });
+    mockAmmContract.addLiquidity.mockResolvedValue({
+      wait: vi.fn().mockResolvedValue({}),
+    });
   });
 
   it('should render successfully', () => {
@@ -43,7 +47,9 @@ describe('Liquidity', () => {
   });
 
   it('should render input fields with correct labels', () => {
-    const { getByText, getByPlaceholderText } = render(<Liquidity {...defaultProps} />);
+    const { getByText, getByPlaceholderText } = render(
+      <Liquidity {...defaultProps} />
+    );
     expect(getByText('ETH Amount')).toBeTruthy();
     expect(getByText('SIMP Amount')).toBeTruthy();
     expect(getByPlaceholderText('Enter ETH amount')).toBeTruthy();
@@ -114,7 +120,9 @@ describe('Liquidity', () => {
   });
 
   it('should enable button when both amounts are provided', () => {
-    const { getByRole, getByPlaceholderText } = render(<Liquidity {...defaultProps} />);
+    const { getByRole, getByPlaceholderText } = render(
+      <Liquidity {...defaultProps} />
+    );
     const ethInput = getByPlaceholderText('Enter ETH amount');
     const button = getByRole('button', { name: 'Add Liquidity' });
 
@@ -125,7 +133,9 @@ describe('Liquidity', () => {
   });
 
   it('should handle successful liquidity addition', async () => {
-    const { getByRole, getByPlaceholderText } = render(<Liquidity {...defaultProps} />);
+    const { getByRole, getByPlaceholderText } = render(
+      <Liquidity {...defaultProps} />
+    );
     const ethInput = getByPlaceholderText('Enter ETH amount');
     const button = getByRole('button', { name: 'Add Liquidity' });
 
@@ -153,11 +163,13 @@ describe('Liquidity', () => {
     const { promise, resolve } = createDeferredTransactionPromise();
     mockTokenContract.approve.mockReturnValue(promise);
 
-    const { getByRole, getByPlaceholderText } = render(<Liquidity {...defaultProps} />);
+    const { getByRole, getByPlaceholderText } = render(
+      <Liquidity {...defaultProps} />
+    );
     const ethInput = getByPlaceholderText('Enter ETH amount');
 
     fireEvent.change(ethInput, { target: { value: '5' } });
-    
+
     const button = getByRole('button', { name: 'Add Liquidity' });
     fireEvent.click(button);
 
@@ -174,18 +186,24 @@ describe('Liquidity', () => {
 
   it('should handle transaction errors', async () => {
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-    mockTokenContract.approve.mockRejectedValue(new Error('Transaction failed'));
+    mockTokenContract.approve.mockRejectedValue(
+      new Error('Transaction failed')
+    );
 
-    const { getByRole, getByPlaceholderText } = render(<Liquidity {...defaultProps} />);
+    const { getByRole, getByPlaceholderText } = render(
+      <Liquidity {...defaultProps} />
+    );
     const ethInput = getByPlaceholderText('Enter ETH amount');
 
     fireEvent.change(ethInput, { target: { value: '5' } });
-    
+
     const button = getByRole('button', { name: 'Add Liquidity' });
     fireEvent.click(button);
 
     await waitFor(() => {
-      expect(alertSpy).toHaveBeenCalledWith('Failed to add liquidity: Transaction failed');
+      expect(alertSpy).toHaveBeenCalledWith(
+        'Failed to add liquidity: Transaction failed'
+      );
     });
 
     alertSpy.mockRestore();

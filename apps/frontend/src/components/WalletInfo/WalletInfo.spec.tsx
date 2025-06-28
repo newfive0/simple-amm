@@ -13,27 +13,30 @@ describe('WalletInfo', () => {
   describe('Rendering', () => {
     it('should render wallet info when connected', () => {
       render(<WalletInfo {...defaultProps} />);
-      
-      expect(screen.getByText('Account:', { exact: false })).toBeInTheDocument();
+
+      expect(
+        screen.getByText('Account:', { exact: false })
+      ).toBeInTheDocument();
       expect(screen.getByText(defaultProps.account)).toBeInTheDocument();
-      expect(screen.getByText('Balance:', { exact: false })).toBeInTheDocument();
+      expect(
+        screen.getByText('Balance:', { exact: false })
+      ).toBeInTheDocument();
     });
 
     it('should display formatted balances with correct precision', () => {
       render(<WalletInfo {...defaultProps} />);
-      
+
       // Should show 4 decimal places for both token and ETH balances
       expect(screen.getByText(/1000\.9877 SIMP/)).toBeInTheDocument();
       expect(screen.getByText(/5\.1235 ETH/)).toBeInTheDocument();
     });
-
   });
 
   describe('Account Display', () => {
     it('should display full account address', () => {
       const longAccount = '0x1234567890abcdef1234567890abcdef12345678';
       render(<WalletInfo {...defaultProps} account={longAccount} />);
-      
+
       expect(screen.getByText(longAccount)).toBeInTheDocument();
     });
   });
@@ -41,25 +44,28 @@ describe('WalletInfo', () => {
   describe('Token Symbol', () => {
     it('should display custom token symbol', () => {
       render(<WalletInfo {...defaultProps} tokenSymbol="CUSTOM" />);
-      
+
       expect(screen.getByText(/CUSTOM/)).toBeInTheDocument();
       expect(screen.queryByText(/SIMP/)).not.toBeInTheDocument();
     });
   });
 
-
   describe('Disconnected State', () => {
     it('should show "not connected" for both account and balance when account is empty', () => {
       render(<WalletInfo {...defaultProps} account="" />);
-      
+
       // Should show labels
-      expect(screen.getByText('Account:', { exact: false })).toBeInTheDocument();
-      expect(screen.getByText('Balance:', { exact: false })).toBeInTheDocument();
-      
+      expect(
+        screen.getByText('Account:', { exact: false })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText('Balance:', { exact: false })
+      ).toBeInTheDocument();
+
       // Should show "Not connected" and "N/A" for account and balance respectively
       expect(screen.getByText('Not connected')).toBeInTheDocument();
       expect(screen.getByText('N/A')).toBeInTheDocument();
-      
+
       // Should not show actual account or balance values
       expect(screen.queryByText(defaultProps.account)).not.toBeInTheDocument();
       expect(screen.queryByText(/SIMP/)).not.toBeInTheDocument();

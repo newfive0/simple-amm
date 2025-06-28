@@ -8,13 +8,15 @@ interface InputFieldProps {
   value: number;
   onChange: (value: number) => void;
   placeholder: string;
+  disabled?: boolean;
 }
 
-const InputField = ({ 
-  label, 
-  value, 
-  onChange, 
-  placeholder 
+const InputField = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+  disabled = false,
 }: InputFieldProps) => (
   <div className={styles.inputGroup}>
     <label className={styles.label}>{label}</label>
@@ -23,6 +25,7 @@ const InputField = ({
       step="0.01"
       value={value === 0 ? '' : value.toString()}
       onChange={(e) => {
+        if (disabled) return;
         const value = e.target.value;
         const numValue = Number(value);
         if (value && isNaN(numValue)) {
@@ -34,6 +37,7 @@ const InputField = ({
       placeholder={placeholder}
       className={styles.input}
       autoFocus={false}
+      disabled={disabled}
     />
   </div>
 );
@@ -64,19 +68,22 @@ export const Liquidity = ({
   const [liquidityTokenAmount, setLiquidityTokenAmount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  const calculateCorrespondingAmount = (amount: number, isEthInput: boolean): number => {
+  const calculateCorrespondingAmount = (
+    amount: number,
+    isEthInput: boolean
+  ): number => {
     if (!amount || amount === 0) {
       return 0;
     }
-    
+
     const poolEthFloat = poolEthBalance;
     const poolTokenFloat = poolTokenBalance;
-    
+
     // If pool is empty, don't auto-calculate - let user set initial ratio
     if (poolEthFloat === 0 || poolTokenFloat === 0) {
       return 0;
     }
-    
+
     if (isEthInput) {
       // Calculate required token amount based on ETH input
       return (amount * poolTokenFloat) / poolEthFloat;
@@ -89,11 +96,11 @@ export const Liquidity = ({
   const handleEthAmountChange = (value: number) => {
     setLiquidityEthAmount(value);
     const correspondingTokenAmount = calculateCorrespondingAmount(value, true);
-    
+
     const poolEthFloat = poolEthBalance;
     const poolTokenFloat = poolTokenBalance;
     const poolHasLiquidity = poolEthFloat > 0 && poolTokenFloat > 0;
-    
+
     // If pool has liquidity, always update the other field (including clearing it)
     if (poolHasLiquidity) {
       setLiquidityTokenAmount(correspondingTokenAmount);
@@ -103,11 +110,11 @@ export const Liquidity = ({
   const handleTokenAmountChange = (value: number) => {
     setLiquidityTokenAmount(value);
     const correspondingEthAmount = calculateCorrespondingAmount(value, false);
-    
+
     const poolEthFloat = poolEthBalance;
     const poolTokenFloat = poolTokenBalance;
     const poolHasLiquidity = poolEthFloat > 0 && poolTokenFloat > 0;
-    
+
     // If pool has liquidity, always update the other field (including clearing it)
     if (poolHasLiquidity) {
       setLiquidityEthAmount(correspondingEthAmount);
@@ -115,7 +122,8 @@ export const Liquidity = ({
   };
 
   const handleError = (error: unknown) => {
-    const message = error instanceof Error ? error.message : 'Unknown error occurred';
+    const message =
+      error instanceof Error ? error.message : 'Unknown error occurred';
     alert(`Failed to add liquidity: ${message}`);
   };
 
@@ -127,7 +135,7 @@ export const Liquidity = ({
   const approveTokenSpending = async (amount: number) => {
     const approveTx = await tokenContract.approve(
       contractAddresses.ammPoolAddress,
-      ethers.parseEther(amount.toString()),
+      ethers.parseEther(amount.toString())
     );
     await approveTx.wait();
   };
@@ -143,7 +151,7 @@ export const Liquidity = ({
 
       const addLiquidityTx = await ammContract.addLiquidity(
         ethers.parseEther(liquidityTokenAmount.toString()),
-        { value: ethers.parseEther(liquidityEthAmount.toString()) },
+        { value: ethers.parseEther(liquidityEthAmount.toString()) }
       );
       await addLiquidityTx.wait();
 
@@ -159,11 +167,11 @@ export const Liquidity = ({
   const PoolBalances = () => (
     <div className={styles.poolBalances}>
       <p>
-        <strong>Pool Balance:</strong> {poolTokenBalance.toFixed(4)} {tokenSymbol} / {poolEthBalance.toFixed(4)} ETH
+        <strong>Pool Balance:</strong> {poolTokenBalance.toFixed(4)}{' '}
+        {tokenSymbol} / {poolEthBalance.toFixed(4)} ETH
       </p>
     </div>
   );
-
 
   return (
     <div className={styles.liquidity}>
@@ -192,4 +200,33 @@ export const Liquidity = ({
   );
 };
 
-export default Liquidity;
+// DisabledLiquidity component for when wallet is not connected
+export const DisabledLiquidity = () => {
+  return (
+    <div className={styles.liquidity}>
+      <h2 className={styles.title}>Add Liquidity</h2>
+      <div className={styles.poolBalances}>
+        <p>
+          <strong>Pool Balance:</strong> 0.0000 SIMP / 0.0000 ETH
+        </p>
+      </div>
+      <InputField
+        label="ETH Amount"
+        value={0}
+        onChange={() => {}}
+        placeholder="Enter ETH amount"
+        disabled={true}
+      />
+      <InputField
+        label="SIMP Amount"
+        value={0}
+        onChange={() => {}}
+        placeholder="Enter SIMP amount"
+        disabled={true}
+      />
+      <button onClick={() => {}} disabled={true} className={styles.addButton}>
+        Please connect wallet
+      </button>
+    </div>
+  );
+};

@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 
-test('should display network error page when MetaMask is not detected', async ({ page }) => {
+test('should display network error page when MetaMask is not detected', async ({
+  page,
+}) => {
   // Remove MetaMask by overriding window.ethereum before page load
   await page.addInitScript(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -10,7 +12,11 @@ test('should display network error page when MetaMask is not detected', async ({
   await page.goto('/');
 
   // Wait for the error boundary to display the wallet error message
-  await expect(page.locator('text=/Ethereum wallet required. Please install a Web3 wallet extension./i')).toBeVisible({
+  await expect(
+    page.locator(
+      'text=/Ethereum wallet required. Please install a Web3 wallet extension./i'
+    )
+  ).toBeVisible({
     timeout: 10000,
   });
 

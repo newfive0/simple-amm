@@ -3,7 +3,13 @@ import { useWallet } from '../../contexts';
 import { WalletInfo, Swap, Liquidity } from '../';
 import { Token__factory, AMMPool__factory } from '@typechain-types';
 import { config } from '../../config';
-import { getWalletBalances, getPoolBalances, getTokenSymbol, WalletBalances, PoolBalances } from '../../utils/balances';
+import {
+  getWalletBalances,
+  getPoolBalances,
+  getTokenSymbol,
+  WalletBalances,
+  PoolBalances,
+} from '../../utils/balances';
 
 export const ConnectedDashboard = () => {
   return <DashboardContent />;
@@ -11,8 +17,14 @@ export const ConnectedDashboard = () => {
 
 const DashboardContent = () => {
   const { account, signer, ethereumProvider } = useWallet();
-  const [walletBalances, setWalletBalances] = useState<WalletBalances>({ ethBalance: 0, tokenBalance: 0 });
-  const [poolBalances, setPoolBalances] = useState<PoolBalances>({ ethReserve: 0, tokenReserve: 0 });
+  const [walletBalances, setWalletBalances] = useState<WalletBalances>({
+    ethBalance: 0,
+    tokenBalance: 0,
+  });
+  const [poolBalances, setPoolBalances] = useState<PoolBalances>({
+    ethReserve: 0,
+    tokenReserve: 0,
+  });
   const [tokenSymbol, setTokenSymbol] = useState<string>('');
 
   // Fetch all balances and token info
@@ -35,7 +47,9 @@ const DashboardContent = () => {
       setPoolBalances(poolBal);
       setTokenSymbol(symbol);
     } catch (error) {
-      console.error(`Failed to fetch balances: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(
+        `Failed to fetch balances: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }, [signer, ethereumProvider, account]);
 
@@ -53,11 +67,13 @@ const DashboardContent = () => {
   };
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      flexDirection: 'column', 
-      gap: '0' 
-    }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0',
+      }}
+    >
       <WalletInfo
         account={account}
         ethBalance={walletBalances.ethBalance}
@@ -65,7 +81,7 @@ const DashboardContent = () => {
         tokenSymbol={tokenSymbol}
       />
 
-      <ContractsSection 
+      <ContractsSection
         poolEthBalance={poolBalances.ethReserve}
         poolTokenBalance={poolBalances.tokenReserve}
         tokenSymbol={tokenSymbol}
@@ -97,8 +113,14 @@ const ContractsSection = ({
     return <div>Wallet not connected</div>;
   }
 
-  const tokenContract = Token__factory.connect(config.contracts.tokenAddress, signer);
-  const ammContract = AMMPool__factory.connect(config.contracts.ammPoolAddress, signer);
+  const tokenContract = Token__factory.connect(
+    config.contracts.tokenAddress,
+    signer
+  );
+  const ammContract = AMMPool__factory.connect(
+    config.contracts.ammPoolAddress,
+    signer
+  );
   const contractAddresses = config.contracts;
 
   return (

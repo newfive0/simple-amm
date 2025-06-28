@@ -1,4 +1,11 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  ReactNode,
+} from 'react';
 import { ethers } from 'ethers';
 import { EIP1193Provider } from 'eip-1193';
 
@@ -18,66 +25,82 @@ export interface WalletContextType {
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
+// Error message constants
+const WALLET_REQUIRED_ERROR =
+  'Ethereum wallet required. Please install a Web3 wallet extension.';
 
-  // Error message constants
-  const WALLET_REQUIRED_ERROR = "Ethereum wallet required. Please install a Web3 wallet extension.";
+// Helper function to extract error message from any error
+const getErrorMessage = (error: unknown): string => {
+  // Try to get message field from error object
+  if (error && typeof error === 'object' && 'message' in error) {
+    return (error as Error).message;
+  }
+  // Final fallback
+  return 'Connection failed';
+};
 
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [walletState, setWalletState] = useState({
     ethereumProvider: null as ethers.BrowserProvider | null,
     signer: null as ethers.JsonRpcSigner | null,
-    account: "",
-    errorMessage: "",
+    account: '',
+    errorMessage: '',
   });
 
   // Request wallet connection (permission)
-  const requestWalletConnection = useCallback(async (ethereum: EIP1193Provider) => {
-    const accounts = await ethereum.request({
-      method: "eth_requestAccounts",
-    });
+  const requestWalletConnection = useCallback(
+    async (ethereum: EIP1193Provider) => {
+      const accounts = await ethereum.request({
+        method: 'eth_requestAccounts',
+      });
 
-    if (!Array.isArray(accounts) || accounts.length === 0) {
-      throw new Error("No accounts returned");
-    }
+      if (!Array.isArray(accounts) || accounts.length === 0) {
+        throw new Error('No accounts returned');
+      }
 
-    return accounts;
-  }, []);
+      return accounts;
+    },
+    []
+  );
 
   // Initialize wallet state after connection
-  const initializeWalletState = useCallback(async (ethereum: EIP1193Provider) => {
-    const ethProvider = new ethers.BrowserProvider(ethereum);
-    const ethSigner = await ethProvider.getSigner(); // Gets signer for accounts[0] (primary account)
-    const userAddress = await ethSigner.getAddress();
+  const initializeWalletState = useCallback(
+    async (ethereum: EIP1193Provider) => {
+      const ethProvider = new ethers.BrowserProvider(ethereum);
+      const ethSigner = await ethProvider.getSigner(); // Gets signer for accounts[0] (primary account)
+      const userAddress = await ethSigner.getAddress();
 
-    // Single state update - only 1 re-render!
-    setWalletState(prev => ({
-      ...prev,
-      ethereumProvider: ethProvider,
-      signer: ethSigner,
-      account: userAddress,
-      errorMessage: "", // Clear any previous errors on successful connection
-    }));
-  }, []);
+      // Single state update - only 1 re-render!
+      setWalletState((prev) => ({
+        ...prev,
+        ethereumProvider: ethProvider,
+        signer: ethSigner,
+        account: userAddress,
+        errorMessage: '', // Clear any previous errors on successful connection
+      }));
+    },
+    []
+  );
 
   // Reset wallet state to disconnected
   const resetWalletState = useCallback(() => {
     setWalletState({
       ethereumProvider: null,
       signer: null,
-      account: "",
-      errorMessage: "",
+      account: '',
+      errorMessage: '',
     });
   }, []);
 
   // Set error message
   const setErrorMessage = useCallback((message: string) => {
-    setWalletState(prev => ({ ...prev, errorMessage: message }));
+    setWalletState((prev) => ({ ...prev, errorMessage: message }));
   }, []);
 
   const connectWallet = useCallback(async () => {
     // Clear any previous errors before attempting connection
-    setErrorMessage("");
-    
+    setErrorMessage('');
+
     // Check if MetaMask is available first
     if (!window.ethereum) {
       setErrorMessage(WALLET_REQUIRED_ERROR);
@@ -90,10 +113,14 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       // Reset state on connection failure and set error message
       resetWalletState();
-      const errorMessage = error instanceof Error ? error.message : 'Connection failed';
-      setErrorMessage(errorMessage);
+      setErrorMessage(getErrorMessage(error));
     }
-  }, [requestWalletConnection, initializeWalletState, resetWalletState, setErrorMessage]);
+  }, [
+    requestWalletConnection,
+    initializeWalletState,
+    resetWalletState,
+    setErrorMessage,
+  ]);
 
   // Check for existing wallet connection on page load
   useEffect(() => {
@@ -143,10 +170,10 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         // If accounts[0] === account, no change needed (same account still connected)
       };
 
-      ethereum.on("accountsChanged", handleAccountsChanged);
+      ethereum.on('accountsChanged', handleAccountsChanged);
 
       return () => {
-        ethereum.removeListener("accountsChanged", handleAccountsChanged);
+        ethereum.removeListener('accountsChanged', handleAccountsChanged);
       };
     } catch (error) {
       // Handle case where ethereum wallet is not available (testing environment)

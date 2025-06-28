@@ -19,7 +19,10 @@ export const WalletInfo = ({
         <strong>Your Account:</strong> {account || 'Not connected'}
       </p>
       <p>
-        <strong>Balance:</strong> {account ? `${tokenBalance.toFixed(4)} ${tokenSymbol} / ${ethBalance.toFixed(4)} ETH` : 'N/A'}
+        <strong>Balance:</strong>{' '}
+        {account
+          ? `${tokenBalance.toFixed(4)} ${tokenSymbol} / ${ethBalance.toFixed(4)} ETH`
+          : 'N/A'}
       </p>
     </div>
   );

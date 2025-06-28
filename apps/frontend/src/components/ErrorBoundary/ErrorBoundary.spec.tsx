@@ -40,7 +40,7 @@ describe('ErrorBoundary', () => {
 
     expect(getByText('Test error message')).toBeTruthy();
     expect(getByText('Try again')).toBeTruthy();
-    
+
     // Verify that React's error boundary mechanism was triggered
     expect(consoleErrorSpy).toHaveBeenCalled();
   });

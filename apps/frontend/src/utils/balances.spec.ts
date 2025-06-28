@@ -34,7 +34,7 @@ vi.mock('@typechain-types', () => ({
 
 describe('Balance Utilities', () => {
   const mockAccount = '0x1234567890abcdef1234567890abcdef12345678';
-  
+
   const mockEthereumProvider = {
     getBalance: vi.fn(),
   };
@@ -53,7 +53,11 @@ describe('Balance Utilities', () => {
       mockEthereumProvider.getBalance.mockResolvedValue(BigInt(5e18)); // 5 ETH
       mockTokenContract.balanceOf.mockResolvedValue(BigInt(1000e18)); // 1000 tokens
 
-      const result = await getWalletBalances(mockEthereumProvider as unknown as ethers.BrowserProvider, mockAccount, mockSigner);
+      const result = await getWalletBalances(
+        mockEthereumProvider as unknown as ethers.BrowserProvider,
+        mockAccount,
+        mockSigner
+      );
 
       expect(result).toEqual({
         ethBalance: 5.0,
@@ -69,7 +73,11 @@ describe('Balance Utilities', () => {
       mockEthereumProvider.getBalance.mockResolvedValue(BigInt(2.5e18)); // 2.5 ETH
       mockTokenContract.balanceOf.mockResolvedValue(BigInt(750e18)); // 750 tokens
 
-      const result = await getWalletBalances(mockEthereumProvider as unknown as ethers.BrowserProvider, mockAccount, mockSigner);
+      const result = await getWalletBalances(
+        mockEthereumProvider as unknown as ethers.BrowserProvider,
+        mockAccount,
+        mockSigner
+      );
 
       expect(result).toEqual({
         ethBalance: 2.5,
@@ -78,19 +86,33 @@ describe('Balance Utilities', () => {
     });
 
     it('should throw error when ethereum provider fails', async () => {
-      mockEthereumProvider.getBalance.mockRejectedValue(new Error('Network error'));
+      mockEthereumProvider.getBalance.mockRejectedValue(
+        new Error('Network error')
+      );
       mockTokenContract.balanceOf.mockResolvedValue(BigInt(1000e18));
 
-      await expect(getWalletBalances(mockEthereumProvider as unknown as ethers.BrowserProvider, mockAccount, mockSigner))
-        .rejects.toThrow('Network error');
+      await expect(
+        getWalletBalances(
+          mockEthereumProvider as unknown as ethers.BrowserProvider,
+          mockAccount,
+          mockSigner
+        )
+      ).rejects.toThrow('Network error');
     });
 
     it('should throw error when token contract fails', async () => {
       mockEthereumProvider.getBalance.mockResolvedValue(BigInt(5e18));
-      mockTokenContract.balanceOf.mockRejectedValue(new Error('Contract error'));
+      mockTokenContract.balanceOf.mockRejectedValue(
+        new Error('Contract error')
+      );
 
-      await expect(getWalletBalances(mockEthereumProvider as unknown as ethers.BrowserProvider, mockAccount, mockSigner))
-        .rejects.toThrow('Contract error');
+      await expect(
+        getWalletBalances(
+          mockEthereumProvider as unknown as ethers.BrowserProvider,
+          mockAccount,
+          mockSigner
+        )
+      ).rejects.toThrow('Contract error');
     });
   });
 
@@ -139,8 +161,9 @@ describe('Balance Utilities', () => {
       mockAmmContract.reserveETH.mockRejectedValue(new Error('Contract error'));
       mockAmmContract.reserveSimplest.mockResolvedValue(BigInt(20e18));
 
-      await expect(getPoolBalances(mockSigner))
-        .rejects.toThrow('Contract error');
+      await expect(getPoolBalances(mockSigner)).rejects.toThrow(
+        'Contract error'
+      );
     });
   });
 
@@ -165,8 +188,9 @@ describe('Balance Utilities', () => {
     it('should throw error when token contract fails', async () => {
       mockTokenContract.symbol.mockRejectedValue(new Error('Contract error'));
 
-      await expect(getTokenSymbol(mockSigner))
-        .rejects.toThrow('Contract error');
+      await expect(getTokenSymbol(mockSigner)).rejects.toThrow(
+        'Contract error'
+      );
     });
   });
 
@@ -181,7 +205,11 @@ describe('Balance Utilities', () => {
 
       // Call all functions in parallel
       const [walletBalances, poolBalances, tokenSymbol] = await Promise.all([
-        getWalletBalances(mockEthereumProvider as unknown as ethers.BrowserProvider, mockAccount, mockSigner),
+        getWalletBalances(
+          mockEthereumProvider as unknown as ethers.BrowserProvider,
+          mockAccount,
+          mockSigner
+        ),
         getPoolBalances(mockSigner),
         getTokenSymbol(mockSigner),
       ]);
@@ -199,7 +227,11 @@ describe('Balance Utilities', () => {
       mockEthereumProvider.getBalance.mockResolvedValue(largeEthAmount);
       mockTokenContract.balanceOf.mockResolvedValue(largeTokenAmount);
 
-      const result = await getWalletBalances(mockEthereumProvider as unknown as ethers.BrowserProvider, mockAccount, mockSigner);
+      const result = await getWalletBalances(
+        mockEthereumProvider as unknown as ethers.BrowserProvider,
+        mockAccount,
+        mockSigner
+      );
 
       expect(result).toEqual({
         ethBalance: 999.0,

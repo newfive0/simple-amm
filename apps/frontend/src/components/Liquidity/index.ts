@@ -1,1 +1,1 @@
-export { Liquidity, default } from './Liquidity';
+export { Liquidity, DisabledLiquidity } from './Liquidity';

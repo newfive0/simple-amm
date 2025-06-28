@@ -39,26 +39,49 @@ interface MockLiquidityProps {
 }
 
 vi.mock('../WalletInfo/WalletInfo', () => ({
-  WalletInfo: ({ account, ethBalance, tokenBalance, tokenSymbol }: MockWalletInfoProps) => (
+  WalletInfo: ({
+    account,
+    ethBalance,
+    tokenBalance,
+    tokenSymbol,
+  }: MockWalletInfoProps) => (
     <div data-testid="wallet-info">
-      {account ? `${account} - ${ethBalance.toFixed(4)} ETH / ${tokenBalance.toFixed(4)} ${tokenSymbol}` : 'Not connected'}
+      {account
+        ? `${account} - ${ethBalance.toFixed(4)} ETH / ${tokenBalance.toFixed(4)} ${tokenSymbol}`
+        : 'Not connected'}
     </div>
   ),
 }));
 
 vi.mock('../Swap/Swap', () => ({
-  Swap: ({ poolEthBalance, poolTokenBalance, tokenSymbol, onSwapComplete }: MockSwapProps) => (
+  Swap: ({
+    poolEthBalance,
+    poolTokenBalance,
+    tokenSymbol,
+    onSwapComplete,
+  }: MockSwapProps) => (
     <div data-testid="swap">
-      <div>Pool: {poolEthBalance.toFixed(4)} ETH / {poolTokenBalance.toFixed(4)} {tokenSymbol}</div>
+      <div>
+        Pool: {poolEthBalance.toFixed(4)} ETH / {poolTokenBalance.toFixed(4)}{' '}
+        {tokenSymbol}
+      </div>
       <button onClick={onSwapComplete}>Complete Swap</button>
     </div>
   ),
 }));
 
 vi.mock('../Liquidity/Liquidity', () => ({
-  Liquidity: ({ poolEthBalance, poolTokenBalance, tokenSymbol, onLiquidityComplete }: MockLiquidityProps) => (
+  Liquidity: ({
+    poolEthBalance,
+    poolTokenBalance,
+    tokenSymbol,
+    onLiquidityComplete,
+  }: MockLiquidityProps) => (
     <div data-testid="liquidity">
-      <div>Pool: {poolEthBalance.toFixed(4)} ETH / {poolTokenBalance.toFixed(4)} {tokenSymbol}</div>
+      <div>
+        Pool: {poolEthBalance.toFixed(4)} ETH / {poolTokenBalance.toFixed(4)}{' '}
+        {tokenSymbol}
+      </div>
       <button onClick={onLiquidityComplete}>Complete Liquidity</button>
     </div>
   ),
@@ -85,7 +108,7 @@ const mockWalletContext = {
   account: '0x1234567890abcdef1234567890abcdef12345678',
   signer: mockSigner,
   ethereumProvider: mockEthereumProvider,
-  errorMessage: "",
+  errorMessage: '',
   connectWallet: vi.fn(),
 };
 
@@ -93,8 +116,12 @@ vi.mock('../../contexts', () => ({
   useWallet: () => mockWalletContext,
 }));
 
-// Import mocked functions  
-import { getWalletBalances, getPoolBalances, getTokenSymbol } from '../../utils/balances';
+// Import mocked functions
+import {
+  getWalletBalances,
+  getPoolBalances,
+  getTokenSymbol,
+} from '../../utils/balances';
 
 const mockGetWalletBalances = vi.mocked(getWalletBalances);
 const mockGetPoolBalances = vi.mocked(getPoolBalances);
@@ -103,21 +130,21 @@ const mockGetTokenSymbol = vi.mocked(getTokenSymbol);
 describe('ConnectedDashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Reset wallet context to default state
     mockWalletContext.signer = mockSigner;
-    
+
     // Setup default mock returns
     mockGetWalletBalances.mockResolvedValue({
       ethBalance: 5.0,
       tokenBalance: 1000.0,
     });
-    
+
     mockGetPoolBalances.mockResolvedValue({
       ethReserve: 10.0,
       tokenReserve: 20.0,
     });
-    
+
     mockGetTokenSymbol.mockResolvedValue('SIMP');
   });
 
@@ -138,7 +165,11 @@ describe('ConnectedDashboard', () => {
 
       // Wait for async balance fetching to complete
       await waitFor(() => {
-        expect(screen.getByText(/0x1234567890abcdef1234567890abcdef12345678 - 5\.0000 ETH \/ 1000\.0000 SIMP/)).toBeInTheDocument();
+        expect(
+          screen.getByText(
+            /0x1234567890abcdef1234567890abcdef12345678 - 5\.0000 ETH \/ 1000\.0000 SIMP/
+          )
+        ).toBeInTheDocument();
       });
     });
 
@@ -147,7 +178,9 @@ describe('ConnectedDashboard', () => {
 
       // Wait for async balance fetching to complete
       await waitFor(() => {
-        const swapElements = screen.getAllByText('Pool: 10.0000 ETH / 20.0000 SIMP');
+        const swapElements = screen.getAllByText(
+          'Pool: 10.0000 ETH / 20.0000 SIMP'
+        );
         expect(swapElements).toHaveLength(2); // One for Swap, one for Liquidity
       });
     });
@@ -178,7 +211,11 @@ describe('ConnectedDashboard', () => {
       // Wait for async useEffect to complete (even though it does nothing with null signer)
       await waitFor(() => {
         // Should show zero balances in WalletInfo and "Wallet not connected" for contracts
-        expect(screen.getByText('0x1234567890abcdef1234567890abcdef12345678 - 0.0000 ETH / 0.0000')).toBeInTheDocument();
+        expect(
+          screen.getByText(
+            '0x1234567890abcdef1234567890abcdef12345678 - 0.0000 ETH / 0.0000'
+          )
+        ).toBeInTheDocument();
         expect(screen.getByText('Wallet not connected')).toBeInTheDocument();
       });
 
@@ -223,7 +260,7 @@ describe('ConnectedDashboard', () => {
 
       // Clear previous calls
       vi.clearAllMocks();
-      
+
       // Setup new mock values
       mockGetWalletBalances.mockResolvedValue({
         ethBalance: 4.0,
@@ -264,22 +301,28 @@ describe('ConnectedDashboard', () => {
     });
   });
 
-
   describe('Error Handling', () => {
     it('should handle balance fetching errors gracefully', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
+      const consoleSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
       // Ensure signer is available for this test
       mockWalletContext.signer = mockSigner;
-      
+
       mockGetWalletBalances.mockRejectedValue(new Error('Network error'));
-      mockGetPoolBalances.mockResolvedValue({ ethReserve: 10.0, tokenReserve: 20.0 });
+      mockGetPoolBalances.mockResolvedValue({
+        ethReserve: 10.0,
+        tokenReserve: 20.0,
+      });
       mockGetTokenSymbol.mockResolvedValue('SIMP');
 
       render(<ConnectedDashboard />);
 
       await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalledWith('Failed to fetch balances: Network error');
+        expect(consoleSpy).toHaveBeenCalledWith(
+          'Failed to fetch balances: Network error'
+        );
       });
 
       consoleSpy.mockRestore();

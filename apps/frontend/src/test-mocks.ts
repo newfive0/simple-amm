@@ -62,9 +62,11 @@ export const mockContractAddresses = {
 };
 
 // Common test props
-export const createDefaultProps = (overrides: { [key: string]: unknown } = {}) => {
+export const createDefaultProps = (
+  overrides: { [key: string]: unknown } = {}
+) => {
   const { tokenContract, ammContract } = createMockContracts();
-  
+
   return {
     tokenContract,
     ammContract,

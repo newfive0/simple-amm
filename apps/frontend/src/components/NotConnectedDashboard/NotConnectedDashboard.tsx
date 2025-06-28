@@ -1,15 +1,17 @@
 import { useWallet } from '../../contexts';
-import { WalletInfo, DisabledSwap } from '../';
+import { WalletInfo, DisabledSwap, DisabledLiquidity } from '../';
 
 export const NotConnectedDashboard = () => {
   const { account } = useWallet();
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '0',
-    }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0',
+      }}
+    >
       <WalletInfo
         account={account}
         ethBalance={0}
@@ -17,6 +19,7 @@ export const NotConnectedDashboard = () => {
         tokenSymbol=""
       />
       <DisabledSwap />
+      <DisabledLiquidity />
     </div>
   );
 };

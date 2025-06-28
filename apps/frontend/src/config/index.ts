@@ -16,7 +16,7 @@ const createConfig = (): AppConfig => {
   if (!tokenAddress || !ammPoolAddress) {
     throw new Error(
       'Contract addresses not found. Ensure contracts are deployed and environment variables are set. ' +
-      'Run: nx copy-artifacts contracts'
+        'Run: nx copy-artifacts contracts'
     );
   }
 

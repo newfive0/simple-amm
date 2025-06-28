@@ -8,7 +8,10 @@ interface ErrorBoundaryProps {
 
 const ErrorFallback = ({ error }: { error: Error }) => (
   <div className={styles.container}>
-    {error.message || 'An unexpected error occurred.'} <a href="/" className={styles.link}>Try again</a>
+    {error.message || 'An unexpected error occurred.'}{' '}
+    <a href="/" className={styles.link}>
+      Try again
+    </a>
   </div>
 );
 

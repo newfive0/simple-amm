@@ -17,8 +17,11 @@ export const getWalletBalances = async (
   account: string,
   signer: ethers.JsonRpcSigner
 ): Promise<WalletBalances> => {
-  const tokenContract = Token__factory.connect(config.contracts.tokenAddress, signer);
-  
+  const tokenContract = Token__factory.connect(
+    config.contracts.tokenAddress,
+    signer
+  );
+
   const [ethBal, tokenBal] = await Promise.all([
     ethereumProvider.getBalance(account),
     tokenContract.balanceOf(account),
@@ -30,9 +33,14 @@ export const getWalletBalances = async (
   };
 };
 
-export const getPoolBalances = async (signer: ethers.JsonRpcSigner): Promise<PoolBalances> => {
-  const ammContract = AMMPool__factory.connect(config.contracts.ammPoolAddress, signer);
-  
+export const getPoolBalances = async (
+  signer: ethers.JsonRpcSigner
+): Promise<PoolBalances> => {
+  const ammContract = AMMPool__factory.connect(
+    config.contracts.ammPoolAddress,
+    signer
+  );
+
   const [ethReserve, tokenReserve] = await Promise.all([
     ammContract.reserveETH(),
     ammContract.reserveSimplest(),
@@ -44,7 +52,12 @@ export const getPoolBalances = async (signer: ethers.JsonRpcSigner): Promise<Poo
   };
 };
 
-export const getTokenSymbol = async (signer: ethers.JsonRpcSigner): Promise<string> => {
-  const tokenContract = Token__factory.connect(config.contracts.tokenAddress, signer);
+export const getTokenSymbol = async (
+  signer: ethers.JsonRpcSigner
+): Promise<string> => {
+  const tokenContract = Token__factory.connect(
+    config.contracts.tokenAddress,
+    signer
+  );
   return await tokenContract.symbol();
 };
