@@ -12,6 +12,7 @@ import {
   getFriendlyMessage,
   WALLET_REQUIRED_ERROR,
 } from '../utils/errorMessages';
+import { useErrorMessage } from './ErrorMessageContext';
 
 declare global {
   interface Window {
@@ -23,19 +24,25 @@ export interface WalletContextType {
   ethereumProvider: ethers.BrowserProvider | null;
   signer: ethers.JsonRpcSigner | null;
   account: string;
-  errorMessage: string;
   connectWallet: () => Promise<void>;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
 
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
+  const { setErrorMessage } = useErrorMessage();
   const [walletState, setWalletState] = useState({
     ethereumProvider: null as ethers.BrowserProvider | null,
     signer: null as ethers.JsonRpcSigner | null,
     account: '',
-    errorMessage: !window.ethereum ? WALLET_REQUIRED_ERROR : '',
   });
+
+  // Check for wallet availability and set error if needed
+  useEffect(() => {
+    if (!window.ethereum) {
+      setErrorMessage(WALLET_REQUIRED_ERROR);
+    }
+  }, [setErrorMessage]);
 
   // Request wallet connection (permission)
   const requestWalletConnection = useCallback(
@@ -66,10 +73,12 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
         ethereumProvider: ethProvider,
         signer: ethSigner,
         account: userAddress,
-        errorMessage: '', // Clear any previous errors on successful connection
       }));
+
+      // Clear any previous errors on successful connection
+      setErrorMessage('');
     },
-    []
+    [setErrorMessage]
   );
 
   // Reset wallet state to disconnected
@@ -78,13 +87,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       ethereumProvider: null,
       signer: null,
       account: '',
-      errorMessage: '',
     });
-  }, []);
-
-  // Set error message
-  const setErrorMessage = useCallback((message: string) => {
-    setWalletState((prev) => ({ ...prev, errorMessage: message }));
   }, []);
 
   const connectWallet = useCallback(async () => {
@@ -155,7 +158,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     ethereumProvider: walletState.ethereumProvider,
     signer: walletState.signer,
     account: walletState.account,
-    errorMessage: walletState.errorMessage,
     connectWallet,
   };
 

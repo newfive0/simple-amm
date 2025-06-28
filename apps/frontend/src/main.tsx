@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import * as ReactDOM from 'react-dom/client';
 import App from './app/app';
-import { WalletProvider } from './contexts';
+import { WalletProvider, ErrorMessageProvider } from './contexts';
 import { ErrorBoundary } from './components';
 
 const root = ReactDOM.createRoot(
@@ -11,9 +11,11 @@ const root = ReactDOM.createRoot(
 root.render(
   <StrictMode>
     <ErrorBoundary>
-      <WalletProvider>
-        <App />
-      </WalletProvider>
+      <ErrorMessageProvider>
+        <WalletProvider>
+          <App />
+        </WalletProvider>
+      </ErrorMessageProvider>
     </ErrorBoundary>
   </StrictMode>
 );

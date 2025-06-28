@@ -1,9 +1,10 @@
-import { useWallet } from '../../contexts';
+import { useWallet, useErrorMessage } from '../../contexts';
 import { ConnectWallet } from '../ConnectWallet';
 import styles from './Header.module.scss';
 
 export const Header = () => {
-  const { account, errorMessage } = useWallet();
+  const { account } = useWallet();
+  const { errorMessage } = useErrorMessage();
 
   return (
     <div className={styles.header}>

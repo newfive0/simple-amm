@@ -2,10 +2,12 @@ import { render, screen } from '@testing-library/react';
 import { vi, describe, it, expect } from 'vitest';
 import { Header } from './Header';
 import type { WalletContextType } from '../../contexts/WalletContext';
+import type { ErrorMessageContextType } from '../../contexts/ErrorMessageContext';
 
-// Mock the wallet context
+// Mock the contexts
 vi.mock('../../contexts', () => ({
   useWallet: vi.fn(),
+  useErrorMessage: vi.fn(),
 }));
 
 // Mock ConnectWallet component
@@ -13,72 +15,56 @@ vi.mock('../ConnectWallet', () => ({
   ConnectWallet: () => <button>Connect Wallet</button>,
 }));
 
-const { useWallet } = await import('../../contexts');
+const { useWallet, useErrorMessage } = await import('../../contexts');
+
+// Helper functions to create mock contexts
+const createMockWalletContext = (account = ''): WalletContextType => ({
+  account,
+  ethereumProvider: null,
+  signer: null,
+  connectWallet: vi.fn(),
+});
+
+const createMockErrorContext = (
+  errorMessage = ''
+): ErrorMessageContextType => ({
+  errorMessage,
+  setErrorMessage: vi.fn(),
+  clearErrorMessage: vi.fn(),
+});
+
+const renderHeaderWithMocks = (account = '', errorMessage = '') => {
+  vi.mocked(useWallet).mockReturnValue(createMockWalletContext(account));
+  vi.mocked(useErrorMessage).mockReturnValue(
+    createMockErrorContext(errorMessage)
+  );
+  return render(<Header />);
+};
 
 describe('Header Component', () => {
   it('should render title and connect button when not connected', () => {
-    const mockWalletContext: WalletContextType = {
-      account: '',
-      ethereumProvider: null,
-      signer: null,
-      errorMessage: '',
-      connectWallet: vi.fn(),
-    };
-
-    vi.mocked(useWallet).mockReturnValue(mockWalletContext);
-
-    render(<Header />);
+    renderHeaderWithMocks();
 
     expect(screen.getByText('Very Simple AMM')).toBeInTheDocument();
     expect(screen.getByText('Connect Wallet')).toBeInTheDocument();
   });
 
   it('should render only title when connected', () => {
-    const mockWalletContext: WalletContextType = {
-      account: '0x123',
-      ethereumProvider: null,
-      signer: null,
-      errorMessage: '',
-      connectWallet: vi.fn(),
-    };
-
-    vi.mocked(useWallet).mockReturnValue(mockWalletContext);
-
-    render(<Header />);
+    renderHeaderWithMocks('0x123');
 
     expect(screen.getByText('Very Simple AMM')).toBeInTheDocument();
     expect(screen.queryByText('Connect Wallet')).not.toBeInTheDocument();
   });
 
   it('should display error message when error exists', () => {
-    const mockWalletContext: WalletContextType = {
-      account: '',
-      ethereumProvider: null,
-      signer: null,
-      errorMessage: 'User rejected the request',
-      connectWallet: vi.fn(),
-    };
-
-    vi.mocked(useWallet).mockReturnValue(mockWalletContext);
-
-    render(<Header />);
+    renderHeaderWithMocks('', 'User rejected the request');
 
     expect(screen.getByText('Very Simple AMM')).toBeInTheDocument();
     expect(screen.getByText('User rejected the request')).toBeInTheDocument();
   });
 
   it('should not display error section when error is empty', () => {
-    const mockWalletContext: WalletContextType = {
-      account: '',
-      ethereumProvider: null,
-      signer: null,
-      errorMessage: '',
-      connectWallet: vi.fn(),
-    };
-
-    vi.mocked(useWallet).mockReturnValue(mockWalletContext);
-
-    render(<Header />);
+    renderHeaderWithMocks();
 
     expect(screen.getByText('Very Simple AMM')).toBeInTheDocument();
     expect(
@@ -87,18 +73,10 @@ describe('Header Component', () => {
   });
 
   it('should not display connect button when there is an error message', () => {
-    const mockWalletContext: WalletContextType = {
-      account: '',
-      ethereumProvider: null,
-      signer: null,
-      errorMessage:
-        'Ethereum wallet required. Please install a Web3 wallet extension.',
-      connectWallet: vi.fn(),
-    };
-
-    vi.mocked(useWallet).mockReturnValue(mockWalletContext);
-
-    render(<Header />);
+    renderHeaderWithMocks(
+      '',
+      'Ethereum wallet required. Please install a Web3 wallet extension.'
+    );
 
     expect(screen.getByText('Very Simple AMM')).toBeInTheDocument();
     expect(

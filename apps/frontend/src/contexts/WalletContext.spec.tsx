@@ -1,11 +1,20 @@
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { ReactNode } from 'react';
 import { WalletProvider, useWallet } from './WalletContext';
+import { ErrorMessageProvider, useErrorMessage } from './ErrorMessageContext';
+
+// Helper component to wrap tests with required providers
+const TestWrapper = ({ children }: { children: ReactNode }) => (
+  <ErrorMessageProvider>
+    <WalletProvider>{children}</WalletProvider>
+  </ErrorMessageProvider>
+);
 
 // Create test component to consume context
 const TestComponent = () => {
-  const { ethereumProvider, signer, account, errorMessage, connectWallet } =
-    useWallet();
+  const { ethereumProvider, signer, account, connectWallet } = useWallet();
+  const { errorMessage } = useErrorMessage();
 
   return (
     <div>
@@ -99,9 +108,9 @@ describe('WalletContext', () => {
       });
 
       render(
-        <WalletProvider>
+        <TestWrapper>
           <TestComponent />
-        </WalletProvider>
+        </TestWrapper>
       );
 
       // Should start disconnected with wallet required error message
@@ -120,9 +129,9 @@ describe('WalletContext', () => {
       });
 
       render(
-        <WalletProvider>
+        <TestWrapper>
           <TestComponent />
-        </WalletProvider>
+        </TestWrapper>
       );
 
       // Try to connect wallet without MetaMask
@@ -146,9 +155,9 @@ describe('WalletContext', () => {
   describe('Wallet Connection', () => {
     it('should connect wallet successfully', async () => {
       render(
-        <WalletProvider>
+        <TestWrapper>
           <TestComponent />
-        </WalletProvider>
+        </TestWrapper>
       );
 
       // Click connect wallet button
@@ -179,9 +188,9 @@ describe('WalletContext', () => {
       );
 
       render(
-        <WalletProvider>
+        <TestWrapper>
           <TestComponent />
-        </WalletProvider>
+        </TestWrapper>
       );
 
       act(() => {
@@ -204,9 +213,9 @@ describe('WalletContext', () => {
       mockEthereum.request.mockResolvedValue([]);
 
       render(
-        <WalletProvider>
+        <TestWrapper>
           <TestComponent />
-        </WalletProvider>
+        </TestWrapper>
       );
 
       act(() => {
@@ -226,9 +235,9 @@ describe('WalletContext', () => {
       mockEthereum.request.mockResolvedValue('invalid-response');
 
       render(
-        <WalletProvider>
+        <TestWrapper>
           <TestComponent />
-        </WalletProvider>
+        </TestWrapper>
       );
 
       act(() => {
@@ -248,9 +257,9 @@ describe('WalletContext', () => {
   describe('Wallet Disconnection', () => {
     it('should disconnect wallet when accounts change to empty array', async () => {
       render(
-        <WalletProvider>
+        <TestWrapper>
           <TestComponent />
-        </WalletProvider>
+        </TestWrapper>
       );
 
       // First connect
@@ -281,9 +290,9 @@ describe('WalletContext', () => {
   describe('Account Change Handling', () => {
     it('should set up account change listener', async () => {
       render(
-        <WalletProvider>
+        <TestWrapper>
           <TestComponent />
-        </WalletProvider>
+        </TestWrapper>
       );
 
       // Wait for initial state updates to complete
@@ -297,9 +306,9 @@ describe('WalletContext', () => {
 
     it('should disconnect when accounts array is empty', async () => {
       render(
-        <WalletProvider>
+        <TestWrapper>
           <TestComponent />
-        </WalletProvider>
+        </TestWrapper>
       );
 
       // First connect wallet
@@ -328,9 +337,9 @@ describe('WalletContext', () => {
 
     it('should reconnect when account changes to different address', async () => {
       render(
-        <WalletProvider>
+        <TestWrapper>
           <TestComponent />
-        </WalletProvider>
+        </TestWrapper>
       );
 
       // First connect wallet
@@ -360,9 +369,9 @@ describe('WalletContext', () => {
 
     it('should not reconnect when account changes to same address', async () => {
       render(
-        <WalletProvider>
+        <TestWrapper>
           <TestComponent />
-        </WalletProvider>
+        </TestWrapper>
       );
 
       const accountsChangedHandler = getAccountsChangedHandler();
@@ -419,9 +428,9 @@ describe('WalletContext', () => {
       );
 
       render(
-        <WalletProvider>
+        <TestWrapper>
           <TestComponent />
-        </WalletProvider>
+        </TestWrapper>
       );
 
       // Click the connect button which will trigger the error
@@ -448,9 +457,9 @@ describe('WalletContext', () => {
       );
 
       render(
-        <WalletProvider>
+        <TestWrapper>
           <TestComponent />
-        </WalletProvider>
+        </TestWrapper>
       );
 
       // Trigger an error
@@ -486,9 +495,9 @@ describe('WalletContext', () => {
       mockSigner.getAddress.mockRejectedValue(new Error('Address error'));
 
       render(
-        <WalletProvider>
+        <TestWrapper>
           <TestComponent />
-        </WalletProvider>
+        </TestWrapper>
       );
 
       act(() => {
@@ -506,9 +515,9 @@ describe('WalletContext', () => {
 
     it('should handle missing ethereum provider during initialization', async () => {
       render(
-        <WalletProvider>
+        <TestWrapper>
           <TestComponent />
-        </WalletProvider>
+        </TestWrapper>
       );
 
       // Connect first
