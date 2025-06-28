@@ -104,19 +104,11 @@ describe('WalletContext', () => {
         </WalletProvider>
       );
 
-      // Wait for initial connection check to complete and show wallet required error
-      await waitFor(() => {
-        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
-          'null'
-        );
-        expect(screen.getByTestId('errorMessage')).toHaveTextContent(
-          'Ethereum wallet required. Please install a Web3 wallet extension.'
-        );
-      });
-
-      // Should remain disconnected
+      // Should start disconnected with no error message
+      expect(screen.getByTestId('ethereum-provider')).toHaveTextContent('null');
       expect(screen.getByTestId('signer')).toHaveTextContent('null');
       expect(screen.getByTestId('account')).toHaveTextContent('');
+      expect(screen.getByTestId('errorMessage')).toHaveTextContent('null');
     });
 
     it('should show wallet required error when trying to connect without MetaMask', async () => {
@@ -274,74 +266,6 @@ describe('WalletContext', () => {
         getAccountsChangedHandler()([]);
       });
 
-      await waitFor(() => {
-        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
-          'null'
-        );
-        expect(screen.getByTestId('signer')).toHaveTextContent('null');
-        expect(screen.getByTestId('account')).toHaveTextContent('');
-      });
-    });
-  });
-
-  describe('Auto-connection on Page Load', () => {
-    it('should auto-connect when wallet was previously connected', async () => {
-      // Simulate successful auto-connection (wallet still connected from previous session)
-      render(
-        <WalletProvider>
-          <TestComponent />
-        </WalletProvider>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
-          'connected'
-        );
-        expect(screen.getByTestId('signer')).toHaveTextContent('available');
-        expect(screen.getByTestId('account')).toHaveTextContent(
-          '0x1234567890abcdef1234567890abcdef12345678'
-        );
-      });
-
-      // Should not request accounts, just initialize state
-      expect(mockEthereum.request).not.toHaveBeenCalled();
-      expect(mockBrowserProvider.getSigner).toHaveBeenCalled();
-      expect(mockSigner.getAddress).toHaveBeenCalled();
-    });
-
-    it('should finish checking connection when wallet not previously connected', async () => {
-      // Simulate failed auto-connection (wallet not connected from previous session)
-      mockBrowserProvider.getSigner.mockRejectedValue(
-        new Error('No permission')
-      );
-
-      render(
-        <WalletProvider>
-          <TestComponent />
-        </WalletProvider>
-      );
-
-      await waitFor(() => {
-        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
-          'null'
-        );
-        expect(screen.getByTestId('signer')).toHaveTextContent('null');
-        expect(screen.getByTestId('account')).toHaveTextContent('');
-      });
-    });
-
-    it('should handle auto-connection failure gracefully', async () => {
-      mockBrowserProvider.getSigner.mockRejectedValue(
-        new Error('Connection failed')
-      );
-
-      render(
-        <WalletProvider>
-          <TestComponent />
-        </WalletProvider>
-      );
-
-      // The useEffect will complete after handling the error properly
       await waitFor(() => {
         expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
           'null'

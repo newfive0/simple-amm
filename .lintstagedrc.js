@@ -1,14 +1,12 @@
 module.exports = {
   // For frontend React/TypeScript files
   'apps/frontend/**/*.{js,ts,tsx}': [
-    'nx lint frontend',
-    () => 'nx typecheck frontend',
+    () => 'nx run-many -t lint,typecheck -p frontend --parallel',
   ],
 
   // For JavaScript/TypeScript files in the contracts library
   'libs/contracts/**/*.{js,ts}': [
-    'nx lint-js contracts',
-    () => 'nx typecheck contracts',
+    () => 'nx run-many -t lint-js,typecheck -p contracts --parallel',
   ],
 
   // For Solidity files in the contracts library

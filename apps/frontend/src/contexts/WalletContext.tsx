@@ -8,6 +8,7 @@ import {
 } from 'react';
 import { ethers } from 'ethers';
 import { EIP1193Provider } from 'eip-1193';
+import { getFriendlyMessage } from '../utils/errorMessages';
 
 declare global {
   interface Window {
@@ -28,16 +29,6 @@ const WalletContext = createContext<WalletContextType | undefined>(undefined);
 // Error message constants
 const WALLET_REQUIRED_ERROR =
   'Ethereum wallet required. Please install a Web3 wallet extension.';
-
-// Helper function to extract error message from any error
-const getErrorMessage = (error: unknown): string => {
-  // Try to get message field from error object
-  if (error && typeof error === 'object' && 'message' in error) {
-    return (error as Error).message;
-  }
-  // Final fallback
-  return 'Connection failed';
-};
 
 export const WalletProvider = ({ children }: { children: ReactNode }) => {
   const [walletState, setWalletState] = useState({
@@ -113,7 +104,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       // Reset state on connection failure and set error message
       resetWalletState();
-      setErrorMessage(getErrorMessage(error));
+      setErrorMessage(getFriendlyMessage(error));
     }
   }, [
     requestWalletConnection,
@@ -121,27 +112,6 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     resetWalletState,
     setErrorMessage,
   ]);
-
-  // Check for existing wallet connection on page load
-  useEffect(() => {
-    const checkConnection = async () => {
-      if (!window.ethereum) {
-        setErrorMessage(WALLET_REQUIRED_ERROR);
-        return;
-      }
-
-      try {
-        // Try to initialize wallet state - if wallet was previously connected,
-        // this will succeed silently. If not connected, it will fail and reset state.
-        await initializeWalletState(window.ethereum);
-      } catch {
-        // Reset state on failure (wallet not connected or permission revoked)
-        resetWalletState();
-      }
-    };
-
-    checkConnection();
-  }, [initializeWalletState, resetWalletState, setErrorMessage]);
 
   // Set up account change listener
   useEffect(() => {
