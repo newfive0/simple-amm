@@ -66,10 +66,10 @@ describe('Swap Component', () => {
       expect(screen.getByText(/≈ 1\.818182 SIMP/)).toBeInTheDocument();
     });
 
-    it('should show zero output when no input amount', () => {
+    it('should show exchange rate when no input amount', () => {
       render(<Swap {...defaultProps} />);
 
-      expect(screen.getByText('≈ 0 SIMP')).toBeInTheDocument();
+      expect(screen.getByText('1 ETH ≈ 2.0000 SIMP')).toBeInTheDocument();
     });
   });
 
@@ -116,7 +116,7 @@ describe('Swap Component', () => {
       const input = screen.getByPlaceholderText('Enter ETH amount');
       fireEvent.change(input, { target: { value: 'invalid' } });
 
-      expect(screen.getByText('≈ 0 SIMP')).toBeInTheDocument();
+      expect(screen.getByText('1 ETH ≈ 2.0000 SIMP')).toBeInTheDocument();
     });
   });
 

@@ -176,8 +176,8 @@ export const Liquidity = ({
       {lpTokenBalances.userLPTokens > 0 && (
         <p>
           <strong>Your LP Tokens:</strong>{' '}
-          {lpTokenBalances.userLPTokens.toFixed(4)} (
-          {lpTokenBalances.poolOwnershipPercentage.toFixed(2)}% of pool)
+          {lpTokenBalances.userLPTokens.toFixed(4)} ~{' '}
+          {lpTokenBalances.poolOwnershipPercentage.toFixed(2)}% of pool
         </p>
       )}
     </div>

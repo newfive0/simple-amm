@@ -213,4 +213,9 @@ describe('Liquidity', () => {
 
     alertSpy.mockRestore();
   });
+
+  it('should display LP tokens with correct format', () => {
+    const { getByText } = render(<Liquidity {...defaultProps} />);
+    expect(getByText(/5\.0000 ~ 50\.00% of pool/)).toBeTruthy();
+  });
 });

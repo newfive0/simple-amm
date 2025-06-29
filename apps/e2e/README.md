@@ -24,11 +24,6 @@ Visual tests for the Simple AMM using Playwright and Synpress.
    nx test e2e
    ```
 
-## Update Snapshots
-
-```bash
-nx update-snapshots e2e
-```
 
 ## What the Test Does
 
@@ -40,4 +35,4 @@ nx update-snapshots e2e
 
 - **Hardhat network not available**: Ensure step 1 is running
 - **Token symbol not found**: Complete steps 1-3 in order
-- **Snapshot differences**: Use `--update-snapshots` flag
+- **Snapshot differences**: Visual tests are now handled by Argos
