@@ -1,0 +1,21 @@
+# Argos screenshots (managed by Argos CI)
+screenshots/
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
+# Synpress cache
+.cache-synpress/
+
+# Node modules
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db

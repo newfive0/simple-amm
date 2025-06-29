@@ -153,14 +153,29 @@ npx playwright test --config=playwright.config.ts
 # Run MetaMask integration tests  
 npx playwright test --config=playwright.config.ts
 
-# Update snapshots (runs in headless mode for consistency)
-npx playwright test --update-snapshots
+# Run tests with visual regression testing
+npm run test:argos
 
 # Show report
 npx playwright show-report
 ```
 
 **Note**: E2E tests automatically start and stop the development environment (Hardhat node, contract deployment, and frontend server).
+
+#### Visual Regression Testing with Argos
+
+This project uses [Argos CI](https://argos-ci.com/) for visual regression testing:
+
+- **No local screenshots**: Screenshots are only stored in Argos cloud
+- **CI-first approach**: Baselines are created in CI environment
+- **Cross-platform consistency**: No OS-specific rendering differences
+- **PR integration**: Visual diffs appear directly in GitHub PRs
+
+**Setup:**
+1. Create account at [argos-ci.com](https://argos-ci.com/)
+2. Connect your GitHub repository
+3. Add `ARGOS_TOKEN` secret to GitHub repository settings
+4. Screenshots are automatically captured and compared on each CI run
 
 ## Linting
 

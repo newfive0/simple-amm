@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { argosScreenshot } from '@argos-ci/playwright';
 
 test('should display network error page when MetaMask is not detected', async ({
   page,
@@ -21,7 +22,5 @@ test('should display network error page when MetaMask is not detected', async ({
   });
 
   // Take screenshot of the network error state
-  await expect(page).toHaveScreenshot('wallet-not-installed-error.png', {
-    fullPage: true,
-  });
+  await argosScreenshot(page, 'wallet-not-installed-error');
 });

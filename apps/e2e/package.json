@@ -8,7 +8,13 @@
       "@simple-amm/frontend"
     ]
   },
+  "scripts": {
+    "test": "playwright test",
+    "test:argos": "playwright test && argos upload ./screenshots",
+    "argos:upload": "argos upload ./screenshots"
+  },
   "devDependencies": {
+    "@argos-ci/playwright": "^5.0.4",
     "@playwright/test": "^1.36.0",
     "@synthetixio/synpress": "^4.1.0"
   }

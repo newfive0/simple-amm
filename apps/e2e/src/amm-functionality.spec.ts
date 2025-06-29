@@ -1,5 +1,6 @@
 import { testWithSynpress } from '@synthetixio/synpress';
 import { MetaMask, metaMaskFixtures } from '@synthetixio/synpress/playwright';
+import { argosScreenshot } from '@argos-ci/playwright';
 import basicSetup from '../test/wallet-setup/basic.setup';
 
 const test = testWithSynpress(metaMaskFixtures(basicSetup));
@@ -44,9 +45,7 @@ test('should display AMM page with disabled elements before connection', async (
   ).toBeVisible();
 
   // Take screenshot of the initial AMM state before connection
-  await expect(page).toHaveScreenshot('amm-before-connection.png', {
-    fullPage: true,
-  });
+  await argosScreenshot(page, 'amm-before-connection');
 });
 
 test.describe('AMM Functionality', () => {
@@ -150,9 +149,7 @@ test.describe('AMM Functionality', () => {
       await expect(simpInput).toHaveValue('');
 
       // Take screenshot after liquidity addition
-      await expect(page).toHaveScreenshot('add-liquidity-success.png', {
-        fullPage: true,
-      });
+      await argosScreenshot(page, 'add-liquidity-success');
     };
 
     // STEP 3: Swap 1 ETH for SIMP
@@ -196,9 +193,7 @@ test.describe('AMM Functionality', () => {
       await expect(ethSwapInput).toHaveValue('');
 
       // Take screenshot after ETH to SIMP swap
-      await expect(page).toHaveScreenshot('swap-eth-to-simp-success.png', {
-        fullPage: true,
-      });
+      await argosScreenshot(page, 'swap-eth-to-simp-success');
     };
 
     // STEP 4: Swap 1 SIMP for ETH
@@ -245,9 +240,7 @@ test.describe('AMM Functionality', () => {
       await expect(simpSwapInput).toHaveValue('');
 
       // Take final screenshot after SIMP to ETH swap
-      await expect(page).toHaveScreenshot('swap-simp-to-eth-success.png', {
-        fullPage: true,
-      });
+      await argosScreenshot(page, 'swap-simp-to-eth-success');
     };
 
     // Execute all steps

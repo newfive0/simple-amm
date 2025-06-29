@@ -118,6 +118,14 @@ jobs:
           cd apps/e2e
           npx playwright test --config=playwright.config.ts
 
+      - name: Upload screenshots to Argos
+        if: always()
+        run: |
+          cd apps/e2e
+          npx argos upload ./screenshots --wait
+        env:
+          ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
+
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4
         if: always()
