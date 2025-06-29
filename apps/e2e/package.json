@@ -9,12 +9,9 @@
     ]
   },
   "scripts": {
-    "test": "playwright test",
-    "test:argos": "playwright test && argos upload ./screenshots",
-    "argos:upload": "argos upload ./screenshots"
+    "test": "playwright test"
   },
   "devDependencies": {
-    "@argos-ci/cli": "^2.5.7",
     "@argos-ci/playwright": "^5.0.4",
     "@playwright/test": "^1.36.0",
     "@synthetixio/synpress": "^4.1.0"

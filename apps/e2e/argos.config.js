@@ -17,7 +17,7 @@ module.exports = {
   // Threshold for considering two images different (0-1)
   threshold: 0.01,
   
-  // Fail CI on visual changes (requires --wait flag)
+  // Fail CI on visual changes via GitHub status checks
   failOnChanges: true,
   
   // Ignore regions (if needed)

@@ -169,7 +169,9 @@ This project uses [Argos CI](https://argos-ci.com/) for visual regression testin
 1. Create account at [argos-ci.com](https://argos-ci.com/)
 2. Connect your GitHub repository
 3. Add `ARGOS_TOKEN` secret to GitHub repository settings
-4. Screenshots are automatically captured and compared on each CI run
+4. Enable branch protection on main branch with "Argos" status check required
+5. Screenshots are automatically captured and compared on each CI run
+6. PRs with visual changes will be blocked until approved in Argos dashboard
 
 ## Linting
 
