@@ -2,6 +2,14 @@ import { testWithSynpress } from '@synthetixio/synpress';
 import { MetaMask, metaMaskFixtures } from '@synthetixio/synpress/playwright';
 import { argosScreenshot } from '@argos-ci/playwright';
 import basicSetup from '../test/wallet-setup/basic.setup';
+import {
+  initializeCalculator,
+  getCurrentBalances,
+  updateBalancesAfterAddLiquidity,
+  updateBalancesAfterSwapEthForSimp,
+  updateBalancesAfterSwapSimpForEth,
+} from './utils/balance-calculator';
+import { getGasCostsFromRecentTransactions } from './utils/gas-tracker';
 
 const test = testWithSynpress(metaMaskFixtures(basicSetup));
 const { expect } = test;
@@ -62,8 +70,8 @@ test.describe('AMM Functionality', () => {
       extensionId
     );
 
-    // Helper function to handle MetaMask transactions with 3 confirmations
-    const handleTripleConfirmation = async () => {
+    // Helper function to handle MetaMask transactions with 3 confirmations and return gas cost
+    const handleTripleConfirmation = async (): Promise<number> => {
       await page.waitForTimeout(3000);
       await metamask.confirmTransaction();
 
@@ -72,12 +80,22 @@ test.describe('AMM Functionality', () => {
 
       await page.waitForTimeout(3000);
       await metamask.confirmTransaction();
+
+      // Wait a bit for transactions to be mined
+      await page.waitForTimeout(5000);
+
+      // Get gas costs from the 2 actual blockchain transactions (approve + addLiquidity)
+      // Note: First confirmation is just MetaMask's spending cap UI, not a transaction
+      return await getGasCostsFromRecentTransactions(2);
     };
 
-    // Helper function to handle single MetaMask transaction
-    const handleSingleConfirmation = async () => {
+    // Helper function to handle single MetaMask transaction and return gas cost
+    const handleSingleConfirmation = async (): Promise<number> => {
       await page.waitForTimeout(3000);
       await metamask.confirmTransaction();
+
+      // Get gas cost from the transaction we just made
+      return await getGasCostsFromRecentTransactions(1);
     };
 
     // STEP 1: Setup and connect wallet
@@ -107,6 +125,17 @@ test.describe('AMM Functionality', () => {
       await expect(page.locator('text=/^Balance:.*SIMP.*ETH/')).toBeVisible({
         timeout: 15000,
       });
+
+      // Wait for specific initial balances
+      const currentBalances = getCurrentBalances();
+      const expectedBalanceText = `Balance: ${currentBalances.simpBalance.toFixed(4)} SIMP | ${currentBalances.ethBalance.toFixed(4)} ETH`;
+      const balanceElement = page.getByText('Balance:').locator('..');
+      await expect(balanceElement).toHaveText(expectedBalanceText, {
+        timeout: 10000,
+      });
+
+      // Take screenshot after successful connection with initial balances
+      await argosScreenshot(page, 'wallet-connected-initial-balances');
     };
 
     // STEP 2: Add liquidity (10 ETH + 20 SIMP)
@@ -129,15 +158,15 @@ test.describe('AMM Functionality', () => {
       await expect(ethInput).toHaveValue('10');
       await expect(simpInput).toHaveValue('20');
 
-      // Click Add Liquidity button
+      // Click Add Liquidity button and track gas usage
       const addLiquidityButton = liquiditySection
         .locator('button')
         .filter({ hasText: 'Add Liquidity' });
       await expect(addLiquidityButton).toBeEnabled();
-      await addLiquidityButton.click();
 
-      // Handle three-step confirmation process
-      await handleTripleConfirmation();
+      // Perform add liquidity operation
+      await addLiquidityButton.click();
+      const gasUsed = await handleTripleConfirmation();
 
       // Wait for transaction to complete
       await expect(
@@ -147,6 +176,17 @@ test.describe('AMM Functionality', () => {
       // Verify inputs are cleared after successful transaction
       await expect(ethInput).toHaveValue('');
       await expect(simpInput).toHaveValue('');
+
+      // Update balance calculations after adding liquidity with actual gas cost
+      updateBalancesAfterAddLiquidity(10, 20, gasUsed);
+
+      // Wait for balances to update to expected values
+      const updatedBalances = getCurrentBalances();
+      const expectedBalanceText = `Balance: ${updatedBalances.simpBalance.toFixed(4)} SIMP | ${updatedBalances.ethBalance.toFixed(4)} ETH`;
+      const balanceElement = page.getByText('Balance:').locator('..');
+      await expect(balanceElement).toHaveText(expectedBalanceText, {
+        timeout: 10000,
+      });
 
       // Take screenshot after liquidity addition
       await argosScreenshot(page, 'add-liquidity-success');
@@ -181,8 +221,8 @@ test.describe('AMM Functionality', () => {
       await expect(swapEthButton).toBeEnabled();
       await swapEthButton.click();
 
-      // Handle single confirmation
-      await handleSingleConfirmation();
+      // Handle single confirmation and get gas cost
+      const ethSwapGasUsed = await handleSingleConfirmation();
 
       // Wait for transaction to complete
       await expect(
@@ -191,6 +231,17 @@ test.describe('AMM Functionality', () => {
 
       // Verify input is cleared after successful swap
       await expect(ethSwapInput).toHaveValue('');
+
+      // Update balance calculations after ETH to SIMP swap
+      updateBalancesAfterSwapEthForSimp(1, ethSwapGasUsed);
+
+      // Wait for balances to update to expected values
+      const swapUpdatedBalances = getCurrentBalances();
+      const expectedBalanceText = `Balance: ${swapUpdatedBalances.simpBalance.toFixed(4)} SIMP | ${swapUpdatedBalances.ethBalance.toFixed(4)} ETH`;
+      const balanceElement = page.getByText('Balance:').locator('..');
+      await expect(balanceElement).toHaveText(expectedBalanceText, {
+        timeout: 10000,
+      });
 
       // Take screenshot after ETH to SIMP swap
       await argosScreenshot(page, 'swap-eth-to-simp-success');
@@ -228,8 +279,8 @@ test.describe('AMM Functionality', () => {
       await expect(swapSimpButton).toBeEnabled();
       await swapSimpButton.click();
 
-      // Handle three-step confirmation process
-      await handleTripleConfirmation();
+      // Handle SIMP->ETH swap (3 confirmations, receiving ETH)
+      const simpToEthGasUsed = await handleTripleConfirmation();
 
       // Wait for transaction to complete
       await expect(
@@ -237,11 +288,25 @@ test.describe('AMM Functionality', () => {
       ).toBeHidden({ timeout: 30000 });
 
       // Verify input is cleared after successful swap
-      await expect(simpSwapInput).toHaveValue('');
+      await expect(simpSwapInput).toHaveValue('', { timeout: 10000 });
+
+      // Update balance calculations after SIMP to ETH swap with actual gas cost
+      updateBalancesAfterSwapSimpForEth(1, simpToEthGasUsed);
+
+      // Wait for balances to update to expected values
+      const finalBalances = getCurrentBalances();
+      const expectedBalanceText = `Balance: ${finalBalances.simpBalance.toFixed(4)} SIMP | ${finalBalances.ethBalance.toFixed(4)} ETH`;
+      const balanceElement = page.getByText('Balance:').locator('..');
+      await expect(balanceElement).toHaveText(expectedBalanceText, {
+        timeout: 10000,
+      });
 
       // Take final screenshot after SIMP to ETH swap
       await argosScreenshot(page, 'swap-simp-to-eth-success');
     };
+
+    // Initialize the calculator with starting balances and reserves
+    initializeCalculator();
 
     // Execute all steps
     await setupAndConnect();
