@@ -128,6 +128,10 @@ jobs:
           npx @argos-ci/cli upload ./screenshots
         env:
           ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
+      
+      - name: Check Argos status (will be handled by GitHub status checks)
+        if: always()
+        run: echo "Visual regression testing completed. Check Argos dashboard for approval if changes detected."
 
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4

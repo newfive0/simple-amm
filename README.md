@@ -167,11 +167,17 @@ This project uses [Argos CI](https://argos-ci.com/) for visual regression testin
 
 **Setup:**
 1. Create account at [argos-ci.com](https://argos-ci.com/)
-2. Connect your GitHub repository
-3. Add `ARGOS_TOKEN` secret to GitHub repository settings
-4. Enable branch protection on main branch with "Argos" status check required
-5. Screenshots are automatically captured and compared on each CI run
-6. PRs with visual changes will be blocked until approved in Argos dashboard
+2. Install Argos GitHub App from [GitHub Marketplace](https://github.com/marketplace/argos-ci)
+3. Connect your GitHub repository in Argos dashboard
+4. Add `ARGOS_TOKEN` secret to GitHub repository settings
+5. Enable branch protection rules:
+   - Go to Repository Settings → Branches
+   - Add rule for `main` branch
+   - Check "Require status checks to pass before merging"
+   - Search for and add "argos" status check
+   - Check "Require branches to be up to date before merging"
+6. Screenshots are automatically captured and compared on each CI run
+7. PRs with visual changes will be blocked until approved in Argos dashboard
 
 ## Linting
 
