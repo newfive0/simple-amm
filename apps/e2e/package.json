@@ -14,6 +14,7 @@
     "argos:upload": "argos upload ./screenshots"
   },
   "devDependencies": {
+    "@argos-ci/cli": "^2.5.7",
     "@argos-ci/playwright": "^5.0.4",
     "@playwright/test": "^1.36.0",
     "@synthetixio/synpress": "^4.1.0"
