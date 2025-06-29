@@ -147,14 +147,8 @@ nx update-snapshots e2e
 ```sh
 cd apps/e2e
 
-# Run regular Playwright tests
+# Run Playwright tests
 npx playwright test --config=playwright.config.ts
-
-# Run MetaMask integration tests  
-npx playwright test --config=playwright.config.ts
-
-# Run tests with visual regression testing
-npm run test:argos
 
 # Show report
 npx playwright show-report
