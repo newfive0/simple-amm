@@ -16,16 +16,11 @@ cleanup() {
 trap cleanup EXIT
 
 # Process arguments
-UPDATE_SNAPSHOTS=""
 TEST_FILES=""
 
 for arg in "$@"; do
-    if [ "$arg" = "--update-snapshots" ]; then
-        UPDATE_SNAPSHOTS="--update-snapshots"
-    else
-        # Assume it's a test file
-        TEST_FILES="$TEST_FILES $arg"
-    fi
+    # Assume it's a test file
+    TEST_FILES="$TEST_FILES $arg"
 done
 
 # Start synpress setup in parallel
@@ -53,6 +48,6 @@ wait $SYNPRESS_PID
 
 # Run tests
 echo "Running e2e tests..."
-npx playwright test --config=playwright.config.ts $UPDATE_SNAPSHOTS $TEST_FILES
+npx playwright test --config=playwright.config.ts $TEST_FILES
 
 echo "Tests completed"

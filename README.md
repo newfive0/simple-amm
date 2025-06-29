@@ -137,9 +137,6 @@ nx test e2e
 
 # Show Playwright test report in browser
 nx show-report e2e
-
-# Update visual snapshots when UI changes
-nx update-snapshots e2e
 ```
 
 **Manual E2E Commands** (if you prefer to run from the e2e directory):

@@ -26,14 +26,6 @@
         "command": "npx playwright show-report",
         "cwd": "apps/e2e"
       }
-    },
-    "update-snapshots": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "./run-e2e.sh --update-snapshots",
-        "parallel": false,
-        "cwd": "apps/e2e"
-      }
     }
   },
   "tags": [],

@@ -15,6 +15,7 @@ interface SwapInputProps {
   expectedOutput?: string;
   outputLabel?: string;
   disabled?: boolean;
+  exchangeRate?: string;
 }
 
 const SwapInput = ({
@@ -28,6 +29,7 @@ const SwapInput = ({
   expectedOutput,
   outputLabel,
   disabled = false,
+  exchangeRate,
 }: SwapInputProps) => (
   <div className={styles.swapInput}>
     <div className={styles.inputField}>
@@ -46,7 +48,7 @@ const SwapInput = ({
         <div className={styles.expectedOutput}>
           {expectedOutput && outputLabel
             ? `≈ ${expectedOutput} ${outputLabel}`
-            : `≈ 0 ${outputLabel || 'SIMP'}`}
+            : exchangeRate || `≈ 0 ${outputLabel || 'SIMP'}`}
         </div>
       </div>
     </div>
@@ -143,6 +145,20 @@ export const Swap = ({
     }
   };
 
+  const getExchangeRate = (isEthToToken: boolean): string => {
+    if (poolEthReserve === 0 || poolTokenReserve === 0) return '';
+
+    if (isEthToToken) {
+      // Show 1 ETH = x SIMP
+      const rate = poolTokenReserve / poolEthReserve;
+      return `1 ETH ≈ ${rate.toFixed(4)} ${tokenSymbol}`;
+    } else {
+      // Show 1 SIMP = x ETH
+      const rate = poolEthReserve / poolTokenReserve;
+      return `1 ${tokenSymbol} ≈ ${rate.toFixed(6)} ETH`;
+    }
+  };
+
   const handleError = (error: unknown) => {
     const message =
       error instanceof Error ? error.message : 'Unknown error occurred';
@@ -226,6 +242,7 @@ export const Swap = ({
           isLoading={isLoading}
           expectedOutput={calculateSwapOutput(ethAmount, true)}
           outputLabel={tokenSymbol}
+          exchangeRate={getExchangeRate(true)}
         />
       ) : (
         <SwapInput
@@ -239,6 +256,7 @@ export const Swap = ({
           isLoading={isLoading}
           expectedOutput={calculateSwapOutput(tokenAmount, false)}
           outputLabel="ETH"
+          exchangeRate={getExchangeRate(false)}
         />
       )}
     </div>
@@ -246,14 +264,30 @@ export const Swap = ({
 };
 
 // DisabledSwap component for when wallet is not connected
-export const DisabledSwap = () => {
+interface DisabledSwapProps {
+  poolEthReserve?: number;
+  poolTokenReserve?: number;
+  tokenSymbol?: string;
+}
+
+export const DisabledSwap = ({
+  poolEthReserve = 0,
+  poolTokenReserve = 0,
+  tokenSymbol = 'SIMP',
+}: DisabledSwapProps = {}) => {
+  const getExchangeRate = (): string => {
+    if (poolEthReserve === 0 || poolTokenReserve === 0) return '';
+    const rate = poolTokenReserve / poolEthReserve;
+    return `1 ETH ≈ ${rate.toFixed(4)} ${tokenSymbol}`;
+  };
+
   return (
     <div className={styles.swap}>
       <h2>Swap Tokens</h2>
       <SwapDirectionSelectorComponent
         value="eth-to-token"
         onChange={() => {}}
-        tokenSymbol="SIMP"
+        tokenSymbol={tokenSymbol}
         disabled={true}
       />
       <SwapInput
@@ -265,8 +299,9 @@ export const DisabledSwap = () => {
         buttonText="Please connect wallet"
         isLoading={false}
         expectedOutput=""
-        outputLabel="SIMP"
+        outputLabel={tokenSymbol}
         disabled={true}
+        exchangeRate={getExchangeRate()}
       />
     </div>
   );
