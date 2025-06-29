@@ -11,16 +11,10 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:4300',
     actionTimeout: 30000,
-    // Run headless in CI environment
+    // Run headless in CI environment, but MetaMask tests need headed mode
     headless: !!process.env.CI,
     // Set consistent viewport to avoid scrollbar differences
     viewport: { width: 1280, height: 720 },
-  },
-
-  expect: {
-    toHaveScreenshot: {
-      threshold: 0.3,
-    },
   },
 
   // Custom snapshot path

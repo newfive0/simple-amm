@@ -23,6 +23,5 @@ test('should display network error page when MetaMask is not detected', async ({
   // Take screenshot of the network error state
   await expect(page).toHaveScreenshot('wallet-not-installed-error.png', {
     fullPage: true,
-    maxDiffPixelRatio: 0.03, // allows up to 3% difference
   });
 });

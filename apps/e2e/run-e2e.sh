@@ -53,6 +53,6 @@ wait $SYNPRESS_PID
 
 # Run tests
 echo "Running e2e tests..."
-npx playwright test --config=synpress.config.ts $UPDATE_SNAPSHOTS $TEST_FILES
+npx playwright test --config=playwright.config.ts $UPDATE_SNAPSHOTS $TEST_FILES
 
 echo "Tests completed"

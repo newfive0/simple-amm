@@ -116,7 +116,7 @@ jobs:
       - name: Run e2e tests
         run: |
           cd apps/e2e
-          npx playwright test --config=synpress.config.ts
+          npx playwright test --config=playwright.config.ts
 
       - name: Upload Playwright Report
         uses: actions/upload-artifact@v4

@@ -151,9 +151,9 @@ cd apps/e2e
 npx playwright test --config=playwright.config.ts
 
 # Run MetaMask integration tests  
-npx playwright test --config=synpress.config.ts
+npx playwright test --config=playwright.config.ts
 
-# Update snapshots
+# Update snapshots (runs in headless mode for consistency)
 npx playwright test --update-snapshots
 
 # Show report
