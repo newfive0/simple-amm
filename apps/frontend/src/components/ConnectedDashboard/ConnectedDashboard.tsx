@@ -5,10 +5,12 @@ import { Token__factory, AMMPool__factory } from '@typechain-types';
 import { config } from '../../config';
 import {
   getWalletBalances,
-  getPoolBalances,
+  getPoolReserves,
   getTokenSymbol,
+  getLiquidityBalances,
   WalletBalances,
-  PoolBalances,
+  PoolReserves,
+  LiquidityBalances,
 } from '../../utils/balances';
 
 export const ConnectedDashboard = () => {
@@ -21,9 +23,14 @@ const DashboardContent = () => {
     ethBalance: 0,
     tokenBalance: 0,
   });
-  const [poolBalances, setPoolBalances] = useState<PoolBalances>({
+  const [poolReserves, setPoolReserves] = useState<PoolReserves>({
     ethReserve: 0,
     tokenReserve: 0,
+  });
+  const [lpTokenBalances, setLpTokenBalances] = useState<LiquidityBalances>({
+    userLPTokens: 0,
+    totalLPTokens: 0,
+    poolOwnershipPercentage: 0,
   });
   const [tokenSymbol, setTokenSymbol] = useState<string>('');
 
@@ -31,20 +38,27 @@ const DashboardContent = () => {
   const refreshAllBalances = useCallback(async () => {
     if (!signer || !ethereumProvider || !account) {
       setWalletBalances({ ethBalance: 0, tokenBalance: 0 });
-      setPoolBalances({ ethReserve: 0, tokenReserve: 0 });
+      setPoolReserves({ ethReserve: 0, tokenReserve: 0 });
+      setLpTokenBalances({
+        userLPTokens: 0,
+        totalLPTokens: 0,
+        poolOwnershipPercentage: 0,
+      });
       setTokenSymbol('');
       return;
     }
 
     try {
-      const [walletBal, poolBal, symbol] = await Promise.all([
+      const [walletBal, poolReserves, lpTokenBal, symbol] = await Promise.all([
         getWalletBalances(ethereumProvider, account, signer),
-        getPoolBalances(signer),
+        getPoolReserves(signer),
+        getLiquidityBalances(signer, account),
         getTokenSymbol(signer),
       ]);
 
       setWalletBalances(walletBal);
-      setPoolBalances(poolBal);
+      setPoolReserves(poolReserves);
+      setLpTokenBalances(lpTokenBal);
       setTokenSymbol(symbol);
     } catch (error) {
       console.error(
@@ -82,8 +96,9 @@ const DashboardContent = () => {
       />
 
       <ContractsSection
-        poolEthBalance={poolBalances.ethReserve}
-        poolTokenBalance={poolBalances.tokenReserve}
+        poolEthReserve={poolReserves.ethReserve}
+        poolTokenReserve={poolReserves.tokenReserve}
+        lpTokenBalances={lpTokenBalances}
         tokenSymbol={tokenSymbol}
         onSwapComplete={handleSwapComplete}
         onLiquidityComplete={handleLiquidityComplete}
@@ -93,16 +108,18 @@ const DashboardContent = () => {
 };
 
 interface ContractsSectionProps {
-  poolEthBalance: number;
-  poolTokenBalance: number;
+  poolEthReserve: number;
+  poolTokenReserve: number;
+  lpTokenBalances: LiquidityBalances;
   tokenSymbol: string;
   onSwapComplete: () => Promise<void>;
   onLiquidityComplete: () => Promise<void>;
 }
 
 const ContractsSection = ({
-  poolEthBalance,
-  poolTokenBalance,
+  poolEthReserve,
+  poolTokenReserve,
+  lpTokenBalances,
   tokenSymbol,
   onSwapComplete,
   onLiquidityComplete,
@@ -129,8 +146,8 @@ const ContractsSection = ({
         ammContract={ammContract}
         tokenContract={tokenContract}
         contractAddresses={contractAddresses}
-        poolEthBalance={poolEthBalance}
-        poolTokenBalance={poolTokenBalance}
+        poolEthReserve={poolEthReserve}
+        poolTokenReserve={poolTokenReserve}
         tokenSymbol={tokenSymbol}
         onSwapComplete={onSwapComplete}
       />
@@ -139,8 +156,9 @@ const ContractsSection = ({
         ammContract={ammContract}
         tokenContract={tokenContract}
         contractAddresses={contractAddresses}
-        poolEthBalance={poolEthBalance}
-        poolTokenBalance={poolTokenBalance}
+        poolEthReserve={poolEthReserve}
+        poolTokenReserve={poolTokenReserve}
+        lpTokenBalances={lpTokenBalances}
         tokenSymbol={tokenSymbol}
         onLiquidityComplete={onLiquidityComplete}
       />

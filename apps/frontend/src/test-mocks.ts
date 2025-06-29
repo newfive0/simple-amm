@@ -71,8 +71,8 @@ export const createDefaultProps = (
     tokenContract,
     ammContract,
     contractAddresses: mockContractAddresses,
-    poolEthBalance: '10.0',
-    poolTokenBalance: '20.0',
+    poolEthReserve: '10.0',
+    poolTokenReserve: '20.0',
     tokenSymbol: 'SIMP',
     ...overrides,
   };

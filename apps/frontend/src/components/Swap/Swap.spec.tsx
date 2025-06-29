@@ -18,8 +18,8 @@ const defaultProps = {
   ammContract,
   tokenContract,
   contractAddresses: mockContractAddresses,
-  poolEthBalance: 10.0,
-  poolTokenBalance: 20.0,
+  poolEthReserve: 10.0,
+  poolTokenReserve: 20.0,
   tokenSymbol: 'SIMP',
   onSwapComplete: mockOnSwapComplete,
 };
@@ -61,7 +61,7 @@ describe('Swap Component', () => {
       const input = screen.getByPlaceholderText('Enter ETH amount');
       fireEvent.change(input, { target: { value: '1' } });
 
-      // With pool balances ETH: 10, Token: 20
+      // With pool reserves ETH: 10, Token: 20
       // Expected output: (20 * 1) / (10 + 1) = 1.818182
       expect(screen.getByText(/≈ 1\.818182 SIMP/)).toBeInTheDocument();
     });
@@ -80,7 +80,7 @@ describe('Swap Component', () => {
       const input = screen.getByPlaceholderText('Enter ETH amount');
       fireEvent.change(input, { target: { value: '2' } });
 
-      // With pool balances ETH: 10, Token: 20
+      // With pool reserves ETH: 10, Token: 20
       // Expected output: (20 * 2) / (10 + 2) = 3.333333
       expect(screen.getByText(/≈ 3\.333333 SIMP/)).toBeInTheDocument();
     });
@@ -94,14 +94,14 @@ describe('Swap Component', () => {
       const input = screen.getByPlaceholderText('Enter SIMP amount');
       fireEvent.change(input, { target: { value: '5' } });
 
-      // With pool balances ETH: 10, Token: 20
+      // With pool reserves ETH: 10, Token: 20
       // Expected output: (10 * 5) / (20 + 5) = 2.000000
       expect(screen.getByText(/≈ 2\.000000 ETH/)).toBeInTheDocument();
     });
 
-    it('should handle zero pool balances', () => {
+    it('should handle zero pool reserves', () => {
       render(
-        <Swap {...defaultProps} poolEthBalance={0} poolTokenBalance={0} />
+        <Swap {...defaultProps} poolEthReserve={0} poolTokenReserve={0} />
       );
 
       const input = screen.getByPlaceholderText('Enter ETH amount');

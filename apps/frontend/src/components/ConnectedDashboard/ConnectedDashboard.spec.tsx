@@ -6,8 +6,9 @@ import { ConnectedDashboard } from './ConnectedDashboard';
 // Mock balance utilities
 vi.mock('../../utils/balances', () => ({
   getWalletBalances: vi.fn(),
-  getPoolBalances: vi.fn(),
+  getPoolReserves: vi.fn(),
   getTokenSymbol: vi.fn(),
+  getLiquidityBalances: vi.fn(),
 }));
 
 // Mock the child components
@@ -22,8 +23,8 @@ interface MockSwapProps {
   ammContract: unknown;
   tokenContract: unknown;
   contractAddresses: { tokenAddress: string; ammPoolAddress: string };
-  poolEthBalance: number;
-  poolTokenBalance: number;
+  poolEthReserve: number;
+  poolTokenReserve: number;
   tokenSymbol: string;
   onSwapComplete: () => void;
 }
@@ -32,8 +33,13 @@ interface MockLiquidityProps {
   ammContract: unknown;
   tokenContract: unknown;
   contractAddresses: { tokenAddress: string; ammPoolAddress: string };
-  poolEthBalance: number;
-  poolTokenBalance: number;
+  poolEthReserve: number;
+  poolTokenReserve: number;
+  lpTokenBalances: {
+    userLPTokens: number;
+    totalLPTokens: number;
+    poolOwnershipPercentage: number;
+  };
   tokenSymbol: string;
   onLiquidityComplete: () => void;
 }
@@ -55,14 +61,14 @@ vi.mock('../WalletInfo/WalletInfo', () => ({
 
 vi.mock('../Swap/Swap', () => ({
   Swap: ({
-    poolEthBalance,
-    poolTokenBalance,
+    poolEthReserve,
+    poolTokenReserve,
     tokenSymbol,
     onSwapComplete,
   }: MockSwapProps) => (
     <div data-testid="swap">
       <div>
-        Pool: {poolEthBalance.toFixed(4)} ETH / {poolTokenBalance.toFixed(4)}{' '}
+        Pool: {poolEthReserve.toFixed(4)} ETH / {poolTokenReserve.toFixed(4)}{' '}
         {tokenSymbol}
       </div>
       <button onClick={onSwapComplete}>Complete Swap</button>
@@ -72,16 +78,18 @@ vi.mock('../Swap/Swap', () => ({
 
 vi.mock('../Liquidity/Liquidity', () => ({
   Liquidity: ({
-    poolEthBalance,
-    poolTokenBalance,
+    poolEthReserve,
+    poolTokenReserve,
+    lpTokenBalances,
     tokenSymbol,
     onLiquidityComplete,
   }: MockLiquidityProps) => (
     <div data-testid="liquidity">
       <div>
-        Pool: {poolEthBalance.toFixed(4)} ETH / {poolTokenBalance.toFixed(4)}{' '}
+        Pool: {poolEthReserve.toFixed(4)} ETH / {poolTokenReserve.toFixed(4)}{' '}
         {tokenSymbol}
       </div>
+      <div>LP Tokens: {lpTokenBalances.userLPTokens.toFixed(4)}</div>
       <button onClick={onLiquidityComplete}>Complete Liquidity</button>
     </div>
   ),
@@ -119,13 +127,15 @@ vi.mock('../../contexts', () => ({
 // Import mocked functions
 import {
   getWalletBalances,
-  getPoolBalances,
+  getPoolReserves,
   getTokenSymbol,
+  getLiquidityBalances,
 } from '../../utils/balances';
 
 const mockGetWalletBalances = vi.mocked(getWalletBalances);
-const mockGetPoolBalances = vi.mocked(getPoolBalances);
+const mockGetPoolReserves = vi.mocked(getPoolReserves);
 const mockGetTokenSymbol = vi.mocked(getTokenSymbol);
+const mockGetLiquidityBalances = vi.mocked(getLiquidityBalances);
 
 describe('ConnectedDashboard', () => {
   beforeEach(() => {
@@ -140,9 +150,15 @@ describe('ConnectedDashboard', () => {
       tokenBalance: 1000.0,
     });
 
-    mockGetPoolBalances.mockResolvedValue({
+    mockGetPoolReserves.mockResolvedValue({
       ethReserve: 10.0,
       tokenReserve: 20.0,
+    });
+
+    mockGetLiquidityBalances.mockResolvedValue({
+      userLPTokens: 5.0,
+      totalLPTokens: 10.0,
+      poolOwnershipPercentage: 50.0,
     });
 
     mockGetTokenSymbol.mockResolvedValue('SIMP');
@@ -196,7 +212,7 @@ describe('ConnectedDashboard', () => {
           mockWalletContext.account,
           mockSigner
         );
-        expect(mockGetPoolBalances).toHaveBeenCalledWith(mockSigner);
+        expect(mockGetPoolReserves).toHaveBeenCalledWith(mockSigner);
         expect(mockGetTokenSymbol).toHaveBeenCalledWith(mockSigner);
       });
     });
@@ -221,7 +237,7 @@ describe('ConnectedDashboard', () => {
 
       // Should not call balance utilities when signer is missing
       expect(mockGetWalletBalances).not.toHaveBeenCalled();
-      expect(mockGetPoolBalances).not.toHaveBeenCalled();
+      expect(mockGetPoolReserves).not.toHaveBeenCalled();
       expect(mockGetTokenSymbol).not.toHaveBeenCalled();
 
       mockWalletContext.signer = originalSigner;
@@ -273,7 +289,8 @@ describe('ConnectedDashboard', () => {
 
       await waitFor(() => {
         expect(mockGetWalletBalances).toHaveBeenCalled();
-        expect(mockGetPoolBalances).toHaveBeenCalled();
+        expect(mockGetPoolReserves).toHaveBeenCalled();
+        expect(mockGetLiquidityBalances).toHaveBeenCalled();
         expect(mockGetTokenSymbol).toHaveBeenCalled();
       });
     });
@@ -295,7 +312,8 @@ describe('ConnectedDashboard', () => {
 
       await waitFor(() => {
         expect(mockGetWalletBalances).toHaveBeenCalled();
-        expect(mockGetPoolBalances).toHaveBeenCalled();
+        expect(mockGetPoolReserves).toHaveBeenCalled();
+        expect(mockGetLiquidityBalances).toHaveBeenCalled();
         expect(mockGetTokenSymbol).toHaveBeenCalled();
       });
     });
@@ -311,9 +329,14 @@ describe('ConnectedDashboard', () => {
       mockWalletContext.signer = mockSigner;
 
       mockGetWalletBalances.mockRejectedValue(new Error('Network error'));
-      mockGetPoolBalances.mockResolvedValue({
+      mockGetPoolReserves.mockResolvedValue({
         ethReserve: 10.0,
         tokenReserve: 20.0,
+      });
+      mockGetLiquidityBalances.mockResolvedValue({
+        userLPTokens: 5.0,
+        totalLPTokens: 10.0,
+        poolOwnershipPercentage: 50.0,
       });
       mockGetTokenSymbol.mockResolvedValue('SIMP');
 

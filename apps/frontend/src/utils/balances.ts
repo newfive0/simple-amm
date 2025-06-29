@@ -7,9 +7,15 @@ export interface WalletBalances {
   tokenBalance: number;
 }
 
-export interface PoolBalances {
+export interface PoolReserves {
   ethReserve: number;
   tokenReserve: number;
+}
+
+export interface LiquidityBalances {
+  userLPTokens: number;
+  totalLPTokens: number;
+  poolOwnershipPercentage: number;
 }
 
 export const getWalletBalances = async (
@@ -33,9 +39,9 @@ export const getWalletBalances = async (
   };
 };
 
-export const getPoolBalances = async (
+export const getPoolReserves = async (
   signer: ethers.JsonRpcSigner
-): Promise<PoolBalances> => {
+): Promise<PoolReserves> => {
   const ammContract = AMMPool__factory.connect(
     config.contracts.ammPoolAddress,
     signer
@@ -60,4 +66,32 @@ export const getTokenSymbol = async (
     signer
   );
   return await tokenContract.symbol();
+};
+
+export const getLiquidityBalances = async (
+  signer: ethers.JsonRpcSigner,
+  account: string
+): Promise<LiquidityBalances> => {
+  const ammContract = AMMPool__factory.connect(
+    config.contracts.ammPoolAddress,
+    signer
+  );
+
+  const [userLPTokensBN, totalLPTokensBN] = await Promise.all([
+    ammContract.lpTokens(account),
+    ammContract.totalLPTokens(),
+  ]);
+
+  const userLPTokens = Number(ethers.formatEther(userLPTokensBN));
+  const totalLPTokens = Number(ethers.formatEther(totalLPTokensBN));
+
+  // Calculate ownership percentage
+  const poolOwnershipPercentage =
+    totalLPTokens > 0 ? (userLPTokens / totalLPTokens) * 100 : 0;
+
+  return {
+    userLPTokens,
+    totalLPTokens,
+    poolOwnershipPercentage,
+  };
 };

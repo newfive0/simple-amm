@@ -14,56 +14,56 @@ contract AMMPool {
     IERC20 public simplestToken;
     uint256 public reserveSimplest;
     uint256 public reserveETH;
-    uint256 public totalLiquidity;
-    mapping(address => uint256) public liquidity;
+    uint256 public totalLPTokens;
+    mapping(address => uint256) public lpTokens;
 
-    event LiquidityAdded(address indexed provider, uint256 amountSimplest, uint256 amountETH, uint256 liquidity);
-    event LiquidityRemoved(address indexed provider, uint256 amountSimplest, uint256 amountETH, uint256 liquidity);
+    event LiquidityAdded(address indexed provider, uint256 amountSimplest, uint256 amountETH, uint256 lpTokenAmount);
+    event LiquidityRemoved(address indexed provider, uint256 amountSimplest, uint256 amountETH, uint256 lpTokenAmount);
     event Swap(address indexed user, address tokenIn, uint256 amountIn, uint256 amountOut);
 
     constructor(address _simplestToken) {
         simplestToken = IERC20(_simplestToken);
     }
 
-    function addLiquidity(uint256 amountSimplest) external payable returns (uint256 liquidityShare) {
+    function addLiquidity(uint256 amountSimplest) external payable returns (uint256 lpTokenAmount) {
         // TODO: Slippage protection
         if (amountSimplest <= 0 || msg.value <= 0) revert InvalidAmount();
 
         simplestToken.transferFrom(msg.sender, address(this), amountSimplest);
 
-        if (totalLiquidity == 0) {
-            liquidityShare = Math.sqrt(amountSimplest * msg.value);
+        if (totalLPTokens == 0) {
+            lpTokenAmount = Math.sqrt(amountSimplest * msg.value);
         } else {
-            liquidityShare = min(
-                (amountSimplest * totalLiquidity) / reserveSimplest,
-                (msg.value * totalLiquidity) / reserveETH
+            lpTokenAmount = min(
+                (amountSimplest * totalLPTokens) / reserveSimplest,
+                (msg.value * totalLPTokens) / reserveETH
             );
         }
 
-        liquidity[msg.sender] += liquidityShare;
-        totalLiquidity += liquidityShare;
+        lpTokens[msg.sender] += lpTokenAmount;
+        totalLPTokens += lpTokenAmount;
         reserveSimplest += amountSimplest;
         reserveETH += msg.value;
 
-        emit LiquidityAdded(msg.sender, amountSimplest, msg.value, liquidityShare);
+        emit LiquidityAdded(msg.sender, amountSimplest, msg.value, lpTokenAmount);
     }
 
-    function removeLiquidity(uint256 liquidityShare) external returns (uint256 amountSimplest, uint256 amountETH) {
+    function removeLiquidity(uint256 lpTokenAmount) external returns (uint256 amountSimplest, uint256 amountETH) {
         // TODO: Slippage protection
-        if (liquidityShare <= 0 || liquidity[msg.sender] < liquidityShare) revert InsufficientLiquidity();
+        if (lpTokenAmount <= 0 || lpTokens[msg.sender] < lpTokenAmount) revert InsufficientLiquidity();
 
-        amountSimplest = (liquidityShare * reserveSimplest) / totalLiquidity;
-        amountETH = (liquidityShare * reserveETH) / totalLiquidity;
+        amountSimplest = (lpTokenAmount * reserveSimplest) / totalLPTokens;
+        amountETH = (lpTokenAmount * reserveETH) / totalLPTokens;
 
-        liquidity[msg.sender] -= liquidityShare;
-        totalLiquidity -= liquidityShare;
+        lpTokens[msg.sender] -= lpTokenAmount;
+        totalLPTokens -= lpTokenAmount;
         reserveSimplest -= amountSimplest;
         reserveETH -= amountETH;
 
         simplestToken.transfer(msg.sender, amountSimplest);
         payable(msg.sender).transfer(amountETH);
 
-        emit LiquidityRemoved(msg.sender, amountSimplest, amountETH, liquidityShare);
+        emit LiquidityRemoved(msg.sender, amountSimplest, amountETH, lpTokenAmount);
     }
 
     function swap(address tokenIn, uint256 amountIn) external payable returns (uint256 amountOut) {

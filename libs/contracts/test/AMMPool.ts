@@ -98,7 +98,7 @@ describe('AMMPool', () => {
       const expectedLiquidity = BigInt(Math.floor(sqrtValue * 10 ** 18));
 
       // Get actual liquidity
-      const actualLiquidity = await ammPool.totalLiquidity();
+      const actualLiquidity = await ammPool.totalLPTokens();
 
       // Check state changes - allow for a small precision difference (0.001%)
       expect(await ammPool.reserveSimplest()).to.equal(
@@ -118,7 +118,7 @@ describe('AMMPool', () => {
       expect(percentDifference).to.be.lessThan(0.001);
 
       // Check user's liquidity matches the total
-      expect(await ammPool.liquidity(user1.address)).to.equal(actualLiquidity);
+      expect(await ammPool.lpTokens(user1.address)).to.equal(actualLiquidity);
 
       // Check event
       await expect(addLiquidityTx)

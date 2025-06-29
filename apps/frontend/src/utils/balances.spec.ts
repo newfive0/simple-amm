@@ -1,6 +1,6 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ethers } from 'ethers';
-import { getWalletBalances, getPoolBalances, getTokenSymbol } from './balances';
+import { getWalletBalances, getPoolReserves, getTokenSymbol } from './balances';
 
 // Mock the config module
 vi.mock('../config', () => ({
@@ -116,13 +116,13 @@ describe('Balance Utilities', () => {
     });
   });
 
-  describe('getPoolBalances', () => {
-    it('should fetch and return pool balances', async () => {
+  describe('getPoolReserves', () => {
+    it('should fetch and return pool reserves', async () => {
       // Mock return values
       mockAmmContract.reserveETH.mockResolvedValue(BigInt(10e18)); // 10 ETH
       mockAmmContract.reserveSimplest.mockResolvedValue(BigInt(20e18)); // 20 tokens
 
-      const result = await getPoolBalances(mockSigner);
+      const result = await getPoolReserves(mockSigner);
 
       expect(result).toEqual({
         ethReserve: 10.0,
@@ -137,7 +137,7 @@ describe('Balance Utilities', () => {
       mockAmmContract.reserveETH.mockResolvedValue(BigInt(0));
       mockAmmContract.reserveSimplest.mockResolvedValue(BigInt(0));
 
-      const result = await getPoolBalances(mockSigner);
+      const result = await getPoolReserves(mockSigner);
 
       expect(result).toEqual({
         ethReserve: 0.0,
@@ -149,7 +149,7 @@ describe('Balance Utilities', () => {
       mockAmmContract.reserveETH.mockResolvedValue(BigInt(15.5e18)); // 15.5 ETH
       mockAmmContract.reserveSimplest.mockResolvedValue(BigInt(31.25e18)); // 31.25 tokens
 
-      const result = await getPoolBalances(mockSigner);
+      const result = await getPoolReserves(mockSigner);
 
       expect(result).toEqual({
         ethReserve: 15.5,
@@ -161,7 +161,7 @@ describe('Balance Utilities', () => {
       mockAmmContract.reserveETH.mockRejectedValue(new Error('Contract error'));
       mockAmmContract.reserveSimplest.mockResolvedValue(BigInt(20e18));
 
-      await expect(getPoolBalances(mockSigner)).rejects.toThrow(
+      await expect(getPoolReserves(mockSigner)).rejects.toThrow(
         'Contract error'
       );
     });
@@ -210,7 +210,7 @@ describe('Balance Utilities', () => {
           mockAccount,
           mockSigner
         ),
-        getPoolBalances(mockSigner),
+        getPoolReserves(mockSigner),
         getTokenSymbol(mockSigner),
       ]);
 

@@ -94,8 +94,8 @@ interface SwapProps {
     tokenAddress: string;
     ammPoolAddress: string;
   };
-  poolEthBalance: number;
-  poolTokenBalance: number;
+  poolEthReserve: number;
+  poolTokenReserve: number;
   tokenSymbol: string;
   onSwapComplete: () => void;
 }
@@ -104,8 +104,8 @@ export const Swap = ({
   ammContract,
   tokenContract,
   contractAddresses,
-  poolEthBalance,
-  poolTokenBalance,
+  poolEthReserve,
+  poolTokenReserve,
   tokenSymbol,
   onSwapComplete,
 }: SwapProps) => {
@@ -122,7 +122,7 @@ export const Swap = ({
   ): string => {
     if (!inputAmount || inputAmount === '0') return '';
 
-    if (poolEthBalance === 0 || poolTokenBalance === 0) return '';
+    if (poolEthReserve === 0 || poolTokenReserve === 0) return '';
 
     const input = parseFloat(inputAmount);
     if (isNaN(input)) return '';
@@ -134,11 +134,11 @@ export const Swap = ({
     if (isEthToToken) {
       // ETH input -> Token output
       const outputTokens =
-        (poolTokenBalance * input) / (poolEthBalance + input);
+        (poolTokenReserve * input) / (poolEthReserve + input);
       return outputTokens.toFixed(6);
     } else {
       // Token input -> ETH output
-      const outputEth = (poolEthBalance * input) / (poolTokenBalance + input);
+      const outputEth = (poolEthReserve * input) / (poolTokenReserve + input);
       return outputEth.toFixed(6);
     }
   };

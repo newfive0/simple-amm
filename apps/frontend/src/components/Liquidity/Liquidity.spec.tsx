@@ -17,8 +17,13 @@ const defaultProps = {
   ammContract,
   tokenContract,
   contractAddresses: mockContractAddresses,
-  poolEthBalance: 10.0,
-  poolTokenBalance: 20.0,
+  poolEthReserve: 10.0,
+  poolTokenReserve: 20.0,
+  lpTokenBalances: {
+    userLPTokens: 5.0,
+    totalLPTokens: 10.0,
+    poolOwnershipPercentage: 50.0,
+  },
   tokenSymbol: 'SIMP',
   onLiquidityComplete: mockOnLiquidityComplete,
 };
@@ -39,10 +44,10 @@ describe('Liquidity', () => {
     expect(baseElement).toBeTruthy();
   });
 
-  it('should display the correct title and pool balance', () => {
+  it('should display the correct title and pool reserves', () => {
     const { getByRole, getByText } = render(<Liquidity {...defaultProps} />);
     expect(getByRole('heading', { name: 'Add Liquidity' })).toBeTruthy();
-    expect(getByText(/Pool Balance:/)).toBeTruthy();
+    expect(getByText(/Pool Reserves:/)).toBeTruthy();
     expect(getByText(/20\.0000.*SIMP.*10\.0000.*ETH/)).toBeTruthy();
   });
 
@@ -87,8 +92,8 @@ describe('Liquidity', () => {
   it('should not auto-calculate when pool is empty', () => {
     const emptyPoolProps = {
       ...defaultProps,
-      poolEthBalance: 0.0,
-      poolTokenBalance: 0.0,
+      poolEthReserve: 0.0,
+      poolTokenReserve: 0.0,
     };
     const { getByPlaceholderText } = render(<Liquidity {...emptyPoolProps} />);
     const ethInput = getByPlaceholderText('Enter ETH amount');

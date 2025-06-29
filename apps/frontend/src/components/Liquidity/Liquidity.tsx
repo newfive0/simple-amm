@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ethers } from 'ethers';
 import { Token, AMMPool } from '@typechain-types';
+import { LiquidityBalances } from '../../utils/balances';
 import styles from './Liquidity.module.scss';
 
 interface InputFieldProps {
@@ -49,8 +50,9 @@ interface LiquidityProps {
     tokenAddress: string;
     ammPoolAddress: string;
   };
-  poolEthBalance: number;
-  poolTokenBalance: number;
+  poolEthReserve: number;
+  poolTokenReserve: number;
+  lpTokenBalances: LiquidityBalances;
   tokenSymbol: string;
   onLiquidityComplete: () => void;
 }
@@ -59,8 +61,9 @@ export const Liquidity = ({
   ammContract,
   tokenContract,
   contractAddresses,
-  poolEthBalance,
-  poolTokenBalance,
+  poolEthReserve,
+  poolTokenReserve,
+  lpTokenBalances,
   tokenSymbol,
   onLiquidityComplete,
 }: LiquidityProps) => {
@@ -76,8 +79,8 @@ export const Liquidity = ({
       return 0;
     }
 
-    const poolEthFloat = poolEthBalance;
-    const poolTokenFloat = poolTokenBalance;
+    const poolEthFloat = poolEthReserve;
+    const poolTokenFloat = poolTokenReserve;
 
     // If pool is empty, don't auto-calculate - let user set initial ratio
     if (poolEthFloat === 0 || poolTokenFloat === 0) {
@@ -97,8 +100,8 @@ export const Liquidity = ({
     setLiquidityEthAmount(value);
     const correspondingTokenAmount = calculateCorrespondingAmount(value, true);
 
-    const poolEthFloat = poolEthBalance;
-    const poolTokenFloat = poolTokenBalance;
+    const poolEthFloat = poolEthReserve;
+    const poolTokenFloat = poolTokenReserve;
     const poolHasLiquidity = poolEthFloat > 0 && poolTokenFloat > 0;
 
     // If pool has liquidity, always update the other field (including clearing it)
@@ -111,8 +114,8 @@ export const Liquidity = ({
     setLiquidityTokenAmount(value);
     const correspondingEthAmount = calculateCorrespondingAmount(value, false);
 
-    const poolEthFloat = poolEthBalance;
-    const poolTokenFloat = poolTokenBalance;
+    const poolEthFloat = poolEthReserve;
+    const poolTokenFloat = poolTokenReserve;
     const poolHasLiquidity = poolEthFloat > 0 && poolTokenFloat > 0;
 
     // If pool has liquidity, always update the other field (including clearing it)
@@ -167,9 +170,16 @@ export const Liquidity = ({
   const PoolBalances = () => (
     <div className={styles.poolBalances}>
       <p>
-        <strong>Pool Balance:</strong> {poolTokenBalance.toFixed(4)}{' '}
-        {tokenSymbol} / {poolEthBalance.toFixed(4)} ETH
+        <strong>Pool Reserves:</strong> {poolTokenReserve.toFixed(4)}{' '}
+        {tokenSymbol} + {poolEthReserve.toFixed(4)} ETH
       </p>
+      {lpTokenBalances.userLPTokens > 0 && (
+        <p>
+          <strong>Your LP Tokens:</strong>{' '}
+          {lpTokenBalances.userLPTokens.toFixed(4)} (
+          {lpTokenBalances.poolOwnershipPercentage.toFixed(2)}% of pool)
+        </p>
+      )}
     </div>
   );
 
@@ -207,7 +217,7 @@ export const DisabledLiquidity = () => {
       <h2 className={styles.title}>Add Liquidity</h2>
       <div className={styles.poolBalances}>
         <p>
-          <strong>Pool Balance:</strong> 0.0000 SIMP / 0.0000 ETH
+          <strong>Pool Reserves:</strong> 0.0000 SIMP / 0.0000 ETH
         </p>
       </div>
       <InputField
