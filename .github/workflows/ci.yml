@@ -122,7 +122,7 @@ jobs:
         if: always()
         run: |
           cd apps/e2e
-          npx argos upload ./screenshots --wait
+          npx argos upload ./screenshots
         env:
           ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
 
