@@ -402,9 +402,9 @@ describe('WalletContext', () => {
 
     it('should clean up event listener on unmount', () => {
       const { unmount } = render(
-        <WalletProvider>
+        <TestWrapper>
           <TestComponent />
-        </WalletProvider>
+        </TestWrapper>
       );
 
       expect(mockEthereum.on).toHaveBeenCalledWith(
