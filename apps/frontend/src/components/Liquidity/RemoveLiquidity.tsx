@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { ethers } from 'ethers';
 import { AMMPool } from '@typechain-types';
 import { LiquidityBalances } from '../../utils/balances';
-import { InputField } from './InputField';
 import styles from './RemoveLiquidity.module.scss';
 
 interface RemoveLiquidityProps {
@@ -65,30 +64,34 @@ export const RemoveLiquidity = ({
     return { ethAmount, tokenAmount };
   };
 
+  const formatReceivingAmount = () => {
+    if (
+      !removeLpAmount ||
+      removeLpAmount <= 0 ||
+      lpTokenBalances.totalLPTokens === 0
+    ) {
+      return '0.0000 SIMP + 0.0000 ETH';
+    }
+    const output = calculateRemoveOutput();
+    return `${output.tokenAmount.toFixed(4)} ${tokenSymbol} + ${output.ethAmount.toFixed(4)} ETH`;
+  };
+
   return (
-    <>
-      <InputField
-        label="LP Tokens to Remove"
-        value={removeLpAmount}
-        onChange={setRemoveLpAmount}
-        placeholder={`Max: ${lpTokenBalances.userLPTokens.toFixed(4)}`}
-      />
-      <button
-        type="button"
-        onClick={() => setRemoveLpAmount(lpTokenBalances.userLPTokens)}
-        className={styles.maxButton}
-      >
-        Max
-      </button>
-      {removeLpAmount > 0 && lpTokenBalances.totalLPTokens > 0 && (
-        <div className={styles.removeOutput}>
-          <p>You will receive:</p>
-          <p>{calculateRemoveOutput().ethAmount.toFixed(4)} ETH</p>
-          <p>
-            {calculateRemoveOutput().tokenAmount.toFixed(4)} {tokenSymbol}
-          </p>
+    <div className={styles.removeLiquidity}>
+      <div className={styles.inputField}>
+        <label>LP Tokens to Remove</label>
+        <div className={styles.inputRow}>
+          <input
+            type="number"
+            step="0.01"
+            value={removeLpAmount || ''}
+            onChange={(e) => setRemoveLpAmount(parseFloat(e.target.value) || 0)}
+            placeholder={`Max: ${lpTokenBalances.userLPTokens.toFixed(4)}`}
+            className={styles.inputLeft}
+          />
+          <div className={styles.expectedOutput}>{formatReceivingAmount()}</div>
         </div>
-      )}
+      </div>
       <button
         onClick={removeLiquidity}
         disabled={
@@ -101,6 +104,6 @@ export const RemoveLiquidity = ({
       >
         {isLoading ? 'Waiting...' : 'Remove Liquidity'}
       </button>
-    </>
+    </div>
   );
 };

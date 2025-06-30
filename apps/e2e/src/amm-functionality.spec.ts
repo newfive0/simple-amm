@@ -8,6 +8,7 @@ import {
   updateBalancesAfterAddLiquidity,
   updateBalancesAfterSwapEthForSimp,
   updateBalancesAfterSwapSimpForEth,
+  updateBalancesAfterRemoveLiquidity,
 } from './utils/balance-calculator';
 import { getGasCostsFromRecentTransactions } from './utils/gas-tracker';
 
@@ -316,8 +317,80 @@ test.describe('AMM Functionality', () => {
         timeout: 10000,
       });
 
-      // Take final screenshot after SIMP to ETH swap
+      // Take screenshot after SIMP to ETH swap
       await argosScreenshot(page, 'swap-simp-to-eth-success');
+    };
+
+    // STEP 5: Remove liquidity (remove 2 LP tokens)
+    const removeLiquidity = async () => {
+      // Switch to Remove tab in Liquidity section
+      const removeTab = page.getByRole('button', {
+        name: 'Remove',
+        exact: true,
+      });
+      await expect(removeTab).toBeVisible();
+      await removeTab.click();
+
+      // Get the liquidity section
+      const liquiditySection = page
+        .getByRole('heading', { name: 'Liquidity' })
+        .locator('../..');
+
+      // Wait for the LP token input to appear after clicking Remove tab
+      await expect(
+        liquiditySection.locator('input[placeholder*="Max:"]')
+      ).toBeVisible({ timeout: 10000 });
+
+      // Fill in LP tokens to remove (2 LP tokens)
+      const lpInput = liquiditySection.locator('input[placeholder*="Max:"]');
+      await lpInput.fill('2');
+
+      // Verify the input is filled
+      await expect(lpInput).toHaveValue('2');
+
+      // Verify the output display shows expected amounts in the expectedOutput div
+      // After initial add liquidity: 10 ETH + 20 SIMP = sqrt(200) ≈ 14.142 LP tokens
+      // After swaps, we expect some changes to reserves
+      // 2 LP tokens out of ~14.142 = ~14.14% of pool
+      await expect(
+        liquiditySection
+          .locator('.expectedOutput, [class*="expectedOutput"]')
+          .filter({ hasText: /^\d+\.\d+ SIMP \+ \d+\.\d+ ETH$/ })
+      ).toBeVisible({ timeout: 5000 });
+
+      // Click Remove Liquidity button
+      const removeLiquidityButton = liquiditySection.getByRole('button', {
+        name: 'Remove Liquidity',
+      });
+      await expect(removeLiquidityButton).toBeEnabled();
+      await removeLiquidityButton.click();
+
+      // Handle single confirmation and get gas cost
+      const removeGasUsed = await handleSingleConfirmation();
+
+      // Wait for transaction to complete
+      await expect(
+        liquiditySection.getByRole('button', { name: 'Waiting...' })
+      ).toBeHidden({ timeout: 60000 });
+
+      // Verify input is cleared after successful transaction
+      await expect(lpInput).toHaveValue('');
+
+      // Update balance calculations after removing liquidity
+      // Assuming total LP tokens is approximately sqrt(200) ≈ 14.142 from initial add
+      const totalLPTokens = Math.sqrt(10 * 20); // Initial add liquidity calculation
+      updateBalancesAfterRemoveLiquidity(2, totalLPTokens, removeGasUsed);
+
+      // Wait for balances to update to expected values
+      const finalBalances = getCurrentBalances();
+      const expectedBalanceText = `Balance: ${finalBalances.simpBalance.toFixed(4)} SIMP | ${finalBalances.ethBalance.toFixed(4)} ETH`;
+      const balanceElement = page.getByText('Balance:').locator('..');
+      await expect(balanceElement).toHaveText(expectedBalanceText, {
+        timeout: 10000,
+      });
+
+      // Take final screenshot after removing liquidity
+      await argosScreenshot(page, 'remove-liquidity-success');
     };
 
     // Initialize the calculator with starting balances and reserves
@@ -328,5 +401,6 @@ test.describe('AMM Functionality', () => {
     await addLiquidity();
     await swapEthForSimp();
     await swapSimpForEth();
+    await removeLiquidity();
   });
 });

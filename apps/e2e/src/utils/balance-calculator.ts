@@ -17,9 +17,6 @@ export interface PoolReserves {
 const INITIAL_ETH = 9999.995796117593;
 const INITIAL_SIMP = 1000000;
 
-// Scale factor for integer arithmetic (18 decimal places to match ETH precision)
-const SCALE = 10n ** 18n;
-
 // Internal state
 let currentBalances: BalanceState = {
   ethBalance: INITIAL_ETH,
@@ -30,25 +27,6 @@ let currentReserves: PoolReserves = {
   ethReserve: 0,
   simpReserve: 0,
 };
-
-/**
- * Convert number to scaled BigInt for integer arithmetic
- * Uses string conversion to avoid JavaScript precision issues
- */
-function toBigInt(value: number): bigint {
-  // Convert to string with sufficient precision to avoid floating-point issues
-  const str = value.toFixed(18);
-  const [integer, decimal = ''] = str.split('.');
-  const paddedDecimal = decimal.padEnd(18, '0');
-  return BigInt(integer + paddedDecimal);
-}
-
-/**
- * Convert scaled BigInt back to number
- */
-function toNumber(value: bigint): number {
-  return Number(value) / Number(SCALE);
-}
 
 /**
  * Initialize or reset the calculator state
@@ -102,7 +80,7 @@ export function updateBalancesAfterAddLiquidity(
 
 /**
  * Update balances and pool reserves after swapping ETH for SIMP
- * Uses contract's exact integer arithmetic with 0.3% fee: amountInWithFee = amountIn * 997 / 1000
+ * Uses simplified arithmetic with 0.3% fee approximation
  * @param ethSwapAmount ETH amount being swapped
  * @param actualGasCost Actual gas cost in ETH (required)
  */
@@ -110,19 +88,14 @@ export function updateBalancesAfterSwapEthForSimp(
   ethSwapAmount: number,
   actualGasCost: number
 ): void {
-  // Convert to BigInt for integer arithmetic
-  const amountIn = toBigInt(ethSwapAmount);
-  const reserveSimplest = toBigInt(currentReserves.simpReserve);
-  const reserveETH = toBigInt(currentReserves.ethReserve);
+  // Apply 0.3% fee: effective amount = amountIn * 0.997
+  const amountInWithFee = ethSwapAmount * 0.997;
 
-  // Apply 0.3% fee exactly as contract does: (amountIn * 997) / 1000
-  const amountInWithFee = (amountIn * 997n) / 1000n;
-
-  // Calculate SIMP output using contract's exact formula
+  // Calculate SIMP output using constant product formula
   // amountOut = (reserveSimplest * amountInWithFee) / (reserveETH + amountInWithFee)
-  const simpOutputBigInt =
-    (reserveSimplest * amountInWithFee) / (reserveETH + amountInWithFee);
-  const simpOutput = toNumber(simpOutputBigInt);
+  const simpOutput =
+    (currentReserves.simpReserve * amountInWithFee) /
+    (currentReserves.ethReserve + amountInWithFee);
 
   const gasCost = actualGasCost;
 
@@ -138,7 +111,7 @@ export function updateBalancesAfterSwapEthForSimp(
 
 /**
  * Update balances and pool reserves after swapping SIMP for ETH
- * Uses contract's exact integer arithmetic with 0.3% fee: amountInWithFee = amountIn * 997 / 1000
+ * Uses simplified arithmetic with 0.3% fee approximation
  * @param simpSwapAmount SIMP amount being swapped
  * @param actualGasCost Actual gas cost in ETH (required)
  */
@@ -146,19 +119,14 @@ export function updateBalancesAfterSwapSimpForEth(
   simpSwapAmount: number,
   actualGasCost: number
 ): void {
-  // Convert to BigInt for integer arithmetic
-  const amountIn = toBigInt(simpSwapAmount);
-  const reserveETH = toBigInt(currentReserves.ethReserve);
-  const reserveSimplest = toBigInt(currentReserves.simpReserve);
+  // Apply 0.3% fee: effective amount = amountIn * 0.997
+  const amountInWithFee = simpSwapAmount * 0.997;
 
-  // Apply 0.3% fee exactly as contract does: (amountIn * 997) / 1000
-  const amountInWithFee = (amountIn * 997n) / 1000n;
-
-  // Calculate ETH output using contract's exact formula
+  // Calculate ETH output using constant product formula
   // amountOut = (reserveETH * amountInWithFee) / (reserveSimplest + amountInWithFee)
-  const ethOutputBigInt =
-    (reserveETH * amountInWithFee) / (reserveSimplest + amountInWithFee);
-  const ethOutput = toNumber(ethOutputBigInt);
+  const ethOutput =
+    (currentReserves.ethReserve * amountInWithFee) /
+    (currentReserves.simpReserve + amountInWithFee);
 
   const gasCost = actualGasCost;
 
@@ -169,5 +137,50 @@ export function updateBalancesAfterSwapSimpForEth(
   currentReserves = {
     ethReserve: currentReserves.ethReserve - ethOutput,
     simpReserve: currentReserves.simpReserve + simpSwapAmount,
+  };
+}
+
+/**
+ * Calculate expected output amounts for removing liquidity
+ * @param lpTokensToRemove Amount of LP tokens to remove
+ * @param totalLPTokens Total LP tokens in existence (based on initial add liquidity: sqrt(10 * 20) = sqrt(200) ≈ 14.142)
+ * @returns Expected ETH and SIMP amounts to receive
+ */
+export function calculateRemoveLiquidityOutput(
+  lpTokensToRemove: number,
+  totalLPTokens: number
+): { ethAmount: number; simpAmount: number } {
+  const percentage = lpTokensToRemove / totalLPTokens;
+  return {
+    ethAmount: currentReserves.ethReserve * percentage,
+    simpAmount: currentReserves.simpReserve * percentage,
+  };
+}
+
+/**
+ * Update balances and pool reserves after removing liquidity
+ * @param lpTokensToRemove Amount of LP tokens being removed
+ * @param totalLPTokens Total LP tokens before removal
+ * @param actualGasCost Actual gas cost in ETH (required)
+ */
+export function updateBalancesAfterRemoveLiquidity(
+  lpTokensToRemove: number,
+  totalLPTokens: number,
+  actualGasCost: number
+): void {
+  const { ethAmount, simpAmount } = calculateRemoveLiquidityOutput(
+    lpTokensToRemove,
+    totalLPTokens
+  );
+
+  const gasCost = actualGasCost;
+
+  currentBalances = {
+    ethBalance: currentBalances.ethBalance + ethAmount - gasCost,
+    simpBalance: currentBalances.simpBalance + simpAmount,
+  };
+  currentReserves = {
+    ethReserve: currentReserves.ethReserve - ethAmount,
+    simpReserve: currentReserves.simpReserve - simpAmount,
   };
 }
