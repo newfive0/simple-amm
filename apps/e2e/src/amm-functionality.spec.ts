@@ -44,12 +44,13 @@ test('should display AMM page with disabled elements before connection', async (
     swapSection.getByRole('button', { name: 'Please connect wallet' })
   ).toBeVisible();
 
-  const liquiditySection = page
-    .locator('h2')
-    .filter({ hasText: 'Add Liquidity' })
-    .locator('..');
+  // Check that Add/Remove tabs are disabled
+  await expect(page.getByRole('button', { name: 'Add' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Remove' })).toBeDisabled();
+
+  // Check that there's a disabled action button in liquidity section
   await expect(
-    liquiditySection.getByRole('button', { name: 'Please connect wallet' })
+    page.getByRole('button', { name: 'Please connect wallet' }).nth(1)
   ).toBeVisible();
 
   // Take screenshot of the initial AMM state before connection
@@ -140,18 +141,32 @@ test.describe('AMM Functionality', () => {
 
     // STEP 2: Add liquidity (10 ETH + 20 SIMP)
     const addLiquidity = async () => {
+      // Wait for Liquidity section to be visible
+      await expect(
+        page.getByRole('heading', { name: 'Liquidity' })
+      ).toBeVisible();
+
+      // Ensure we're on the Add tab (should be default)
+      const addTab = page.getByRole('button', { name: 'Add', exact: true });
+      await expect(addTab).toBeVisible();
+      await addTab.click(); // Click to ensure it's active
+
+      // Get the liquidity section - go up from the h2 to the main container
       const liquiditySection = page
-        .locator('h2')
-        .filter({ hasText: 'Add Liquidity' })
-        .locator('..');
-      await expect(liquiditySection.locator('h2')).toBeVisible();
+        .getByRole('heading', { name: 'Liquidity' })
+        .locator('../..');
+
+      // Wait for the input fields to appear after clicking Add tab
+      await expect(
+        liquiditySection.getByPlaceholder('Enter ETH amount')
+      ).toBeVisible({ timeout: 10000 });
 
       // Fill in ETH amount (10 ETH)
-      const ethInput = liquiditySection.locator('input[placeholder*="ETH"]');
+      const ethInput = liquiditySection.getByPlaceholder('Enter ETH amount');
       await ethInput.fill('10');
 
       // Fill in SIMP amount (20 SIMP)
-      const simpInput = liquiditySection.locator('input[placeholder*="SIMP"]');
+      const simpInput = liquiditySection.getByPlaceholder('Enter SIMP amount');
       await simpInput.fill('20');
 
       // Verify inputs are filled correctly
@@ -159,9 +174,9 @@ test.describe('AMM Functionality', () => {
       await expect(simpInput).toHaveValue('20');
 
       // Click Add Liquidity button and track gas usage
-      const addLiquidityButton = liquiditySection
-        .locator('button')
-        .filter({ hasText: 'Add Liquidity' });
+      const addLiquidityButton = page.getByRole('button', {
+        name: 'Add Liquidity',
+      });
       await expect(addLiquidityButton).toBeEnabled();
 
       // Perform add liquidity operation
@@ -169,9 +184,9 @@ test.describe('AMM Functionality', () => {
       const gasUsed = await handleTripleConfirmation();
 
       // Wait for transaction to complete
-      await expect(
-        liquiditySection.locator('button').filter({ hasText: 'Waiting...' })
-      ).toBeHidden({ timeout: 60000 });
+      await expect(page.getByRole('button', { name: 'Waiting...' })).toBeHidden(
+        { timeout: 60000 }
+      );
 
       // Verify inputs are cleared after successful transaction
       await expect(ethInput).toHaveValue('');
