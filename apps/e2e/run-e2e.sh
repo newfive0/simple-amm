@@ -17,10 +17,22 @@ trap cleanup EXIT
 
 # Process arguments
 TEST_FILES=""
+GREP_PATTERN=""
 
 for arg in "$@"; do
-    # Assume it's a test file
-    TEST_FILES="$TEST_FILES $arg"
+    # Skip empty args that come from Nx parameter substitution
+    if [ -n "$arg" ] && [ "$arg" != "{args.file}" ] && [ "$arg" != "{args.grep}" ]; then
+        # Check if this looks like a grep pattern (starts with --grep)
+        if [[ "$arg" == "--grep="* ]]; then
+            GREP_PATTERN="$arg"
+        elif [ -z "$GREP_PATTERN" ] && [[ "$arg" != *.spec.ts ]] && [[ "$arg" != src/* ]]; then
+            # If no explicit --grep= and not a test file, treat as grep pattern
+            GREP_PATTERN="--grep=$arg"
+        else
+            # Assume it's a test file
+            TEST_FILES="$TEST_FILES $arg"
+        fi
+    fi
 done
 
 # Start synpress setup in parallel
@@ -48,6 +60,6 @@ wait $SYNPRESS_PID
 
 # Run tests
 echo "Running e2e tests..."
-npx playwright test --config=playwright.config.ts $TEST_FILES
+npx playwright test --config=playwright.config.ts $GREP_PATTERN $TEST_FILES
 
 echo "Tests completed"

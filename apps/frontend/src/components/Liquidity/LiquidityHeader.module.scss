@@ -1,0 +1,49 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.title {
+  margin: 0;
+  color: #333;
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.tab {
+  padding: 8px 16px;
+  background-color: #f8f9fa;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+
+  &:hover:not(:disabled) {
+    background-color: #e9ecef;
+  }
+
+  &.active {
+    background-color: #28a745;
+    color: white;
+
+    &:hover {
+      background-color: #218838; // Darker green for better contrast
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &:not(:last-child) {
+    border-right: 1px solid #ddd;
+  }
+}

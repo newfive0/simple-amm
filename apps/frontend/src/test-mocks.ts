@@ -38,6 +38,7 @@ export const createMockTokenContract = () => ({
 export const createMockAMMContract = () => ({
   swap: vi.fn(),
   addLiquidity: vi.fn(),
+  removeLiquidity: vi.fn(),
   reserveETH: vi.fn(),
   reserveSimplest: vi.fn(),
 });
