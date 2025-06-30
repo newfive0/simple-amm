@@ -29,8 +29,14 @@
   font-size: 16px;
   background-color: #28a745;
   color: white;
-  border: none;
+  border: 1px solid #ddd;
+  border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #218838;
+  }
 
   &:disabled {
     background-color: #6c757d;
