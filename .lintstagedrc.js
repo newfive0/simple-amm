@@ -1,8 +1,7 @@
 module.exports = {
   // Run lint and typecheck for all projects when any JS/TS file changes
   '**/*.{js,ts,tsx}': [
-    () => 'nx run-many -t lint --parallel',
-    () => 'nx run-many -t typecheck --parallel',
+    () => 'nx run-many -t lint,typecheck --parallel',
   ],
 
   // For Solidity files in the contracts library
