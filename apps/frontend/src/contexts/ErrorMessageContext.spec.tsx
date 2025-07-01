@@ -4,8 +4,7 @@ import { ErrorMessageProvider, useErrorMessage } from './ErrorMessageContext';
 
 // Create test component to consume context
 const TestComponent = () => {
-  const { errorMessage, setErrorMessage, clearErrorMessage } =
-    useErrorMessage();
+  const { errorMessage, setErrorMessage } = useErrorMessage();
 
   return (
     <div>
@@ -22,7 +21,7 @@ const TestComponent = () => {
       >
         Set Another Error
       </button>
-      <button onClick={clearErrorMessage} data-testid="clear-error">
+      <button onClick={() => setErrorMessage('')} data-testid="clear-error">
         Clear Error
       </button>
     </div>

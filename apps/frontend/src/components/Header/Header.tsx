@@ -9,7 +9,11 @@ export const Header = () => {
   return (
     <div className={styles.header}>
       <h1 className={styles.title}>Very Simple AMM</h1>
-      {errorMessage && <div className={styles.error}>{errorMessage}</div>}
+      {errorMessage && (
+        <div className={styles.error} data-testid="error-message">
+          {errorMessage}
+        </div>
+      )}
       {!account && !errorMessage && <ConnectWallet />}
     </div>
   );

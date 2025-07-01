@@ -40,6 +40,7 @@ export const RemoveLiquidity = ({
 
       onLiquidityComplete();
       setRemoveLpAmount(0);
+      setErrorMessage(''); // Clear any previous errors on success
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Unknown error occurred';

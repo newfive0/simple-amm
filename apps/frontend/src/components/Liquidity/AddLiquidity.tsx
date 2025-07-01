@@ -119,6 +119,7 @@ export const AddLiquidity = ({
 
       onLiquidityComplete();
       resetForm();
+      setErrorMessage(''); // Clear any previous errors on success
     } catch (error) {
       handleError(error);
     } finally {

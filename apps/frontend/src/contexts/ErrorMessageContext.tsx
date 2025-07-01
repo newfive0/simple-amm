@@ -1,15 +1,8 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  ReactNode,
-} from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
 
 export interface ErrorMessageContextType {
   errorMessage: string;
   setErrorMessage: (message: string) => void;
-  clearErrorMessage: () => void;
 }
 
 const ErrorMessageContext = createContext<ErrorMessageContextType | undefined>(
@@ -19,14 +12,9 @@ const ErrorMessageContext = createContext<ErrorMessageContextType | undefined>(
 export const ErrorMessageProvider = ({ children }: { children: ReactNode }) => {
   const [errorMessage, setErrorMessage] = useState('');
 
-  const clearErrorMessage = useCallback(() => {
-    setErrorMessage('');
-  }, []);
-
   const value: ErrorMessageContextType = {
     errorMessage,
     setErrorMessage,
-    clearErrorMessage,
   };
 
   return (

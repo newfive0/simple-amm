@@ -99,6 +99,7 @@ export const Swap = ({
       await callback();
       onSwapComplete();
       resetForm();
+      setErrorMessage(''); // Clear any previous errors on success
     } catch (error) {
       handleError(error);
     } finally {
