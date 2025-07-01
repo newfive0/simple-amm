@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Token, AMMPool } from '@typechain-types';
 import { LiquidityBalances } from '../../utils/balances';
-import { LiquidityHeader } from './LiquidityHeader';
+import { TabGroup } from '../shared/TabGroup';
 import { AddLiquidity } from './AddLiquidity';
 import { RemoveLiquidity } from './RemoveLiquidity';
 import { InputField } from './InputField';
@@ -49,9 +49,24 @@ export const Liquidity = ({
     </div>
   );
 
+  const tabOptions = [
+    { id: 'add', label: 'Add' },
+    { id: 'remove', label: 'Remove' },
+  ];
+
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId as 'add' | 'remove');
+  };
+
   return (
     <div className={styles.liquidity}>
-      <LiquidityHeader activeTab={activeTab} onTabChange={setActiveTab} />
+      <TabGroup
+        title="Liquidity"
+        options={tabOptions}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        showLabel={true}
+      />
       <PoolBalances />
       {activeTab === 'add' ? (
         <AddLiquidity
@@ -79,9 +94,21 @@ export const Liquidity = ({
 
 // DisabledLiquidity component for when wallet is not connected
 export const DisabledLiquidity = () => {
+  const tabOptions = [
+    { id: 'add', label: 'Add' },
+    { id: 'remove', label: 'Remove' },
+  ];
+
   return (
     <div className={styles.liquidity}>
-      <LiquidityHeader disabled={true} />
+      <TabGroup
+        title="Liquidity"
+        options={tabOptions}
+        activeTab="add"
+        onTabChange={() => {}}
+        disabled={true}
+        showLabel={true}
+      />
       <div className={styles.poolBalances}>
         <p>
           <strong>Pool Reserves:</strong> 0.0000 SIMP / 0.0000 ETH

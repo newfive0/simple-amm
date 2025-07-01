@@ -1,3 +1,8 @@
+.container {
+  display: flex;
+  flex-direction: column;
+}
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -7,6 +12,19 @@
 .title {
   margin: 0;
   color: #333;
+}
+
+.tabGroup {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.tabLabel {
+  font-size: 16px;
+  color: #666;
+  font-weight: 500;
 }
 
 .tabs {
@@ -31,7 +49,7 @@
     color: white;
 
     &:hover {
-      background-color: #218838; // Darker green for better contrast
+      background-color: #218838;
     }
   }
 
