@@ -3,6 +3,13 @@ import { vi } from 'vitest';
 import { Liquidity } from './Liquidity';
 import { createMockContracts, mockContractAddresses } from '../../test-mocks';
 
+const mockSetErrorMessage = vi.fn();
+vi.mock('../../contexts/ErrorMessageContext', () => ({
+  useErrorMessage: () => ({
+    setErrorMessage: mockSetErrorMessage,
+  }),
+}));
+
 // Create mock contracts
 const { tokenContract, ammContract } = createMockContracts();
 
@@ -25,6 +32,7 @@ const defaultProps = {
 describe('Liquidity', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSetErrorMessage.mockClear();
   });
 
   it('should render successfully', () => {

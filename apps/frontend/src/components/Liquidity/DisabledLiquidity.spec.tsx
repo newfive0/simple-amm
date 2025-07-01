@@ -1,8 +1,19 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { DisabledLiquidity } from './DisabledLiquidity';
 
+const mockSetErrorMessage = vi.fn();
+vi.mock('../../contexts/ErrorMessageContext', () => ({
+  useErrorMessage: () => ({
+    setErrorMessage: mockSetErrorMessage,
+  }),
+}));
+
 describe('DisabledLiquidity Component', () => {
+  beforeEach(() => {
+    mockSetErrorMessage.mockClear();
+  });
+
   it('should render with default token symbol', () => {
     render(<DisabledLiquidity />);
 

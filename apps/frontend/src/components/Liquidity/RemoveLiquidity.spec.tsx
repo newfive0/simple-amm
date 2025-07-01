@@ -3,6 +3,13 @@ import { vi } from 'vitest';
 import { RemoveLiquidity } from './RemoveLiquidity';
 import { createMockContracts } from '../../test-mocks';
 
+const mockSetErrorMessage = vi.fn();
+vi.mock('../../contexts/ErrorMessageContext', () => ({
+  useErrorMessage: () => ({
+    setErrorMessage: mockSetErrorMessage,
+  }),
+}));
+
 const { mockAmmContract, ammContract } = createMockContracts();
 
 const mockOnLiquidityComplete = vi.fn();
@@ -22,6 +29,7 @@ const defaultProps = {
 describe('RemoveLiquidity', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSetErrorMessage.mockClear();
     mockAmmContract.removeLiquidity.mockResolvedValue({
       wait: vi.fn().mockResolvedValue({}),
     });
@@ -118,7 +126,6 @@ describe('RemoveLiquidity', () => {
   });
 
   it('should handle transaction errors', async () => {
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
     mockAmmContract.removeLiquidity.mockRejectedValue(
       new Error('Transaction failed')
     );
@@ -134,12 +141,10 @@ describe('RemoveLiquidity', () => {
     fireEvent.click(removeButton);
 
     await waitFor(() => {
-      expect(alertSpy).toHaveBeenCalledWith(
+      expect(mockSetErrorMessage).toHaveBeenCalledWith(
         'Failed to remove liquidity: Transaction failed'
       );
     });
-
-    alertSpy.mockRestore();
   });
 
   it('should disable remove button when LP amount is zero', () => {

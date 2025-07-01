@@ -5,6 +5,7 @@ import { createDeferredPromise } from '../../test-mocks';
 
 // Mock the contexts
 const mockConnectWallet = vi.fn();
+const mockSetErrorMessage = vi.fn();
 
 vi.mock('../../contexts', () => ({
   useWallet: () => ({
@@ -12,9 +13,16 @@ vi.mock('../../contexts', () => ({
   }),
 }));
 
+vi.mock('../../contexts/ErrorMessageContext', () => ({
+  useErrorMessage: () => ({
+    setErrorMessage: mockSetErrorMessage,
+  }),
+}));
+
 describe('ConnectWallet', () => {
   beforeEach(() => {
     mockConnectWallet.mockClear();
+    mockSetErrorMessage.mockClear();
   });
 
   it('should render successfully', () => {

@@ -4,6 +4,7 @@ import { Token, AMMPool } from '@typechain-types';
 import { InputWithOutput } from '../shared/InputWithOutput';
 import { TabGroup } from '../shared/TabGroup';
 import { createSwapOutputCalculator } from '../../utils/expectedOutputCalculators';
+import { useErrorMessage } from '../../contexts/ErrorMessageContext';
 import styles from './Swap.module.scss';
 
 export { DisabledSwap } from './DisabledSwap';
@@ -73,6 +74,7 @@ export const Swap = ({
   const [swapDirection, setSwapDirection] = useState<
     'eth-to-token' | 'token-to-eth'
   >('token-to-eth');
+  const { setErrorMessage } = useErrorMessage();
 
   // Clear amounts when direction changes
   useEffect(() => {
@@ -83,7 +85,7 @@ export const Swap = ({
   const handleError = (error: unknown) => {
     const message =
       error instanceof Error ? error.message : 'Unknown error occurred';
-    alert(`Swap failed: ${message}`);
+    setErrorMessage(`Swap failed: ${message}`);
   };
 
   const resetForm = () => {

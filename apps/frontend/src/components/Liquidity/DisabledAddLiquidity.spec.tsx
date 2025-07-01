@@ -1,8 +1,19 @@
 import { render, screen } from '@testing-library/react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { DisabledAddLiquidity } from './DisabledAddLiquidity';
 
+const mockSetErrorMessage = vi.fn();
+vi.mock('../../contexts/ErrorMessageContext', () => ({
+  useErrorMessage: () => ({
+    setErrorMessage: mockSetErrorMessage,
+  }),
+}));
+
 describe('DisabledAddLiquidity Component', () => {
+  beforeEach(() => {
+    mockSetErrorMessage.mockClear();
+  });
+
   it('should render ETH and token input fields', () => {
     render(<DisabledAddLiquidity />);
 

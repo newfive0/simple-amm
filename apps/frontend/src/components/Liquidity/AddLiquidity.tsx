@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ethers } from 'ethers';
 import { Token, AMMPool } from '@typechain-types';
 import { InputField } from './InputField';
+import { useErrorMessage } from '../../contexts/ErrorMessageContext';
 import styles from './AddLiquidity.module.scss';
 
 interface AddLiquidityProps {
@@ -27,6 +28,7 @@ export const AddLiquidity = ({
   const [liquidityEthAmount, setLiquidityEthAmount] = useState<number>(0);
   const [liquidityTokenAmount, setLiquidityTokenAmount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
+  const { setErrorMessage } = useErrorMessage();
 
   const calculateCorrespondingAmount = (
     amount: number,
@@ -84,7 +86,7 @@ export const AddLiquidity = ({
   const handleError = (error: unknown) => {
     const message =
       error instanceof Error ? error.message : 'Unknown error occurred';
-    alert(`Failed to add liquidity: ${message}`);
+    setErrorMessage(`Failed to add liquidity: ${message}`);
   };
 
   const resetForm = () => {

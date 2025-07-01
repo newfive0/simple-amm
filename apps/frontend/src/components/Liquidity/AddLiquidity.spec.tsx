@@ -3,6 +3,13 @@ import { vi } from 'vitest';
 import { AddLiquidity } from './AddLiquidity';
 import { createMockContracts, mockContractAddresses } from '../../test-mocks';
 
+const mockSetErrorMessage = vi.fn();
+vi.mock('../../contexts/ErrorMessageContext', () => ({
+  useErrorMessage: () => ({
+    setErrorMessage: mockSetErrorMessage,
+  }),
+}));
+
 const { mockTokenContract, mockAmmContract, tokenContract, ammContract } =
   createMockContracts();
 
@@ -20,6 +27,7 @@ const defaultProps = {
 describe('AddLiquidity', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSetErrorMessage.mockClear();
     mockTokenContract.approve.mockResolvedValue({
       wait: vi.fn().mockResolvedValue({}),
     });
@@ -131,7 +139,6 @@ describe('AddLiquidity', () => {
   });
 
   it('should handle transaction errors', async () => {
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
     mockTokenContract.approve.mockRejectedValue(
       new Error('Transaction failed')
     );
@@ -146,12 +153,10 @@ describe('AddLiquidity', () => {
     fireEvent.click(button);
 
     await waitFor(() => {
-      expect(alertSpy).toHaveBeenCalledWith(
+      expect(mockSetErrorMessage).toHaveBeenCalledWith(
         'Failed to add liquidity: Transaction failed'
       );
     });
-
-    alertSpy.mockRestore();
   });
 
   it('should use SIMP token symbol', () => {
