@@ -1,6 +1,6 @@
 import { render, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
-import { Liquidity, DisabledLiquidity } from './Liquidity';
+import { Liquidity } from './Liquidity';
 import { createMockContracts, mockContractAddresses } from '../../test-mocks';
 
 // Create mock contracts
@@ -80,36 +80,5 @@ describe('Liquidity', () => {
     // Switch back to add
     fireEvent.click(getByRole('button', { name: 'Add' }));
     expect(getByPlaceholderText('Enter ETH amount')).toBeTruthy();
-  });
-});
-
-describe('DisabledLiquidity', () => {
-  it('should render with disabled state', () => {
-    const { getByRole, getByText, getAllByText } = render(
-      <DisabledLiquidity />
-    );
-
-    expect(getByRole('heading', { name: 'Liquidity' })).toBeTruthy();
-    expect(getByText(/Pool Reserves:/)).toBeTruthy();
-    expect(getByText(/0\.0000 SIMP.*0\.0000 ETH/)).toBeTruthy();
-
-    // Tabs should be disabled
-    const addButton = getByRole('button', { name: 'Add' });
-    const removeButton = getByRole('button', { name: 'Remove' });
-    expect(addButton).toBeDisabled();
-    expect(removeButton).toBeDisabled();
-
-    // Button should show disabled message
-    expect(getAllByText('Please connect wallet')[0]).toBeTruthy();
-  });
-
-  it('should have disabled input fields', () => {
-    const { getByPlaceholderText } = render(<DisabledLiquidity />);
-
-    const ethInput = getByPlaceholderText('Enter ETH amount');
-    const simpInput = getByPlaceholderText('Enter SIMP amount');
-
-    expect(ethInput).toBeDisabled();
-    expect(simpInput).toBeDisabled();
   });
 });
