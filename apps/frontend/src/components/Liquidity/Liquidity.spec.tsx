@@ -1,7 +1,7 @@
 import { render, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import { Liquidity } from './Liquidity';
-import { createMockContracts, mockContractAddresses } from '../../test-mocks';
+import { createMockContracts } from '../../test-mocks';
 
 const mockSetErrorMessage = vi.fn();
 vi.mock('../../contexts/ErrorMessageContext', () => ({
@@ -18,7 +18,6 @@ const mockOnLiquidityComplete = vi.fn();
 const defaultProps = {
   ammContract,
   tokenContract,
-  contractAddresses: mockContractAddresses,
   poolEthReserve: 10.0,
   poolTokenReserve: 20.0,
   lpTokenBalances: {

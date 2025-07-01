@@ -18,7 +18,6 @@ const mockOnLiquidityComplete = vi.fn();
 const defaultProps = {
   ammContract,
   tokenContract,
-  contractAddresses: mockContractAddresses,
   poolEthReserve: 10.0,
   poolTokenReserve: 20.0,
   onLiquidityComplete: mockOnLiquidityComplete,

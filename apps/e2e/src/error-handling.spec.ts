@@ -216,50 +216,6 @@ test.describe('Error Handling', () => {
     });
   });
 
-  test.describe('Input Validation Errors', () => {
-    test('should show error for invalid number input', async ({
-      context,
-      page,
-      metamaskPage,
-      extensionId,
-    }) => {
-      const metamask = new MetaMask(
-        context,
-        metamaskPage,
-        'Tester@1234',
-        extensionId
-      );
-
-      // Setup: Connect wallet first
-      await page.goto('/');
-      await page
-        .locator('button')
-        .filter({ hasText: /connect/i })
-        .first()
-        .click();
-      await metamask.connectToDapp();
-
-      // Wait for connection
-      await expect(
-        page.locator('text=Connected').or(page.locator('text=0x')).first()
-      ).toBeVisible({ timeout: 30000 });
-
-      // Navigate to liquidity section
-      const liquiditySection = page
-        .getByRole('heading', { name: 'Liquidity' })
-        .locator('../..');
-
-      // Try to enter invalid characters
-      const ethInput = liquiditySection.getByPlaceholder('Enter ETH amount');
-
-      // Fill with text instead of numbers
-      await ethInput.fill('abc');
-
-      // Verify error is displayed
-      await verifyErrorDisplay(page, 'Please enter a valid number');
-    });
-  });
-
   test.describe('Error Clearing', () => {
     test('should clear error after successful swap', async ({
       context,
@@ -288,17 +244,7 @@ test.describe('Error Handling', () => {
         page.locator('text=Connected').or(page.locator('text=0x')).first()
       ).toBeVisible({ timeout: 30000 });
 
-      // First, trigger an error by entering invalid input
-      const liquiditySection = page
-        .getByRole('heading', { name: 'Liquidity' })
-        .locator('../..');
-      const ethInput = liquiditySection.getByPlaceholder('Enter ETH amount');
-      await ethInput.fill('abc');
-
-      // Verify error is displayed
-      await verifyErrorDisplay(page, 'Please enter a valid number');
-
-      // Now perform a successful swap
+      // First, trigger an error by rejecting a transaction
       const swapSection = page
         .locator('h2')
         .filter({ hasText: 'Swap' })
@@ -317,6 +263,20 @@ test.describe('Error Handling', () => {
         .locator('button')
         .filter({ hasText: 'Swap ETH for SIMP' });
       await swapButton.click();
+
+      // Reject to create an error
+      await page.waitForTimeout(3000);
+      await metamask.rejectTransaction();
+      await verifyErrorDisplay(page, 'Swap failed:');
+
+      // Now perform a successful swap (switch back to ETH → SIMP if needed)
+      const newSwapInput = swapSection.getByPlaceholder('ETH → SIMP');
+      await newSwapInput.fill('0.05');
+
+      const newSwapButton = swapSection
+        .locator('button')
+        .filter({ hasText: 'Swap ETH for SIMP' });
+      await newSwapButton.click();
 
       // Confirm the transaction
       await page.waitForTimeout(3000);

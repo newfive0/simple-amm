@@ -21,7 +21,6 @@ interface MockWalletInfoProps {
 interface MockSwapProps {
   ammContract: unknown;
   tokenContract: unknown;
-  contractAddresses: { tokenAddress: string; ammPoolAddress: string };
   poolEthReserve: number;
   poolTokenReserve: number;
   onSwapComplete: () => void;
@@ -30,7 +29,6 @@ interface MockSwapProps {
 interface MockLiquidityProps {
   ammContract: unknown;
   tokenContract: unknown;
-  contractAddresses: { tokenAddress: string; ammPoolAddress: string };
   poolEthReserve: number;
   poolTokenReserve: number;
   lpTokenBalances: {

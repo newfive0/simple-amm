@@ -8,10 +8,6 @@ import styles from './AddLiquidity.module.scss';
 interface AddLiquidityProps {
   ammContract: AMMPool;
   tokenContract: Token;
-  contractAddresses: {
-    tokenAddress: string;
-    ammPoolAddress: string;
-  };
   poolEthReserve: number;
   poolTokenReserve: number;
   onLiquidityComplete: () => void;
@@ -20,7 +16,6 @@ interface AddLiquidityProps {
 export const AddLiquidity = ({
   ammContract,
   tokenContract,
-  contractAddresses,
   poolEthReserve,
   poolTokenReserve,
   onLiquidityComplete,
@@ -95,8 +90,9 @@ export const AddLiquidity = ({
   };
 
   const approveTokenSpending = async (amount: number) => {
+    const ammPoolAddress = await ammContract.getAddress();
     const approveTx = await tokenContract.approve(
-      contractAddresses.ammPoolAddress,
+      ammPoolAddress,
       ethers.parseEther(amount.toString())
     );
     await approveTx.wait();

@@ -33,6 +33,7 @@ export const createMockTokenContract = () => ({
   approve: vi.fn(),
   symbol: vi.fn(),
   balanceOf: vi.fn(),
+  getAddress: vi.fn().mockResolvedValue(mockContractAddresses.tokenAddress),
 });
 
 export const createMockAMMContract = () => ({
@@ -41,6 +42,7 @@ export const createMockAMMContract = () => ({
   removeLiquidity: vi.fn(),
   reserveETH: vi.fn(),
   reserveSimplest: vi.fn(),
+  getAddress: vi.fn().mockResolvedValue(mockContractAddresses.ammPoolAddress),
 });
 
 // Type-safe mock contract factories
@@ -71,7 +73,6 @@ export const createDefaultProps = (
   return {
     tokenContract,
     ammContract,
-    contractAddresses: mockContractAddresses,
     poolEthReserve: '10.0',
     poolTokenReserve: '20.0',
     ...overrides,

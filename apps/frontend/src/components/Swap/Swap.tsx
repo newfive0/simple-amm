@@ -51,10 +51,6 @@ const SwapInput = ({
 interface SwapProps {
   ammContract: AMMPool;
   tokenContract: Token;
-  contractAddresses: {
-    tokenAddress: string;
-    ammPoolAddress: string;
-  };
   poolEthReserve: number;
   poolTokenReserve: number;
   onSwapComplete: () => void;
@@ -63,7 +59,6 @@ interface SwapProps {
 export const Swap = ({
   ammContract,
   tokenContract,
-  contractAddresses,
   poolEthReserve,
   poolTokenReserve,
   onSwapComplete,
@@ -108,8 +103,9 @@ export const Swap = ({
   };
 
   const approveTokenSpending = async (amount: string) => {
+    const ammPoolAddress = await ammContract.getAddress();
     const approveTx = await tokenContract.approve(
-      contractAddresses.ammPoolAddress,
+      ammPoolAddress,
       ethers.parseEther(amount)
     );
     await approveTx.wait();
@@ -131,8 +127,9 @@ export const Swap = ({
 
     await executeSwapTransaction(async () => {
       await approveTokenSpending(tokenAmount);
+      const tokenAddress = await tokenContract.getAddress();
       const tx = await ammContract.swap(
-        contractAddresses.tokenAddress,
+        tokenAddress,
         ethers.parseEther(tokenAmount)
       );
       await tx.wait();
