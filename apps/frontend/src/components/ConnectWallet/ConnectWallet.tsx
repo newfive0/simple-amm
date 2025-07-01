@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useWallet } from '../../contexts';
+import { useErrorMessage } from '../../contexts/ErrorMessageContext';
 import styles from './ConnectWallet.module.scss';
 
 export const ConnectWallet = () => {
   const { connectWallet } = useWallet();
   const [isLoading, setIsLoading] = useState(false);
+  const { setErrorMessage } = useErrorMessage();
 
   const isResourceUnavailableError = (error: unknown): boolean => {
     return !!(
@@ -21,11 +23,11 @@ export const ConnectWallet = () => {
       await connectWallet();
     } catch (error: unknown) {
       if (isResourceUnavailableError(error)) {
-        alert(
+        setErrorMessage(
           'Connection error occurred. Your wallet may be processing another request. Please check your wallet.'
         );
       } else {
-        alert('Failed to connect wallet. Please try again.');
+        setErrorMessage('Failed to connect wallet. Please try again.');
       }
     } finally {
       setIsLoading(false);

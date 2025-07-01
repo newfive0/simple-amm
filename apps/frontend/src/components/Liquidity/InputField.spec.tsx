@@ -2,6 +2,14 @@ import { render, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 import { InputField } from './InputField';
 
+const mockSetErrorMessage = vi.fn();
+
+vi.mock('../../contexts/ErrorMessageContext', () => ({
+  useErrorMessage: () => ({
+    setErrorMessage: mockSetErrorMessage,
+  }),
+}));
+
 describe('InputField', () => {
   const defaultProps = {
     value: 0,
@@ -11,6 +19,7 @@ describe('InputField', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSetErrorMessage.mockClear();
   });
 
   it('should render with placeholder', () => {

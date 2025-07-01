@@ -8,6 +8,13 @@ import {
   mockContractAddresses,
 } from '../../test-mocks';
 
+const mockSetErrorMessage = vi.fn();
+vi.mock('../../contexts/ErrorMessageContext', () => ({
+  useErrorMessage: () => ({
+    setErrorMessage: mockSetErrorMessage,
+  }),
+}));
+
 // Create mock contracts
 const { mockTokenContract, mockAmmContract, tokenContract, ammContract } =
   createMockContracts();
@@ -26,6 +33,7 @@ const defaultProps = {
 describe('Swap Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockSetErrorMessage.mockClear();
   });
 
   describe('Rendering', () => {
@@ -148,7 +156,6 @@ describe('Swap Component', () => {
     });
 
     it('should handle Token to ETH swap failure', async () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
       mockTokenContract.approve.mockRejectedValue(
         new Error('Transaction failed')
       );
@@ -162,14 +169,12 @@ describe('Swap Component', () => {
       fireEvent.click(swapButton);
 
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith(
+        expect(mockSetErrorMessage).toHaveBeenCalledWith(
           'Swap failed: Transaction failed'
         );
         expect(swapButton).toHaveTextContent('Swap SIMP for ETH');
         expect(swapButton).not.toBeDisabled();
       });
-
-      alertSpy.mockRestore();
     });
 
     it('should disable swap button when no amount entered', () => {
@@ -217,7 +222,6 @@ describe('Swap Component', () => {
     });
 
     it('should handle ETH to Token swap failure', async () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
       mockAmmContract.swap.mockRejectedValue(new Error('Transaction failed'));
 
       render(<Swap {...defaultProps} />);
@@ -233,14 +237,12 @@ describe('Swap Component', () => {
       fireEvent.click(swapButton);
 
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith(
+        expect(mockSetErrorMessage).toHaveBeenCalledWith(
           'Swap failed: Transaction failed'
         );
         expect(swapButton).toHaveTextContent('Swap ETH for SIMP');
         expect(swapButton).not.toBeDisabled();
       });
-
-      alertSpy.mockRestore();
     });
   });
 
@@ -292,7 +294,6 @@ describe('Swap Component', () => {
     });
 
     it('should not reset form after failed swap', async () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
       mockTokenContract.approve.mockRejectedValue(new Error('Failed'));
 
       render(<Swap {...defaultProps} />);
@@ -304,17 +305,14 @@ describe('Swap Component', () => {
       fireEvent.click(swapButton);
 
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalled();
+        expect(mockSetErrorMessage).toHaveBeenCalled();
         expect(input).toHaveDisplayValue('1.5'); // Should retain value
       });
-
-      alertSpy.mockRestore();
     });
   });
 
   describe('Edge Cases', () => {
     it('should handle unknown error types', async () => {
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
       mockTokenContract.approve.mockRejectedValue('string error');
 
       render(<Swap {...defaultProps} />);
@@ -326,12 +324,10 @@ describe('Swap Component', () => {
       fireEvent.click(swapButton);
 
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith(
+        expect(mockSetErrorMessage).toHaveBeenCalledWith(
           'Swap failed: Unknown error occurred'
         );
       });
-
-      alertSpy.mockRestore();
     });
 
     it('should handle empty amounts in swap functions', async () => {

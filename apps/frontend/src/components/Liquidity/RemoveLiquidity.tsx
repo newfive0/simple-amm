@@ -4,6 +4,7 @@ import { AMMPool } from '@typechain-types';
 import { LiquidityBalances } from '../../utils/balances';
 import { InputWithOutput } from '../shared/InputWithOutput';
 import { createRemoveLiquidityOutputCalculator } from '../../utils/expectedOutputCalculators';
+import { useErrorMessage } from '../../contexts/ErrorMessageContext';
 import styles from './RemoveLiquidity.module.scss';
 
 interface RemoveLiquidityProps {
@@ -23,6 +24,7 @@ export const RemoveLiquidity = ({
 }: RemoveLiquidityProps) => {
   const [removeLpAmount, setRemoveLpAmount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
+  const { setErrorMessage } = useErrorMessage();
 
   const removeLiquidity = async () => {
     if (!removeLpAmount || removeLpAmount <= 0) {
@@ -41,7 +43,7 @@ export const RemoveLiquidity = ({
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Unknown error occurred';
-      alert(`Failed to remove liquidity: ${message}`);
+      setErrorMessage(`Failed to remove liquidity: ${message}`);
     } finally {
       setIsLoading(false);
     }
