@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { ethers } from 'ethers';
 import { AMMPool } from '@typechain-types';
 import { LiquidityBalances } from '../../utils/balances';
-import { InputField } from './InputField';
+import { InputWithOutput } from '../shared/InputWithOutput';
+import { createRemoveLiquidityOutputCalculator } from '../../utils/expectedOutputCalculators';
 import styles from './RemoveLiquidity.module.scss';
 
 interface RemoveLiquidityProps {
@@ -48,47 +49,31 @@ export const RemoveLiquidity = ({
     }
   };
 
-  const calculateRemoveOutput = () => {
-    if (
-      !removeLpAmount ||
-      removeLpAmount <= 0 ||
-      lpTokenBalances.totalLPTokens === 0
-    ) {
-      return { ethAmount: 0, tokenAmount: 0 };
-    }
-
-    const ethAmount =
-      (removeLpAmount * poolEthReserve) / lpTokenBalances.totalLPTokens;
-    const tokenAmount =
-      (removeLpAmount * poolTokenReserve) / lpTokenBalances.totalLPTokens;
-
-    return { ethAmount, tokenAmount };
-  };
+  const generateExpectedOutput = createRemoveLiquidityOutputCalculator(
+    poolEthReserve,
+    poolTokenReserve,
+    lpTokenBalances.totalLPTokens,
+    tokenSymbol
+  );
 
   return (
     <>
-      <InputField
-        label="LP Tokens to Remove"
-        value={removeLpAmount}
-        onChange={setRemoveLpAmount}
-        placeholder={`Max: ${lpTokenBalances.userLPTokens.toFixed(4)}`}
+      <InputWithOutput
+        value={removeLpAmount === 0 ? '' : removeLpAmount.toString()}
+        onChange={(value) => {
+          if (value === '') {
+            setRemoveLpAmount(0);
+            return;
+          }
+          const numValue = Number(value);
+          if (isNaN(numValue)) {
+            return;
+          }
+          setRemoveLpAmount(numValue);
+        }}
+        placeholder="LP Tokens to Remove"
+        generateExpectedOutput={generateExpectedOutput}
       />
-      <button
-        type="button"
-        onClick={() => setRemoveLpAmount(lpTokenBalances.userLPTokens)}
-        className={styles.maxButton}
-      >
-        Max
-      </button>
-      {removeLpAmount > 0 && lpTokenBalances.totalLPTokens > 0 && (
-        <div className={styles.removeOutput}>
-          <p>You will receive:</p>
-          <p>{calculateRemoveOutput().ethAmount.toFixed(4)} ETH</p>
-          <p>
-            {calculateRemoveOutput().tokenAmount.toFixed(4)} {tokenSymbol}
-          </p>
-        </div>
-      )}
       <button
         onClick={removeLiquidity}
         disabled={

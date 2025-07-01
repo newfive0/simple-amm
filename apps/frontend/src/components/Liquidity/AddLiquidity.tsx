@@ -128,18 +128,18 @@ export const AddLiquidity = ({
 
   return (
     <>
-      <InputField
-        label="ETH Amount"
-        value={liquidityEthAmount}
-        onChange={handleEthAmountChange}
-        placeholder="Enter ETH amount"
-      />
-      <InputField
-        label={`${tokenSymbol} Amount`}
-        value={liquidityTokenAmount}
-        onChange={handleTokenAmountChange}
-        placeholder={`Enter ${tokenSymbol} amount`}
-      />
+      <div className={styles.inputRow}>
+        <InputField
+          value={liquidityEthAmount}
+          onChange={handleEthAmountChange}
+          placeholder="Enter ETH amount"
+        />
+        <InputField
+          value={liquidityTokenAmount}
+          onChange={handleTokenAmountChange}
+          placeholder={`Enter ${tokenSymbol} amount`}
+        />
+      </div>
       <button
         onClick={addLiquidity}
         disabled={isLoading || !liquidityEthAmount || !liquidityTokenAmount}

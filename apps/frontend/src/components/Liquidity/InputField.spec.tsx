@@ -4,7 +4,6 @@ import { InputField } from './InputField';
 
 describe('InputField', () => {
   const defaultProps = {
-    label: 'Test Label',
     value: 0,
     onChange: vi.fn(),
     placeholder: 'Test placeholder',
@@ -14,12 +13,9 @@ describe('InputField', () => {
     vi.clearAllMocks();
   });
 
-  it('should render with label and placeholder', () => {
-    const { getByText, getByPlaceholderText } = render(
-      <InputField {...defaultProps} />
-    );
+  it('should render with placeholder', () => {
+    const { getByPlaceholderText } = render(<InputField {...defaultProps} />);
 
-    expect(getByText('Test Label')).toBeTruthy();
     expect(getByPlaceholderText('Test placeholder')).toBeTruthy();
   });
 

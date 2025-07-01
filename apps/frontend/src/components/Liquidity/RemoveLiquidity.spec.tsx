@@ -28,53 +28,58 @@ describe('RemoveLiquidity', () => {
     });
   });
 
-  it('should render LP token input with max placeholder', () => {
-    const { getByText, getByPlaceholderText } = render(
+  it('should render LP token input with placeholder', () => {
+    const { getByPlaceholderText } = render(
       <RemoveLiquidity {...defaultProps} />
     );
 
-    expect(getByText('LP Tokens to Remove')).toBeTruthy();
-    expect(getByPlaceholderText('Max: 5.0000')).toBeTruthy();
+    expect(getByPlaceholderText('LP Tokens to Remove')).toBeTruthy();
   });
 
-  it('should show max button', () => {
-    const { getByRole } = render(<RemoveLiquidity {...defaultProps} />);
+  it('should show expected output', () => {
+    const { getByText } = render(<RemoveLiquidity {...defaultProps} />);
 
-    expect(getByRole('button', { name: 'Max' })).toBeTruthy();
+    // When no input, should show default output
+    expect(getByText('0.0000 SIMP + 0.0000 ETH')).toBeTruthy();
   });
 
-  it('should set max LP tokens when max button clicked', () => {
-    const { getByRole, getByPlaceholderText } = render(
-      <RemoveLiquidity {...defaultProps} />
-    );
-
-    const maxButton = getByRole('button', { name: 'Max' });
-    fireEvent.click(maxButton);
-
-    const input = getByPlaceholderText('Max: 5.0000');
-    expect(input).toHaveValue(5);
-  });
-
-  it('should calculate remove output correctly', () => {
+  it('should calculate output correctly when LP tokens entered', () => {
     const { getByPlaceholderText, getByText } = render(
       <RemoveLiquidity {...defaultProps} />
     );
 
-    const lpInput = getByPlaceholderText('Max: 5.0000');
+    const lpInput = getByPlaceholderText('LP Tokens to Remove');
     fireEvent.change(lpInput, { target: { value: '2.5' } });
 
-    expect(getByText('You will receive:')).toBeTruthy();
     // 2.5 LP tokens out of 10 total = 25% of pool
     // 25% of 10 ETH = 2.5 ETH
     // 25% of 20 SIMP = 5 SIMP
-    expect(getByText(/2\.5000 ETH/)).toBeTruthy();
-    expect(getByText(/5\.0000 SIMP/)).toBeTruthy();
+    expect(getByText('5.0000 SIMP + 2.5000 ETH')).toBeTruthy();
   });
 
-  it('should not show output when LP amount is zero', () => {
-    const { queryByText } = render(<RemoveLiquidity {...defaultProps} />);
+  it('should show zero output when input is empty', () => {
+    const { getByPlaceholderText, getByText } = render(
+      <RemoveLiquidity {...defaultProps} />
+    );
 
-    expect(queryByText('You will receive:')).toBeFalsy();
+    const lpInput = getByPlaceholderText('LP Tokens to Remove');
+    fireEvent.change(lpInput, { target: { value: '' } });
+
+    expect(getByText('0.0000 SIMP + 0.0000 ETH')).toBeTruthy();
+  });
+
+  it('should handle decimal input values', () => {
+    const { getByPlaceholderText, getByText } = render(
+      <RemoveLiquidity {...defaultProps} />
+    );
+
+    const lpInput = getByPlaceholderText('LP Tokens to Remove');
+    fireEvent.change(lpInput, { target: { value: '1.5' } });
+
+    // 1.5 LP tokens out of 10 total = 15% of pool
+    // 15% of 20 SIMP = 3 SIMP
+    // 15% of 10 ETH = 1.5 ETH
+    expect(getByText('3.0000 SIMP + 1.5000 ETH')).toBeTruthy();
   });
 
   it('should execute remove liquidity successfully', async () => {
@@ -82,7 +87,7 @@ describe('RemoveLiquidity', () => {
       <RemoveLiquidity {...defaultProps} />
     );
 
-    const lpInput = getByPlaceholderText('Max: 5.0000');
+    const lpInput = getByPlaceholderText('LP Tokens to Remove');
     fireEvent.change(lpInput, { target: { value: '2.5' } });
 
     const removeButton = getByRole('button', { name: 'Remove Liquidity' });
@@ -104,7 +109,7 @@ describe('RemoveLiquidity', () => {
       <RemoveLiquidity {...defaultProps} />
     );
 
-    const lpInput = getByPlaceholderText('Max: 5.0000');
+    const lpInput = getByPlaceholderText('LP Tokens to Remove');
     fireEvent.change(lpInput, { target: { value: '2.5' } });
 
     const removeButton = getByRole('button', { name: 'Remove Liquidity' });
@@ -123,7 +128,7 @@ describe('RemoveLiquidity', () => {
       <RemoveLiquidity {...defaultProps} />
     );
 
-    const lpInput = getByPlaceholderText('Max: 5.0000');
+    const lpInput = getByPlaceholderText('LP Tokens to Remove');
     fireEvent.change(lpInput, { target: { value: '2.5' } });
 
     const removeButton = getByRole('button', { name: 'Remove Liquidity' });
@@ -150,7 +155,7 @@ describe('RemoveLiquidity', () => {
       <RemoveLiquidity {...defaultProps} />
     );
 
-    const lpInput = getByPlaceholderText('Max: 5.0000');
+    const lpInput = getByPlaceholderText('LP Tokens to Remove');
     fireEvent.change(lpInput, { target: { value: '10' } });
 
     const removeButton = getByRole('button', { name: 'Remove Liquidity' });
@@ -167,13 +172,14 @@ describe('RemoveLiquidity', () => {
       },
     };
 
-    const { getByPlaceholderText, queryByText } = render(
+    const { getByPlaceholderText, getByText } = render(
       <RemoveLiquidity {...zeroLPProps} />
     );
 
-    const lpInput = getByPlaceholderText('Max: 0.0000');
+    const lpInput = getByPlaceholderText('LP Tokens to Remove');
     fireEvent.change(lpInput, { target: { value: '1' } });
 
-    expect(queryByText('You will receive:')).toBeFalsy();
+    // With zero total LP tokens, output should be zero
+    expect(getByText('0.0000 SIMP + 0.0000 ETH')).toBeTruthy();
   });
 });

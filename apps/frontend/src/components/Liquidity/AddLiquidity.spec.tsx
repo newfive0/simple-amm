@@ -29,12 +29,8 @@ describe('AddLiquidity', () => {
     });
   });
 
-  it('should render input fields with correct labels', () => {
-    const { getByText, getByPlaceholderText } = render(
-      <AddLiquidity {...defaultProps} />
-    );
-    expect(getByText('ETH Amount')).toBeTruthy();
-    expect(getByText('SIMP Amount')).toBeTruthy();
+  it('should render input fields with correct placeholders', () => {
+    const { getByPlaceholderText } = render(<AddLiquidity {...defaultProps} />);
     expect(getByPlaceholderText('Enter ETH amount')).toBeTruthy();
     expect(getByPlaceholderText('Enter SIMP amount')).toBeTruthy();
   });
@@ -160,11 +156,10 @@ describe('AddLiquidity', () => {
   });
 
   it('should use custom token symbol', () => {
-    const { getByText, getByPlaceholderText } = render(
+    const { getByPlaceholderText } = render(
       <AddLiquidity {...defaultProps} tokenSymbol="CUSTOM" />
     );
 
-    expect(getByText('CUSTOM Amount')).toBeTruthy();
     expect(getByPlaceholderText('Enter CUSTOM amount')).toBeTruthy();
   });
 });

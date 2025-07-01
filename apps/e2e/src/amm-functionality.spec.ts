@@ -35,14 +35,24 @@ test('should display AMM page with disabled elements before connection', async (
     timeout: 10000,
   });
 
-  // Wait for disabled swap and liquidity elements to be visible
+  // Check for "Please connect wallet" button - try different approaches
+  // First check if the swap section exists
   const swapSection = page
     .locator('h2')
-    .filter({ hasText: 'Swap Tokens' })
-    .locator('..');
+    .filter({ hasText: 'Swap' })
+    .locator('../..');
+  await expect(swapSection).toBeVisible();
+
+  // Try to find the button within the swap section
   await expect(
     swapSection.getByRole('button', { name: 'Please connect wallet' })
   ).toBeVisible();
+
+  // Check that swap direction tabs (Receive ETH/SIMP) are disabled
+  await expect(swapSection.getByRole('button', { name: 'ETH' })).toBeDisabled();
+  await expect(
+    swapSection.getByRole('button', { name: 'SIMP' })
+  ).toBeDisabled();
 
   // Check that Add/Remove tabs are disabled
   await expect(page.getByRole('button', { name: 'Add' })).toBeDisabled();
@@ -212,13 +222,20 @@ test.describe('AMM Functionality', () => {
       const swapSection = page
         .locator('h2')
         .filter({ hasText: 'Swap' })
-        .locator('..');
+        .locator('../..');
       await expect(swapSection.locator('h2')).toBeVisible();
 
-      // Fill in ETH amount to swap (1 ETH)
-      const ethSwapInput = swapSection.locator(
-        'input[placeholder*="ETH amount"]'
-      );
+      // Select ETH to SIMP direction by clicking the SIMP tab (to receive SIMP)
+      const simpTab = swapSection.getByRole('button', {
+        name: 'SIMP',
+        exact: true,
+      });
+      await expect(simpTab).toBeEnabled();
+      await simpTab.click();
+
+      // Fill in ETH amount to swap (1 ETH) - use placeholder "ETH → SIMP"
+      const ethSwapInput = swapSection.getByPlaceholder('ETH → SIMP');
+      await expect(ethSwapInput).toBeVisible({ timeout: 5000 });
       await ethSwapInput.fill('1');
 
       // Verify the input is filled
@@ -241,7 +258,7 @@ test.describe('AMM Functionality', () => {
 
       // Wait for transaction to complete
       await expect(
-        swapSection.locator('button').filter({ hasText: 'Swapping...' })
+        swapSection.locator('button').filter({ hasText: 'Waiting...' })
       ).toBeHidden({ timeout: 60000 });
 
       // Verify input is cleared after successful swap
@@ -267,16 +284,19 @@ test.describe('AMM Functionality', () => {
       const swapSection = page
         .locator('h2')
         .filter({ hasText: 'Swap' })
-        .locator('..');
+        .locator('../..');
 
-      // Switch swap direction to SIMP → ETH
-      const swapDirectionSelect = swapSection.locator('select');
-      await swapDirectionSelect.selectOption('token-to-eth');
+      // Switch swap direction to SIMP → ETH by clicking the ETH tab (to receive ETH)
+      const ethTab = swapSection.getByRole('button', {
+        name: 'ETH',
+        exact: true,
+      });
+      await expect(ethTab).toBeEnabled();
+      await ethTab.click();
 
-      // Fill in SIMP amount to swap (1 SIMP)
-      const simpSwapInput = swapSection.locator(
-        'input[placeholder*="SIMP amount"]'
-      );
+      // Fill in SIMP amount to swap (1 SIMP) - use placeholder "SIMP → ETH"
+      const simpSwapInput = swapSection.getByPlaceholder('SIMP → ETH');
+      await expect(simpSwapInput).toBeVisible({ timeout: 5000 });
       await simpSwapInput.fill('1');
 
       // Verify the input is filled
@@ -294,13 +314,13 @@ test.describe('AMM Functionality', () => {
       await expect(swapSimpButton).toBeEnabled();
       await swapSimpButton.click();
 
-      // Handle SIMP->ETH swap (3 confirmations, receiving ETH)
+      // Handle SIMP->ETH swap (3 confirmations for approve + swap)
       const simpToEthGasUsed = await handleTripleConfirmation();
 
       // Wait for transaction to complete
       await expect(
-        page.locator('button').filter({ hasText: 'Swapping...' })
-      ).toBeHidden({ timeout: 30000 });
+        swapSection.locator('button').filter({ hasText: 'Waiting...' })
+      ).toBeHidden({ timeout: 60000 });
 
       // Verify input is cleared after successful swap
       await expect(simpSwapInput).toHaveValue('', { timeout: 10000 });

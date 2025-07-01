@@ -1,3 +1,10 @@
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .addButton {
   width: 100%;
   padding: 12px;
