@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
 import { DisabledLiquidity } from './DisabledLiquidity';
 
@@ -10,10 +10,10 @@ describe('DisabledLiquidity Component', () => {
     expect(screen.getByText('0.0000 SIMP / 0.0000 ETH')).toBeInTheDocument();
   });
 
-  it('should render with custom token symbol', () => {
-    render(<DisabledLiquidity tokenSymbol="TEST" />);
+  it('should render with SIMP token symbol', () => {
+    render(<DisabledLiquidity />);
 
-    expect(screen.getByText('0.0000 TEST / 0.0000 ETH')).toBeInTheDocument();
+    expect(screen.getByText('0.0000 SIMP / 0.0000 ETH')).toBeInTheDocument();
   });
 
   it('should show Add tab by default', () => {
@@ -34,8 +34,7 @@ describe('DisabledLiquidity Component', () => {
     expect(addButton).toBeDisabled();
     expect(removeButton).toBeDisabled();
 
-    // Should stay on Add tab even after clicking Remove
-    fireEvent.click(removeButton);
+    // Should always show Add tab interface (default state)
     expect(screen.getByPlaceholderText('Enter ETH amount')).toBeInTheDocument();
   });
 

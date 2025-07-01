@@ -6,7 +6,6 @@ const defaultProps = {
   account: '0x1234567890abcdef1234567890abcdef12345678',
   ethBalance: 5.123456789,
   tokenBalance: 1000.987654321,
-  tokenSymbol: 'SIMP',
 };
 
 describe('WalletInfo', () => {
@@ -42,11 +41,10 @@ describe('WalletInfo', () => {
   });
 
   describe('Token Symbol', () => {
-    it('should display custom token symbol', () => {
-      render(<WalletInfo {...defaultProps} tokenSymbol="CUSTOM" />);
+    it('should display SIMP token symbol', () => {
+      render(<WalletInfo {...defaultProps} />);
 
-      expect(screen.getByText(/CUSTOM/)).toBeInTheDocument();
-      expect(screen.queryByText(/SIMP/)).not.toBeInTheDocument();
+      expect(screen.getByText(/SIMP/)).toBeInTheDocument();
     });
   });
 

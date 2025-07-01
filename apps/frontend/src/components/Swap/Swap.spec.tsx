@@ -20,7 +20,6 @@ const defaultProps = {
   contractAddresses: mockContractAddresses,
   poolEthReserve: 10.0,
   poolTokenReserve: 20.0,
-  tokenSymbol: 'SIMP',
   onSwapComplete: mockOnSwapComplete,
 };
 

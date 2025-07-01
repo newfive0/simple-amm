@@ -4,7 +4,7 @@ import { DisabledRemoveLiquidity } from './DisabledRemoveLiquidity';
 
 describe('DisabledRemoveLiquidity Component', () => {
   it('should render LP token input field', () => {
-    render(<DisabledRemoveLiquidity tokenSymbol="SIMP" />);
+    render(<DisabledRemoveLiquidity />);
 
     expect(
       screen.getByPlaceholderText('LP Tokens to Remove')
@@ -12,7 +12,7 @@ describe('DisabledRemoveLiquidity Component', () => {
   });
 
   it('should render button with disabled state', () => {
-    render(<DisabledRemoveLiquidity tokenSymbol="SIMP" />);
+    render(<DisabledRemoveLiquidity />);
 
     const button = screen.getByRole('button', {
       name: 'Please connect wallet',
@@ -22,13 +22,13 @@ describe('DisabledRemoveLiquidity Component', () => {
   });
 
   it('should show expected output with token symbol', () => {
-    render(<DisabledRemoveLiquidity tokenSymbol="TEST" />);
+    render(<DisabledRemoveLiquidity />);
 
-    expect(screen.getByText('0.0000 TEST + 0.0000 ETH')).toBeInTheDocument();
+    expect(screen.getByText('0.0000 SIMP + 0.0000 ETH')).toBeInTheDocument();
   });
 
   it('should have input disabled', () => {
-    render(<DisabledRemoveLiquidity tokenSymbol="SIMP" />);
+    render(<DisabledRemoveLiquidity />);
 
     const input = screen.getByPlaceholderText('LP Tokens to Remove');
     expect(input).toBeDisabled();

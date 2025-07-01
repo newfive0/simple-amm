@@ -6,8 +6,7 @@
 export const createRemoveLiquidityOutputCalculator = (
   poolEthReserve: number,
   poolTokenReserve: number,
-  totalLPTokens: number,
-  tokenSymbol: string
+  totalLPTokens: number
 ) => {
   return (lpAmountString: string): string => {
     const lpAmount = parseFloat(lpAmountString);
@@ -19,9 +18,7 @@ export const createRemoveLiquidityOutputCalculator = (
     const ethAmount = (lpAmount * poolEthReserve) / totalLPTokens;
     const tokenAmount = (lpAmount * poolTokenReserve) / totalLPTokens;
 
-    return `${tokenAmount.toFixed(4)} ${tokenSymbol} + ${ethAmount.toFixed(
-      4
-    )} ETH`;
+    return `${tokenAmount.toFixed(4)} SIMP + ${ethAmount.toFixed(4)} ETH`;
   };
 };
 

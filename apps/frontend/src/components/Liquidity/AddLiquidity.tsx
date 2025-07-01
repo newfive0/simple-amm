@@ -13,7 +13,6 @@ interface AddLiquidityProps {
   };
   poolEthReserve: number;
   poolTokenReserve: number;
-  tokenSymbol: string;
   onLiquidityComplete: () => void;
 }
 
@@ -23,7 +22,6 @@ export const AddLiquidity = ({
   contractAddresses,
   poolEthReserve,
   poolTokenReserve,
-  tokenSymbol,
   onLiquidityComplete,
 }: AddLiquidityProps) => {
   const [liquidityEthAmount, setLiquidityEthAmount] = useState<number>(0);
@@ -137,7 +135,7 @@ export const AddLiquidity = ({
         <InputField
           value={liquidityTokenAmount}
           onChange={handleTokenAmountChange}
-          placeholder={`Enter ${tokenSymbol} amount`}
+          placeholder="Enter SIMP amount"
         />
       </div>
       <button

@@ -11,7 +11,6 @@ interface RemoveLiquidityProps {
   poolEthReserve: number;
   poolTokenReserve: number;
   lpTokenBalances: LiquidityBalances;
-  tokenSymbol: string;
   onLiquidityComplete: () => void;
 }
 
@@ -20,7 +19,6 @@ export const RemoveLiquidity = ({
   poolEthReserve,
   poolTokenReserve,
   lpTokenBalances,
-  tokenSymbol,
   onLiquidityComplete,
 }: RemoveLiquidityProps) => {
   const [removeLpAmount, setRemoveLpAmount] = useState<number>(0);
@@ -52,8 +50,7 @@ export const RemoveLiquidity = ({
   const generateExpectedOutput = createRemoveLiquidityOutputCalculator(
     poolEthReserve,
     poolTokenReserve,
-    lpTokenBalances.totalLPTokens,
-    tokenSymbol
+    lpTokenBalances.totalLPTokens
   );
 
   return (

@@ -58,14 +58,18 @@ export const getPoolReserves = async (
   };
 };
 
-export const getTokenSymbol = async (
+export const ensureTokenSymbolIsSIMP = async (
   signer: ethers.JsonRpcSigner
-): Promise<string> => {
+): Promise<void> => {
   const tokenContract = Token__factory.connect(
     config.contracts.tokenAddress,
     signer
   );
-  return await tokenContract.symbol();
+  const symbol = await tokenContract.symbol();
+
+  if (symbol !== 'SIMP') {
+    throw new Error(`Expected token symbol to be 'SIMP', but got '${symbol}'`);
+  }
 };
 
 export const getLiquidityBalances = async (

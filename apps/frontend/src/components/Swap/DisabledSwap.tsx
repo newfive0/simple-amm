@@ -45,13 +45,11 @@ const SwapInput = ({
 interface DisabledSwapProps {
   poolEthReserve?: number;
   poolTokenReserve?: number;
-  tokenSymbol?: string;
 }
 
 export const DisabledSwap = ({
   poolEthReserve = 0,
   poolTokenReserve = 0,
-  tokenSymbol = 'SIMP',
 }: DisabledSwapProps) => {
   return (
     <div className={styles.swap}>
@@ -60,7 +58,7 @@ export const DisabledSwap = ({
         <TabGroup
           options={[
             { id: 'token-to-eth', label: 'ETH' },
-            { id: 'eth-to-token', label: tokenSymbol },
+            { id: 'eth-to-token', label: 'SIMP' },
           ]}
           activeTab="token-to-eth"
           onTabChange={() => {}}
@@ -72,14 +70,14 @@ export const DisabledSwap = ({
         key="token-to-eth"
         value=""
         onChange={() => {}}
-        placeholder={`${tokenSymbol} → ETH`}
+        placeholder="SIMP → ETH"
         onClick={() => {}}
         buttonText="Please connect wallet"
         isLoading={false}
         generateExpectedOutput={createSwapOutputCalculator(
           poolEthReserve,
           poolTokenReserve,
-          tokenSymbol,
+          'SIMP',
           'ETH'
         )}
         disabled={true}
