@@ -7,28 +7,77 @@
   border: 1px solid #e9ecef;
   border-bottom: none;
 
-  h2 {
-    margin: 0;
-    color: #333;
-  }
 }
 
-.swapDirection {
+.header {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  justify-content: space-between;
+  align-items: center;
+}
 
-  label {
-    font-weight: bold;
-    font-size: 16px;
-    margin: 0;
+.title {
+  margin: 0;
+  color: #333;
+}
+
+.tabGroup {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.tabLabel {
+  font-size: 16px;
+  color: #666;
+  font-weight: 500;
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+}
+
+.tab {
+  padding: 8px 16px;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+
+  &:hover:not(:disabled) {
+    background-color: #e9ecef;
   }
 
-  select {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ddd;
-    font-size: 16px;
+  &.active {
+    background-color: #28a745;
+    color: white;
+
+    &:hover {
+      background-color: #218838;
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &:not(:last-child) {
+    border-right: none;
+  }
+
+  &:first-child {
+    border-radius: 4px 0 0 4px;
+  }
+
+  &:last-child {
+    border-radius: 0 4px 4px 0;
+  }
+
+  &:only-child {
+    border-radius: 4px;
   }
 }
 
@@ -67,7 +116,6 @@
 
 .expectedOutput {
   flex-shrink: 0;
-  min-width: 175px;
   text-align: right;
   font-size: 16px;
   color: #666;

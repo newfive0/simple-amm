@@ -6,7 +6,6 @@ describe('TabGroup Component', () => {
   const mockOnTabChange = vi.fn();
 
   const defaultProps = {
-    title: 'Test Tabs',
     options: [
       { id: 'tab1', label: 'Tab 1' },
       { id: 'tab2', label: 'Tab 2' },
@@ -20,10 +19,9 @@ describe('TabGroup Component', () => {
     vi.clearAllMocks();
   });
 
-  it('should render title and all tab options', () => {
+  it('should render all tab options', () => {
     render(<TabGroup {...defaultProps} />);
 
-    expect(screen.getByText('Test Tabs')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Tab 1' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Tab 2' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Tab 3' })).toBeInTheDocument();
@@ -105,17 +103,9 @@ describe('TabGroup Component', () => {
     expect(mockOnTabChange).not.toHaveBeenCalled();
   });
 
-  it('should hide title when showLabel is false', () => {
-    render(<TabGroup {...defaultProps} showLabel={false} />);
-
-    expect(screen.queryByText('Test Tabs')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Tab 1' })).toBeInTheDocument();
-  });
-
   it('should show tab label when tabLabel is provided', () => {
-    render(<TabGroup {...defaultProps} showLabel={true} tabLabel="Receive:" />);
+    render(<TabGroup {...defaultProps} tabLabel="Receive:" />);
 
-    expect(screen.getByText('Test Tabs')).toBeInTheDocument();
     expect(screen.getByText('Receive:')).toBeInTheDocument();
   });
 

@@ -1,7 +1,6 @@
 import styles from './InputField.module.scss';
 
 interface InputFieldProps {
-  label: string;
   value: number;
   onChange: (value: number) => void;
   placeholder: string;
@@ -9,14 +8,12 @@ interface InputFieldProps {
 }
 
 export const InputField = ({
-  label,
   value,
   onChange,
   placeholder,
   disabled = false,
 }: InputFieldProps) => (
   <div className={styles.inputGroup}>
-    <label className={styles.label}>{label}</label>
     <input
       type="number"
       step="0.01"
