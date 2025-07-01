@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { Token, AMMPool } from '@typechain-types';
 import { InputWithOutput } from '../shared/InputWithOutput';
+import { TabGroup } from '../shared/TabGroup';
 import { createSwapOutputCalculator } from '../../utils/expectedOutputCalculators';
 import styles from './Swap.module.scss';
+
+export { DisabledSwap } from './DisabledSwap';
 
 interface SwapInputProps {
   value: string;
@@ -41,44 +44,6 @@ const SwapInput = ({
     >
       {isLoading ? 'Waiting...' : buttonText}
     </button>
-  </div>
-);
-
-// Swap Header with tabs
-interface SwapHeaderProps {
-  activeTab: 'eth-to-token' | 'token-to-eth';
-  onTabChange: (tab: 'eth-to-token' | 'token-to-eth') => void;
-  tokenSymbol: string;
-  disabled?: boolean;
-}
-
-const SwapHeader = ({
-  activeTab,
-  onTabChange,
-  tokenSymbol,
-  disabled = false,
-}: SwapHeaderProps) => (
-  <div className={styles.header}>
-    <h2 className={styles.title}>Swap</h2>
-    <div className={styles.tabGroup}>
-      <div className={styles.tabLabel}>Receive</div>
-      <div className={styles.tabs}>
-        <button
-          className={`${styles.tab} ${activeTab === 'token-to-eth' ? styles.active : ''}`}
-          onClick={() => onTabChange('token-to-eth')}
-          disabled={disabled}
-        >
-          ETH
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === 'eth-to-token' ? styles.active : ''}`}
-          onClick={() => onTabChange('eth-to-token')}
-          disabled={disabled}
-        >
-          {tokenSymbol}
-        </button>
-      </div>
-    </div>
   </div>
 );
 
@@ -173,14 +138,23 @@ export const Swap = ({
     });
   };
 
+  const tabOptions = [
+    { id: 'token-to-eth', label: 'ETH' },
+    { id: 'eth-to-token', label: tokenSymbol },
+  ];
+
   return (
     <div className={styles.swap}>
-      <SwapHeader
-        activeTab={swapDirection}
-        onTabChange={setSwapDirection}
-        tokenSymbol={tokenSymbol}
-        disabled={false}
-      />
+      <div className={styles.header}>
+        <h2 className={styles.title}>Swap</h2>
+        <TabGroup
+          options={tabOptions}
+          activeTab={swapDirection}
+          onTabChange={setSwapDirection as (tabId: string) => void}
+          disabled={false}
+          tabLabel="Receive"
+        />
+      </div>
       {swapDirection === 'token-to-eth' ? (
         <SwapInput
           key="token-to-eth"
@@ -214,45 +188,6 @@ export const Swap = ({
           )}
         />
       )}
-    </div>
-  );
-};
-
-// DisabledSwap component for when wallet is not connected
-interface DisabledSwapProps {
-  poolEthReserve?: number;
-  poolTokenReserve?: number;
-  tokenSymbol?: string;
-}
-
-export const DisabledSwap = ({
-  poolEthReserve = 0,
-  poolTokenReserve = 0,
-  tokenSymbol = 'SIMP',
-}: DisabledSwapProps = {}) => {
-  return (
-    <div className={styles.swap}>
-      <SwapHeader
-        activeTab="token-to-eth"
-        onTabChange={() => {}}
-        tokenSymbol={tokenSymbol}
-        disabled={true}
-      />
-      <SwapInput
-        value=""
-        onChange={() => {}}
-        placeholder={`${tokenSymbol} → ETH`}
-        onClick={() => {}}
-        buttonText="Please connect wallet"
-        isLoading={false}
-        generateExpectedOutput={createSwapOutputCalculator(
-          poolEthReserve,
-          poolTokenReserve,
-          tokenSymbol,
-          'ETH'
-        )}
-        disabled={true}
-      />
     </div>
   );
 };
