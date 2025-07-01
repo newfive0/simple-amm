@@ -115,7 +115,7 @@ describe('Swap Component', () => {
     });
   });
 
-  describe('ETH to Token Swap', () => {
+  describe('Token to ETH Swap', () => {
     it('should execute Token to ETH swap successfully', async () => {
       const { promise, resolve } = createDeferredTransactionPromise();
       mockTokenContract.approve.mockResolvedValue(promise);

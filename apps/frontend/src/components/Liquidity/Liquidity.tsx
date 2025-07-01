@@ -49,9 +49,13 @@ export const Liquidity = ({
     </div>
   );
 
+  const handleTabChange = (tabId: string) => {
+    setActiveTab(tabId as 'add' | 'remove');
+  };
+
   return (
     <div className={styles.liquidity}>
-      <LiquidityHeader activeTab={activeTab} onTabChange={setActiveTab} />
+      <LiquidityHeader activeTab={activeTab} onTabChange={handleTabChange} />
       <PoolBalances />
       {activeTab === 'add' ? (
         <AddLiquidity
@@ -81,7 +85,7 @@ export const Liquidity = ({
 export const DisabledLiquidity = () => {
   return (
     <div className={styles.liquidity}>
-      <LiquidityHeader disabled={true} />
+      <LiquidityHeader activeTab="add" onTabChange={() => {}} disabled={true} />
       <div className={styles.poolBalances}>
         <p>
           <strong>Pool Reserves:</strong> 0.0000 SIMP / 0.0000 ETH

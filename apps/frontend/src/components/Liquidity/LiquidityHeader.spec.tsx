@@ -1,49 +1,63 @@
-import { render, fireEvent } from '@testing-library/react';
-import { vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { LiquidityHeader } from './LiquidityHeader';
 
-describe('LiquidityHeader', () => {
-  it('should render with default props', () => {
-    const { getByRole, getByText } = render(<LiquidityHeader />);
+describe('LiquidityHeader Component', () => {
+  const mockOnTabChange = vi.fn();
 
-    expect(getByRole('heading', { name: 'Liquidity' })).toBeTruthy();
-    expect(getByText('Add')).toBeTruthy();
-    expect(getByText('Remove')).toBeTruthy();
+  const defaultProps = {
+    activeTab: 'add' as const,
+    onTabChange: mockOnTabChange,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it('should show add tab as active by default', () => {
-    const { getByRole } = render(<LiquidityHeader />);
+  it('should render title and tab options', () => {
+    render(<LiquidityHeader {...defaultProps} />);
 
-    const addButton = getByRole('button', { name: 'Add' });
+    expect(screen.getByText('Liquidity')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove' })).toBeInTheDocument();
+  });
+
+  it('should highlight the active tab', () => {
+    render(<LiquidityHeader {...defaultProps} activeTab="add" />);
+
+    const addButton = screen.getByRole('button', { name: 'Add' });
+    const removeButton = screen.getByRole('button', { name: 'Remove' });
+
+    // Check that Add button has active class and Remove doesn't
     expect(addButton.className).toContain('active');
+    expect(removeButton.className).not.toContain('active');
   });
 
-  it('should show remove tab as active when activeTab is remove', () => {
-    const { getByRole } = render(<LiquidityHeader activeTab="remove" />);
+  it('should call onTabChange when a different tab is clicked', () => {
+    render(<LiquidityHeader {...defaultProps} activeTab="add" />);
 
-    const removeButton = getByRole('button', { name: 'Remove' });
-    expect(removeButton.className).toContain('active');
-  });
-
-  it('should call onTabChange when tabs are clicked', () => {
-    const mockOnTabChange = vi.fn();
-    const { getByRole } = render(
-      <LiquidityHeader onTabChange={mockOnTabChange} />
-    );
-
-    const removeButton = getByRole('button', { name: 'Remove' });
+    const removeButton = screen.getByRole('button', { name: 'Remove' });
     fireEvent.click(removeButton);
 
     expect(mockOnTabChange).toHaveBeenCalledWith('remove');
   });
 
   it('should disable tabs when disabled prop is true', () => {
-    const { getByRole } = render(<LiquidityHeader disabled={true} />);
+    render(<LiquidityHeader {...defaultProps} disabled={true} />);
 
-    const addButton = getByRole('button', { name: 'Add' });
-    const removeButton = getByRole('button', { name: 'Remove' });
+    const addButton = screen.getByRole('button', { name: 'Add' });
+    const removeButton = screen.getByRole('button', { name: 'Remove' });
 
     expect(addButton).toBeDisabled();
     expect(removeButton).toBeDisabled();
+  });
+
+  it('should not call onTabChange when disabled tab is clicked', () => {
+    render(<LiquidityHeader {...defaultProps} disabled={true} />);
+
+    const removeButton = screen.getByRole('button', { name: 'Remove' });
+    fireEvent.click(removeButton);
+
+    expect(mockOnTabChange).not.toHaveBeenCalled();
   });
 });

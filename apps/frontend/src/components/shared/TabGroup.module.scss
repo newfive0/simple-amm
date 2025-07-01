@@ -1,0 +1,60 @@
+.tabGroup {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.tabLabel {
+  font-size: 16px;
+  color: #666;
+  font-weight: 500;
+}
+
+.tabs {
+  display: flex;
+  gap: 0;
+}
+
+.tab {
+  padding: 8px 16px;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+
+  &:hover:not(:disabled) {
+    background-color: #e9ecef;
+  }
+
+  &.active {
+    background-color: #28a745;
+    color: white;
+
+    &:hover {
+      background-color: #218838;
+    }
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &:not(:last-child) {
+    border-right: none;
+  }
+
+  &:first-child {
+    border-radius: 4px 0 0 4px;
+  }
+
+  &:last-child {
+    border-radius: 0 4px 4px 0;
+  }
+
+  &:only-child {
+    border-radius: 4px;
+  }
+}
