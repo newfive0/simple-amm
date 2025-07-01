@@ -35,18 +35,24 @@ test('should display AMM page with disabled elements before connection', async (
     timeout: 10000,
   });
 
-  // Wait for disabled swap and liquidity elements to be visible
+  // Check for "Please connect wallet" button - try different approaches
+  // First check if the swap section exists
   const swapSection = page
     .locator('h2')
     .filter({ hasText: 'Swap' })
-    .locator('..');
+    .locator('../..');
+  await expect(swapSection).toBeVisible();
+
+  // Try to find the button within the swap section
   await expect(
     swapSection.getByRole('button', { name: 'Please connect wallet' })
   ).toBeVisible();
 
   // Check that swap direction tabs (Receive ETH/SIMP) are disabled
-  await expect(page.getByRole('button', { name: 'ETH' })).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'SIMP' })).toBeDisabled();
+  await expect(swapSection.getByRole('button', { name: 'ETH' })).toBeDisabled();
+  await expect(
+    swapSection.getByRole('button', { name: 'SIMP' })
+  ).toBeDisabled();
 
   // Check that Add/Remove tabs are disabled
   await expect(page.getByRole('button', { name: 'Add' })).toBeDisabled();
@@ -216,16 +222,20 @@ test.describe('AMM Functionality', () => {
       const swapSection = page
         .locator('h2')
         .filter({ hasText: 'Swap' })
-        .locator('..');
+        .locator('../..');
       await expect(swapSection.locator('h2')).toBeVisible();
 
       // Select ETH to SIMP direction by clicking the SIMP tab (to receive SIMP)
-      const simpTab = page.getByRole('button', { name: 'SIMP' });
+      const simpTab = swapSection.getByRole('button', {
+        name: 'SIMP',
+        exact: true,
+      });
       await expect(simpTab).toBeEnabled();
       await simpTab.click();
 
       // Fill in ETH amount to swap (1 ETH) - use placeholder "ETH → SIMP"
       const ethSwapInput = swapSection.getByPlaceholder('ETH → SIMP');
+      await expect(ethSwapInput).toBeVisible({ timeout: 5000 });
       await ethSwapInput.fill('1');
 
       // Verify the input is filled
@@ -274,15 +284,19 @@ test.describe('AMM Functionality', () => {
       const swapSection = page
         .locator('h2')
         .filter({ hasText: 'Swap' })
-        .locator('..');
+        .locator('../..');
 
       // Switch swap direction to SIMP → ETH by clicking the ETH tab (to receive ETH)
-      const ethTab = page.getByRole('button', { name: 'ETH' });
+      const ethTab = swapSection.getByRole('button', {
+        name: 'ETH',
+        exact: true,
+      });
       await expect(ethTab).toBeEnabled();
       await ethTab.click();
 
       // Fill in SIMP amount to swap (1 SIMP) - use placeholder "SIMP → ETH"
       const simpSwapInput = swapSection.getByPlaceholder('SIMP → ETH');
+      await expect(simpSwapInput).toBeVisible({ timeout: 5000 });
       await simpSwapInput.fill('1');
 
       // Verify the input is filled
