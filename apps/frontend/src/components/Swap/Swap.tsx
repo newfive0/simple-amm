@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { Token, AMMPool } from '@typechain-types';
 import { InputWithOutput } from '../shared/InputWithOutput';
+import { TabGroup } from '../shared/TabGroup';
 import { createSwapOutputCalculator } from '../../utils/expectedOutputCalculators';
 import styles from './Swap.module.scss';
 
@@ -41,44 +42,6 @@ const SwapInput = ({
     >
       {isLoading ? 'Waiting...' : buttonText}
     </button>
-  </div>
-);
-
-// Swap Header with tabs
-interface SwapHeaderProps {
-  activeTab: 'eth-to-token' | 'token-to-eth';
-  onTabChange: (tab: 'eth-to-token' | 'token-to-eth') => void;
-  tokenSymbol: string;
-  disabled?: boolean;
-}
-
-const SwapHeader = ({
-  activeTab,
-  onTabChange,
-  tokenSymbol,
-  disabled = false,
-}: SwapHeaderProps) => (
-  <div className={styles.header}>
-    <h2 className={styles.title}>Swap</h2>
-    <div className={styles.tabGroup}>
-      <div className={styles.tabLabel}>Receive</div>
-      <div className={styles.tabs}>
-        <button
-          className={`${styles.tab} ${activeTab === 'token-to-eth' ? styles.active : ''}`}
-          onClick={() => onTabChange('token-to-eth')}
-          disabled={disabled}
-        >
-          ETH
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === 'eth-to-token' ? styles.active : ''}`}
-          onClick={() => onTabChange('eth-to-token')}
-          disabled={disabled}
-        >
-          {tokenSymbol}
-        </button>
-      </div>
-    </div>
   </div>
 );
 
@@ -175,12 +138,19 @@ export const Swap = ({
 
   return (
     <div className={styles.swap}>
-      <SwapHeader
-        activeTab={swapDirection}
-        onTabChange={setSwapDirection}
-        tokenSymbol={tokenSymbol}
-        disabled={false}
-      />
+      <div className={styles.header}>
+        <h2 className={styles.title}>Swap</h2>
+        <TabGroup
+          options={[
+            { id: 'token-to-eth', label: 'ETH' },
+            { id: 'eth-to-token', label: tokenSymbol },
+          ]}
+          activeTab={swapDirection}
+          onTabChange={setSwapDirection as (tabId: string) => void}
+          disabled={false}
+          tabLabel="Receive"
+        />
+      </div>
       {swapDirection === 'token-to-eth' ? (
         <SwapInput
           key="token-to-eth"
@@ -232,12 +202,19 @@ export const DisabledSwap = ({
 }: DisabledSwapProps = {}) => {
   return (
     <div className={styles.swap}>
-      <SwapHeader
-        activeTab="token-to-eth"
-        onTabChange={() => {}}
-        tokenSymbol={tokenSymbol}
-        disabled={true}
-      />
+      <div className={styles.header}>
+        <h2 className={styles.title}>Swap</h2>
+        <TabGroup
+          options={[
+            { id: 'token-to-eth', label: 'ETH' },
+            { id: 'eth-to-token', label: tokenSymbol },
+          ]}
+          activeTab="token-to-eth"
+          onTabChange={() => {}}
+          disabled={true}
+          tabLabel="Receive"
+        />
+      </div>
       <SwapInput
         value=""
         onChange={() => {}}
