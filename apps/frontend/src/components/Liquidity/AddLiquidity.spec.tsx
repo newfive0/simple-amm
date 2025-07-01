@@ -14,7 +14,6 @@ const defaultProps = {
   contractAddresses: mockContractAddresses,
   poolEthReserve: 10.0,
   poolTokenReserve: 20.0,
-  tokenSymbol: 'SIMP',
   onLiquidityComplete: mockOnLiquidityComplete,
 };
 
@@ -155,11 +154,9 @@ describe('AddLiquidity', () => {
     alertSpy.mockRestore();
   });
 
-  it('should use custom token symbol', () => {
-    const { getByPlaceholderText } = render(
-      <AddLiquidity {...defaultProps} tokenSymbol="CUSTOM" />
-    );
+  it('should use SIMP token symbol', () => {
+    const { getByPlaceholderText } = render(<AddLiquidity {...defaultProps} />);
 
-    expect(getByPlaceholderText('Enter CUSTOM amount')).toBeTruthy();
+    expect(getByPlaceholderText('Enter SIMP amount')).toBeTruthy();
   });
 });

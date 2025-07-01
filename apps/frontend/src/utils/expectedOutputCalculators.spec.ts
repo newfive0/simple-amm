@@ -10,8 +10,7 @@ describe('expectedOutputCalculators', () => {
       const calculator = createRemoveLiquidityOutputCalculator(
         10.0, // poolEthReserve
         20.0, // poolTokenReserve
-        5.0, // totalLPTokens
-        'SIMP'
+        5.0 // totalLPTokens
       );
 
       const result = calculator('2.5');
@@ -19,12 +18,7 @@ describe('expectedOutputCalculators', () => {
     });
 
     it('should return zero output for empty input', () => {
-      const calculator = createRemoveLiquidityOutputCalculator(
-        10.0,
-        20.0,
-        5.0,
-        'SIMP'
-      );
+      const calculator = createRemoveLiquidityOutputCalculator(10.0, 20.0, 5.0);
 
       expect(calculator('')).toBe('0.0000 SIMP + 0.0000 ETH');
       expect(calculator('0')).toBe('0.0000 SIMP + 0.0000 ETH');
@@ -34,8 +28,7 @@ describe('expectedOutputCalculators', () => {
       const calculator = createRemoveLiquidityOutputCalculator(
         10.0,
         20.0,
-        0, // totalLPTokens = 0
-        'SIMP'
+        0 // totalLPTokens = 0
       );
 
       const result = calculator('2.5');

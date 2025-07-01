@@ -74,7 +74,6 @@ export const createDefaultProps = (
     contractAddresses: mockContractAddresses,
     poolEthReserve: '10.0',
     poolTokenReserve: '20.0',
-    tokenSymbol: 'SIMP',
     ...overrides,
   };
 };

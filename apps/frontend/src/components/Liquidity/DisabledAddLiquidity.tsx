@@ -1,13 +1,7 @@
 import { InputField } from './InputField';
 import styles from './AddLiquidity.module.scss';
 
-interface DisabledAddLiquidityProps {
-  tokenSymbol: string;
-}
-
-export const DisabledAddLiquidity = ({
-  tokenSymbol,
-}: DisabledAddLiquidityProps) => {
+export const DisabledAddLiquidity = () => {
   return (
     <>
       <div className={styles.inputRow}>
@@ -20,7 +14,7 @@ export const DisabledAddLiquidity = ({
         <InputField
           value={0}
           onChange={() => {}}
-          placeholder={`Enter ${tokenSymbol} amount`}
+          placeholder="Enter SIMP amount"
           disabled={true}
         />
       </div>

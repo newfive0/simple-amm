@@ -6,7 +6,7 @@ import { config } from '../../config';
 import {
   getWalletBalances,
   getPoolReserves,
-  getTokenSymbol,
+  ensureTokenSymbolIsSIMP,
   getLiquidityBalances,
   WalletBalances,
   PoolReserves,
@@ -32,7 +32,6 @@ const DashboardContent = () => {
     totalLPTokens: 0,
     poolOwnershipPercentage: 0,
   });
-  const [tokenSymbol, setTokenSymbol] = useState<string>('');
 
   // Fetch all balances and token info
   const refreshAllBalances = useCallback(async () => {
@@ -44,22 +43,20 @@ const DashboardContent = () => {
         totalLPTokens: 0,
         poolOwnershipPercentage: 0,
       });
-      setTokenSymbol('');
       return;
     }
 
     try {
-      const [walletBal, poolReserves, lpTokenBal, symbol] = await Promise.all([
+      const [walletBal, poolReserves, lpTokenBal] = await Promise.all([
         getWalletBalances(ethereumProvider, account, signer),
         getPoolReserves(signer),
         getLiquidityBalances(signer, account),
-        getTokenSymbol(signer),
+        ensureTokenSymbolIsSIMP(signer),
       ]);
 
       setWalletBalances(walletBal);
       setPoolReserves(poolReserves);
       setLpTokenBalances(lpTokenBal);
-      setTokenSymbol(symbol);
     } catch (error) {
       console.error(
         `Failed to fetch balances: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -92,14 +89,12 @@ const DashboardContent = () => {
         account={account}
         ethBalance={walletBalances.ethBalance}
         tokenBalance={walletBalances.tokenBalance}
-        tokenSymbol={tokenSymbol}
       />
 
       <ContractsSection
         poolEthReserve={poolReserves.ethReserve}
         poolTokenReserve={poolReserves.tokenReserve}
         lpTokenBalances={lpTokenBalances}
-        tokenSymbol={tokenSymbol}
         onSwapComplete={handleSwapComplete}
         onLiquidityComplete={handleLiquidityComplete}
       />
@@ -111,7 +106,6 @@ interface ContractsSectionProps {
   poolEthReserve: number;
   poolTokenReserve: number;
   lpTokenBalances: LiquidityBalances;
-  tokenSymbol: string;
   onSwapComplete: () => Promise<void>;
   onLiquidityComplete: () => Promise<void>;
 }
@@ -120,7 +114,6 @@ const ContractsSection = ({
   poolEthReserve,
   poolTokenReserve,
   lpTokenBalances,
-  tokenSymbol,
   onSwapComplete,
   onLiquidityComplete,
 }: ContractsSectionProps) => {
@@ -148,7 +141,6 @@ const ContractsSection = ({
         contractAddresses={contractAddresses}
         poolEthReserve={poolEthReserve}
         poolTokenReserve={poolTokenReserve}
-        tokenSymbol={tokenSymbol}
         onSwapComplete={onSwapComplete}
       />
 
@@ -159,7 +151,6 @@ const ContractsSection = ({
         poolEthReserve={poolEthReserve}
         poolTokenReserve={poolTokenReserve}
         lpTokenBalances={lpTokenBalances}
-        tokenSymbol={tokenSymbol}
         onLiquidityComplete={onLiquidityComplete}
       />
     </>

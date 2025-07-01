@@ -56,7 +56,6 @@ interface SwapProps {
   };
   poolEthReserve: number;
   poolTokenReserve: number;
-  tokenSymbol: string;
   onSwapComplete: () => void;
 }
 
@@ -66,7 +65,6 @@ export const Swap = ({
   contractAddresses,
   poolEthReserve,
   poolTokenReserve,
-  tokenSymbol,
   onSwapComplete,
 }: SwapProps) => {
   const [ethAmount, setEthAmount] = useState<string>('');
@@ -140,7 +138,7 @@ export const Swap = ({
 
   const tabOptions = [
     { id: 'token-to-eth', label: 'ETH' },
-    { id: 'eth-to-token', label: tokenSymbol },
+    { id: 'eth-to-token', label: 'SIMP' },
   ];
 
   return (
@@ -160,14 +158,14 @@ export const Swap = ({
           key="token-to-eth"
           value={tokenAmount}
           onChange={setTokenAmount}
-          placeholder={`${tokenSymbol} → ETH`}
+          placeholder="SIMP → ETH"
           onClick={swapTokensForETH}
           buttonText="Swap SIMP for ETH"
           isLoading={isLoading}
           generateExpectedOutput={createSwapOutputCalculator(
             poolEthReserve,
             poolTokenReserve,
-            tokenSymbol,
+            'SIMP',
             'ETH'
           )}
         />
@@ -184,7 +182,7 @@ export const Swap = ({
             poolEthReserve,
             poolTokenReserve,
             'ETH',
-            tokenSymbol
+            'SIMP'
           )}
         />
       )}

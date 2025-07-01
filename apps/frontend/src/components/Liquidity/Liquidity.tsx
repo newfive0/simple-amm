@@ -18,7 +18,6 @@ interface LiquidityProps {
   poolEthReserve: number;
   poolTokenReserve: number;
   lpTokenBalances: LiquidityBalances;
-  tokenSymbol: string;
   onLiquidityComplete: () => void;
 }
 
@@ -29,7 +28,6 @@ export const Liquidity = ({
   poolEthReserve,
   poolTokenReserve,
   lpTokenBalances,
-  tokenSymbol,
   onLiquidityComplete,
 }: LiquidityProps) => {
   const [activeTab, setActiveTab] = useState<'add' | 'remove'>('add');
@@ -37,8 +35,8 @@ export const Liquidity = ({
   const PoolBalances = () => (
     <div className={styles.poolBalances}>
       <p>
-        <strong>Pool Reserves:</strong> {poolTokenReserve.toFixed(4)}{' '}
-        {tokenSymbol} + {poolEthReserve.toFixed(4)} ETH
+        <strong>Pool Reserves:</strong> {poolTokenReserve.toFixed(4)} SIMP +{' '}
+        {poolEthReserve.toFixed(4)} ETH
       </p>
       {lpTokenBalances.userLPTokens > 0 && (
         <p>
@@ -65,7 +63,6 @@ export const Liquidity = ({
           contractAddresses={contractAddresses}
           poolEthReserve={poolEthReserve}
           poolTokenReserve={poolTokenReserve}
-          tokenSymbol={tokenSymbol}
           onLiquidityComplete={onLiquidityComplete}
         />
       ) : (
@@ -74,7 +71,6 @@ export const Liquidity = ({
           poolEthReserve={poolEthReserve}
           poolTokenReserve={poolTokenReserve}
           lpTokenBalances={lpTokenBalances}
-          tokenSymbol={tokenSymbol}
           onLiquidityComplete={onLiquidityComplete}
         />
       )}

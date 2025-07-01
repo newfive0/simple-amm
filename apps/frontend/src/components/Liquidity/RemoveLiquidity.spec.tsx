@@ -16,7 +16,6 @@ const defaultProps = {
     totalLPTokens: 10.0,
     poolOwnershipPercentage: 50.0,
   },
-  tokenSymbol: 'SIMP',
   onLiquidityComplete: mockOnLiquidityComplete,
 };
 

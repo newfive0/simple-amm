@@ -7,7 +7,7 @@ import { ConnectedDashboard } from './ConnectedDashboard';
 vi.mock('../../utils/balances', () => ({
   getWalletBalances: vi.fn(),
   getPoolReserves: vi.fn(),
-  getTokenSymbol: vi.fn(),
+  ensureTokenSymbolIsSIMP: vi.fn(),
   getLiquidityBalances: vi.fn(),
 }));
 
@@ -16,7 +16,6 @@ interface MockWalletInfoProps {
   account: string;
   ethBalance: number;
   tokenBalance: number;
-  tokenSymbol: string;
 }
 
 interface MockSwapProps {
@@ -25,7 +24,6 @@ interface MockSwapProps {
   contractAddresses: { tokenAddress: string; ammPoolAddress: string };
   poolEthReserve: number;
   poolTokenReserve: number;
-  tokenSymbol: string;
   onSwapComplete: () => void;
 }
 
@@ -40,20 +38,14 @@ interface MockLiquidityProps {
     totalLPTokens: number;
     poolOwnershipPercentage: number;
   };
-  tokenSymbol: string;
   onLiquidityComplete: () => void;
 }
 
 vi.mock('../WalletInfo/WalletInfo', () => ({
-  WalletInfo: ({
-    account,
-    ethBalance,
-    tokenBalance,
-    tokenSymbol,
-  }: MockWalletInfoProps) => (
+  WalletInfo: ({ account, ethBalance, tokenBalance }: MockWalletInfoProps) => (
     <div data-testid="wallet-info">
       {account
-        ? `${account} - ${ethBalance.toFixed(4)} ETH / ${tokenBalance.toFixed(4)} ${tokenSymbol}`
+        ? `${account} - ${ethBalance.toFixed(4)} ETH / ${tokenBalance.toFixed(4)} SIMP`
         : 'Not Connected'}
     </div>
   ),
@@ -63,13 +55,12 @@ vi.mock('../Swap/Swap', () => ({
   Swap: ({
     poolEthReserve,
     poolTokenReserve,
-    tokenSymbol,
     onSwapComplete,
   }: MockSwapProps) => (
     <div data-testid="swap">
       <div>
         Pool: {poolEthReserve.toFixed(4)} ETH / {poolTokenReserve.toFixed(4)}{' '}
-        {tokenSymbol}
+        SIMP
       </div>
       <button onClick={onSwapComplete}>Complete Swap</button>
     </div>
@@ -81,13 +72,12 @@ vi.mock('../Liquidity/Liquidity', () => ({
     poolEthReserve,
     poolTokenReserve,
     lpTokenBalances,
-    tokenSymbol,
     onLiquidityComplete,
   }: MockLiquidityProps) => (
     <div data-testid="liquidity">
       <div>
         Pool: {poolEthReserve.toFixed(4)} ETH / {poolTokenReserve.toFixed(4)}{' '}
-        {tokenSymbol}
+        SIMP
       </div>
       <div>LP Tokens: {lpTokenBalances.userLPTokens.toFixed(4)}</div>
       <button onClick={onLiquidityComplete}>Complete Liquidity</button>
@@ -128,13 +118,13 @@ vi.mock('../../contexts', () => ({
 import {
   getWalletBalances,
   getPoolReserves,
-  getTokenSymbol,
+  ensureTokenSymbolIsSIMP,
   getLiquidityBalances,
 } from '../../utils/balances';
 
 const mockGetWalletBalances = vi.mocked(getWalletBalances);
 const mockGetPoolReserves = vi.mocked(getPoolReserves);
-const mockGetTokenSymbol = vi.mocked(getTokenSymbol);
+const mockEnsureTokenSymbolIsSIMP = vi.mocked(ensureTokenSymbolIsSIMP);
 const mockGetLiquidityBalances = vi.mocked(getLiquidityBalances);
 
 describe('ConnectedDashboard', () => {
@@ -161,7 +151,7 @@ describe('ConnectedDashboard', () => {
       poolOwnershipPercentage: 50.0,
     });
 
-    mockGetTokenSymbol.mockResolvedValue('SIMP');
+    mockEnsureTokenSymbolIsSIMP.mockResolvedValue();
   });
 
   describe('Rendering', () => {
@@ -213,7 +203,7 @@ describe('ConnectedDashboard', () => {
           mockSigner
         );
         expect(mockGetPoolReserves).toHaveBeenCalledWith(mockSigner);
-        expect(mockGetTokenSymbol).toHaveBeenCalledWith(mockSigner);
+        expect(mockEnsureTokenSymbolIsSIMP).toHaveBeenCalledWith(mockSigner);
       });
     });
 
@@ -229,7 +219,7 @@ describe('ConnectedDashboard', () => {
         // Should show zero balances in WalletInfo and "Wallet not connected" for contracts
         expect(
           screen.getByText(
-            '0x1234567890abcdef1234567890abcdef12345678 - 0.0000 ETH / 0.0000'
+            '0x1234567890abcdef1234567890abcdef12345678 - 0.0000 ETH / 0.0000 SIMP'
           )
         ).toBeInTheDocument();
         expect(screen.getByText('Wallet not connected')).toBeInTheDocument();
@@ -238,7 +228,7 @@ describe('ConnectedDashboard', () => {
       // Should not call balance utilities when signer is missing
       expect(mockGetWalletBalances).not.toHaveBeenCalled();
       expect(mockGetPoolReserves).not.toHaveBeenCalled();
-      expect(mockGetTokenSymbol).not.toHaveBeenCalled();
+      expect(mockEnsureTokenSymbolIsSIMP).not.toHaveBeenCalled();
 
       mockWalletContext.signer = originalSigner;
     });
@@ -246,7 +236,7 @@ describe('ConnectedDashboard', () => {
     it('should update components when token symbol is fetched', async () => {
       // Ensure signer is available
       mockWalletContext.signer = mockSigner;
-      mockGetTokenSymbol.mockResolvedValue('CUSTOM');
+      mockEnsureTokenSymbolIsSIMP.mockResolvedValue();
       mockGetWalletBalances.mockResolvedValue({
         ethBalance: 5.0,
         tokenBalance: 1000.0,
@@ -255,7 +245,7 @@ describe('ConnectedDashboard', () => {
       render(<ConnectedDashboard />);
 
       await waitFor(() => {
-        expect(screen.getByText(/1000\.0000 CUSTOM/)).toBeInTheDocument();
+        expect(screen.getByText(/1000\.0000 SIMP/)).toBeInTheDocument();
       });
     });
   });
@@ -291,7 +281,7 @@ describe('ConnectedDashboard', () => {
         expect(mockGetWalletBalances).toHaveBeenCalled();
         expect(mockGetPoolReserves).toHaveBeenCalled();
         expect(mockGetLiquidityBalances).toHaveBeenCalled();
-        expect(mockGetTokenSymbol).toHaveBeenCalled();
+        expect(mockEnsureTokenSymbolIsSIMP).toHaveBeenCalled();
       });
     });
 
@@ -314,7 +304,7 @@ describe('ConnectedDashboard', () => {
         expect(mockGetWalletBalances).toHaveBeenCalled();
         expect(mockGetPoolReserves).toHaveBeenCalled();
         expect(mockGetLiquidityBalances).toHaveBeenCalled();
-        expect(mockGetTokenSymbol).toHaveBeenCalled();
+        expect(mockEnsureTokenSymbolIsSIMP).toHaveBeenCalled();
       });
     });
   });
@@ -338,7 +328,7 @@ describe('ConnectedDashboard', () => {
         totalLPTokens: 10.0,
         poolOwnershipPercentage: 50.0,
       });
-      mockGetTokenSymbol.mockResolvedValue('SIMP');
+      mockEnsureTokenSymbolIsSIMP.mockResolvedValue();
 
       render(<ConnectedDashboard />);
 

@@ -1,6 +1,10 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ethers } from 'ethers';
-import { getWalletBalances, getPoolReserves, getTokenSymbol } from './balances';
+import {
+  getWalletBalances,
+  getPoolReserves,
+  ensureTokenSymbolIsSIMP,
+} from './balances';
 
 // Mock the config module
 vi.mock('../config', () => ({
@@ -167,28 +171,28 @@ describe('Balance Utilities', () => {
     });
   });
 
-  describe('getTokenSymbol', () => {
-    it('should fetch and return token symbol', async () => {
+  describe('ensureTokenSymbolIsSIMP', () => {
+    it('should validate SIMP token symbol without error', async () => {
       mockTokenContract.symbol.mockResolvedValue('SIMP');
 
-      const result = await getTokenSymbol(mockSigner);
-
-      expect(result).toBe('SIMP');
+      await expect(
+        ensureTokenSymbolIsSIMP(mockSigner)
+      ).resolves.toBeUndefined();
       expect(mockTokenContract.symbol).toHaveBeenCalled();
     });
 
-    it('should handle different token symbols', async () => {
-      mockTokenContract.symbol.mockResolvedValue('CUSTOM');
+    it('should throw error for non-SIMP token symbol', async () => {
+      mockTokenContract.symbol.mockResolvedValue('USDC');
 
-      const result = await getTokenSymbol(mockSigner);
-
-      expect(result).toBe('CUSTOM');
+      await expect(ensureTokenSymbolIsSIMP(mockSigner)).rejects.toThrow(
+        "Expected token symbol to be 'SIMP', but got 'USDC'"
+      );
     });
 
     it('should throw error when token contract fails', async () => {
       mockTokenContract.symbol.mockRejectedValue(new Error('Contract error'));
 
-      await expect(getTokenSymbol(mockSigner)).rejects.toThrow(
+      await expect(ensureTokenSymbolIsSIMP(mockSigner)).rejects.toThrow(
         'Contract error'
       );
     });
@@ -201,22 +205,21 @@ describe('Balance Utilities', () => {
       mockTokenContract.balanceOf.mockResolvedValue(BigInt(500e18));
       mockAmmContract.reserveETH.mockResolvedValue(BigInt(12e18));
       mockAmmContract.reserveSimplest.mockResolvedValue(BigInt(24e18));
-      mockTokenContract.symbol.mockResolvedValue('TEST');
+      mockTokenContract.symbol.mockResolvedValue('SIMP');
 
       // Call all functions in parallel
-      const [walletBalances, poolBalances, tokenSymbol] = await Promise.all([
+      const [walletBalances, poolBalances] = await Promise.all([
         getWalletBalances(
           mockEthereumProvider as unknown as ethers.BrowserProvider,
           mockAccount,
           mockSigner
         ),
         getPoolReserves(mockSigner),
-        getTokenSymbol(mockSigner),
+        ensureTokenSymbolIsSIMP(mockSigner),
       ]);
 
       expect(walletBalances).toEqual({ ethBalance: 3.0, tokenBalance: 500.0 });
       expect(poolBalances).toEqual({ ethReserve: 12.0, tokenReserve: 24.0 });
-      expect(tokenSymbol).toBe('TEST');
     });
 
     it('should handle large numbers correctly', async () => {

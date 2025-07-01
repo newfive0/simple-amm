@@ -10,10 +10,10 @@ describe('DisabledSwap Component', () => {
     expect(screen.getByPlaceholderText('SIMP → ETH')).toBeInTheDocument();
   });
 
-  it('should render with custom token symbol', () => {
-    render(<DisabledSwap tokenSymbol="TEST" />);
+  it('should render with SIMP token symbol', () => {
+    render(<DisabledSwap />);
 
-    expect(screen.getByPlaceholderText('TEST → ETH')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('SIMP → ETH')).toBeInTheDocument();
   });
 
   it('should show token-to-eth swap by default', () => {
@@ -24,16 +24,16 @@ describe('DisabledSwap Component', () => {
   });
 
   it('should have disabled tabs that switch direction visually', () => {
-    render(<DisabledSwap tokenSymbol="TEST" />);
+    render(<DisabledSwap />);
 
     const ethTab = screen.getByRole('button', { name: 'ETH' });
-    const tokenTab = screen.getByRole('button', { name: 'TEST' });
+    const tokenTab = screen.getByRole('button', { name: 'SIMP' });
 
     expect(ethTab).toBeDisabled();
     expect(tokenTab).toBeDisabled();
 
     // Tabs are disabled but component should handle internal state for visual consistency
-    expect(screen.getByPlaceholderText('TEST → ETH')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('SIMP → ETH')).toBeInTheDocument();
   });
 
   it('should have disabled input and button', () => {
