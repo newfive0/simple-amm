@@ -88,14 +88,12 @@ export const DisabledLiquidity = () => {
         </p>
       </div>
       <InputField
-        label="ETH Amount"
         value={0}
         onChange={() => {}}
         placeholder="Enter ETH amount"
         disabled={true}
       />
       <InputField
-        label="SIMP Amount"
         value={0}
         onChange={() => {}}
         placeholder="Enter SIMP amount"

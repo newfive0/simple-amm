@@ -1,3 +1,23 @@
+.inputRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.expectedOutput {
+  flex-shrink: 0;
+  min-width: 175px;
+  text-align: right;
+  font-size: 16px;
+  color: #666;
+  font-weight: 500;
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
 .removeButton {
   width: 100%;
   padding: 12px;

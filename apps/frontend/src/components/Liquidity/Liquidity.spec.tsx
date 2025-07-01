@@ -64,7 +64,7 @@ describe('Liquidity', () => {
     const removeTab = getByRole('button', { name: 'Remove' });
     fireEvent.click(removeTab);
 
-    expect(getByPlaceholderText('Max: 5.0000')).toBeTruthy();
+    expect(getByPlaceholderText('LP Tokens to Remove')).toBeTruthy();
     expect(getByRole('button', { name: 'Remove Liquidity' })).toBeTruthy();
   });
 
@@ -75,7 +75,7 @@ describe('Liquidity', () => {
 
     // Switch to remove
     fireEvent.click(getByRole('button', { name: 'Remove' }));
-    expect(getByPlaceholderText('Max: 5.0000')).toBeTruthy();
+    expect(getByPlaceholderText('LP Tokens to Remove')).toBeTruthy();
 
     // Switch back to add
     fireEvent.click(getByRole('button', { name: 'Add' }));

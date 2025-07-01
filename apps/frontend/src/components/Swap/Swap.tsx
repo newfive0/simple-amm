@@ -1,57 +1,39 @@
-import { useState } from 'react';
-import type { ChangeEvent } from 'react';
+import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { Token, AMMPool } from '@typechain-types';
+import { InputWithOutput } from '../shared/InputWithOutput';
+import { createSwapOutputCalculator } from '../../utils/expectedOutputCalculators';
 import styles from './Swap.module.scss';
 
 interface SwapInputProps {
-  label: string;
   value: string;
   onChange: (value: string) => void;
   placeholder: string;
   onClick: () => void;
   buttonText: string;
   isLoading: boolean;
-  expectedOutput?: string;
-  outputLabel?: string;
+  generateExpectedOutput: (value: string) => string;
   disabled?: boolean;
-  exchangeRate?: string;
 }
 
 const SwapInput = ({
-  label,
   value,
   onChange,
   placeholder,
   onClick,
   buttonText,
   isLoading,
-  expectedOutput,
-  outputLabel,
+  generateExpectedOutput,
   disabled = false,
-  exchangeRate,
 }: SwapInputProps) => (
   <div className={styles.swapInput}>
-    <div className={styles.inputField}>
-      <label>{label}</label>
-      <div className={styles.inputRow}>
-        <input
-          type="number"
-          step="0.01"
-          value={value}
-          onChange={(e) => !disabled && onChange(e.target.value)}
-          placeholder={placeholder}
-          autoFocus={false}
-          className={styles.inputLeft}
-          disabled={disabled}
-        />
-        <div className={styles.expectedOutput}>
-          {expectedOutput && outputLabel
-            ? `≈ ${expectedOutput} ${outputLabel}`
-            : exchangeRate || `≈ 0 ${outputLabel || 'SIMP'}`}
-        </div>
-      </div>
-    </div>
+    <InputWithOutput
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      generateExpectedOutput={generateExpectedOutput}
+      disabled={disabled}
+    />
     <button
       onClick={onClick}
       disabled={disabled || isLoading || !value}
@@ -62,30 +44,41 @@ const SwapInput = ({
   </div>
 );
 
-// Shared SwapDirectionSelector component
-interface SwapDirectionSelectorProps {
-  value: 'eth-to-token' | 'token-to-eth';
-  onChange: (e: ChangeEvent<HTMLSelectElement>) => void;
+// Swap Header with tabs
+interface SwapHeaderProps {
+  activeTab: 'eth-to-token' | 'token-to-eth';
+  onTabChange: (tab: 'eth-to-token' | 'token-to-eth') => void;
   tokenSymbol: string;
   disabled?: boolean;
 }
 
-const SwapDirectionSelectorComponent = ({
-  value,
-  onChange,
+const SwapHeader = ({
+  activeTab,
+  onTabChange,
   tokenSymbol,
   disabled = false,
-}: SwapDirectionSelectorProps) => (
-  <div className={styles.swapDirection}>
-    <label>Swap Direction</label>
-    <select
-      value={value}
-      onChange={disabled ? undefined : onChange}
-      disabled={disabled}
-    >
-      <option value="eth-to-token">ETH → {tokenSymbol}</option>
-      <option value="token-to-eth">{tokenSymbol} → ETH</option>
-    </select>
+}: SwapHeaderProps) => (
+  <div className={styles.header}>
+    <h2 className={styles.title}>Swap</h2>
+    <div className={styles.tabGroup}>
+      <div className={styles.tabLabel}>Receive</div>
+      <div className={styles.tabs}>
+        <button
+          className={`${styles.tab} ${activeTab === 'token-to-eth' ? styles.active : ''}`}
+          onClick={() => onTabChange('token-to-eth')}
+          disabled={disabled}
+        >
+          ETH
+        </button>
+        <button
+          className={`${styles.tab} ${activeTab === 'eth-to-token' ? styles.active : ''}`}
+          onClick={() => onTabChange('eth-to-token')}
+          disabled={disabled}
+        >
+          {tokenSymbol}
+        </button>
+      </div>
+    </div>
   </div>
 );
 
@@ -116,48 +109,13 @@ export const Swap = ({
   const [isLoading, setIsLoading] = useState(false);
   const [swapDirection, setSwapDirection] = useState<
     'eth-to-token' | 'token-to-eth'
-  >('eth-to-token');
+  >('token-to-eth');
 
-  const calculateSwapOutput = (
-    inputAmount: string,
-    isEthToToken: boolean
-  ): string => {
-    if (!inputAmount || inputAmount === '0') return '';
-
-    if (poolEthReserve === 0 || poolTokenReserve === 0) return '';
-
-    const input = parseFloat(inputAmount);
-    if (isNaN(input)) return '';
-
-    // Using constant product formula: x * y = k
-    // For swap: newY = k / (x + inputX) = (x * y) / (x + inputX)
-    // Output = y - newY = y - (x * y) / (x + inputX) = (y * inputX) / (x + inputX)
-
-    if (isEthToToken) {
-      // ETH input -> Token output
-      const outputTokens =
-        (poolTokenReserve * input) / (poolEthReserve + input);
-      return outputTokens.toFixed(6);
-    } else {
-      // Token input -> ETH output
-      const outputEth = (poolEthReserve * input) / (poolTokenReserve + input);
-      return outputEth.toFixed(6);
-    }
-  };
-
-  const getExchangeRate = (isEthToToken: boolean): string => {
-    if (poolEthReserve === 0 || poolTokenReserve === 0) return '';
-
-    if (isEthToToken) {
-      // Show 1 ETH = x SIMP
-      const rate = poolTokenReserve / poolEthReserve;
-      return `1 ETH ≈ ${rate.toFixed(4)} ${tokenSymbol}`;
-    } else {
-      // Show 1 SIMP = x ETH
-      const rate = poolEthReserve / poolTokenReserve;
-      return `1 ${tokenSymbol} ≈ ${rate.toFixed(6)} ETH`;
-    }
-  };
+  // Clear amounts when direction changes
+  useEffect(() => {
+    setEthAmount('');
+    setTokenAmount('');
+  }, [swapDirection]);
 
   const handleError = (error: unknown) => {
     const message =
@@ -215,48 +173,45 @@ export const Swap = ({
     });
   };
 
-  const SwapDirectionSelector = () => (
-    <SwapDirectionSelectorComponent
-      value={swapDirection}
-      onChange={(e) =>
-        setSwapDirection(e.target.value as 'eth-to-token' | 'token-to-eth')
-      }
-      tokenSymbol={tokenSymbol}
-      disabled={false}
-    />
-  );
-
   return (
     <div className={styles.swap}>
-      <h2>Swap Tokens</h2>
-      <SwapDirectionSelector />
-      {swapDirection === 'eth-to-token' ? (
-        <SwapInput
-          key="eth-to-token"
-          label="ETH Amount"
-          value={ethAmount}
-          onChange={setEthAmount}
-          placeholder="Enter ETH amount"
-          onClick={swapETHForTokens}
-          buttonText="Swap ETH for SIMP"
-          isLoading={isLoading}
-          expectedOutput={calculateSwapOutput(ethAmount, true)}
-          outputLabel={tokenSymbol}
-          exchangeRate={getExchangeRate(true)}
-        />
-      ) : (
+      <SwapHeader
+        activeTab={swapDirection}
+        onTabChange={setSwapDirection}
+        tokenSymbol={tokenSymbol}
+        disabled={false}
+      />
+      {swapDirection === 'token-to-eth' ? (
         <SwapInput
           key="token-to-eth"
-          label="SIMP Amount"
           value={tokenAmount}
           onChange={setTokenAmount}
-          placeholder="Enter SIMP amount"
+          placeholder={`${tokenSymbol} → ETH`}
           onClick={swapTokensForETH}
           buttonText="Swap SIMP for ETH"
           isLoading={isLoading}
-          expectedOutput={calculateSwapOutput(tokenAmount, false)}
-          outputLabel="ETH"
-          exchangeRate={getExchangeRate(false)}
+          generateExpectedOutput={createSwapOutputCalculator(
+            poolEthReserve,
+            poolTokenReserve,
+            tokenSymbol,
+            'ETH'
+          )}
+        />
+      ) : (
+        <SwapInput
+          key="eth-to-token"
+          value={ethAmount}
+          onChange={setEthAmount}
+          placeholder="ETH → SIMP"
+          onClick={swapETHForTokens}
+          buttonText="Swap ETH for SIMP"
+          isLoading={isLoading}
+          generateExpectedOutput={createSwapOutputCalculator(
+            poolEthReserve,
+            poolTokenReserve,
+            'ETH',
+            tokenSymbol
+          )}
         />
       )}
     </div>
@@ -275,33 +230,28 @@ export const DisabledSwap = ({
   poolTokenReserve = 0,
   tokenSymbol = 'SIMP',
 }: DisabledSwapProps = {}) => {
-  const getExchangeRate = (): string => {
-    if (poolEthReserve === 0 || poolTokenReserve === 0) return '';
-    const rate = poolTokenReserve / poolEthReserve;
-    return `1 ETH ≈ ${rate.toFixed(4)} ${tokenSymbol}`;
-  };
-
   return (
     <div className={styles.swap}>
-      <h2>Swap Tokens</h2>
-      <SwapDirectionSelectorComponent
-        value="eth-to-token"
-        onChange={() => {}}
+      <SwapHeader
+        activeTab="token-to-eth"
+        onTabChange={() => {}}
         tokenSymbol={tokenSymbol}
         disabled={true}
       />
       <SwapInput
-        label="ETH Amount"
         value=""
         onChange={() => {}}
-        placeholder="Enter ETH amount"
+        placeholder={`${tokenSymbol} → ETH`}
         onClick={() => {}}
         buttonText="Please connect wallet"
         isLoading={false}
-        expectedOutput=""
-        outputLabel={tokenSymbol}
+        generateExpectedOutput={createSwapOutputCalculator(
+          poolEthReserve,
+          poolTokenReserve,
+          tokenSymbol,
+          'ETH'
+        )}
         disabled={true}
-        exchangeRate={getExchangeRate()}
       />
     </div>
   );
