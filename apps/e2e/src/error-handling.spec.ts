@@ -82,7 +82,7 @@ test.describe('Error Handling', () => {
       // Verify the error contains rejection message
       const errorElement = page.locator('[data-testid="error-message"]');
       const errorText = await errorElement.textContent();
-      expect(errorText?.toLowerCase()).toContain('user rejected');
+      expect(errorText?.toLowerCase()).toContain('user rejected action');
     });
 
     test('should show error when user rejects add liquidity', async ({
