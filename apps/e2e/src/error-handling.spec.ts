@@ -79,10 +79,10 @@ test.describe('Error Handling', () => {
       // Verify error is displayed
       await verifyErrorDisplay(page, 'Swap failed:');
 
-      // Verify the error contains rejection message
+      // Verify the exact error message
       const errorElement = page.locator('[data-testid="error-message"]');
       const errorText = await errorElement.textContent();
-      expect(errorText?.toLowerCase()).toContain('user rejected action');
+      expect(errorText).toBe('Swap failed: user rejected action');
     });
 
     test('should show error when user rejects add liquidity', async ({
