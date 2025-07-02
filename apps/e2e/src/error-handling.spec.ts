@@ -14,7 +14,7 @@ test.describe('Error Handling', () => {
   ): Promise<void> => {
     const errorElement = page.locator('[data-testid="error-message"]');
     await expect(errorElement).toBeVisible({ timeout: 5000 });
-    await expect(errorElement).toContainText(expectedError);
+    await expect(errorElement).toHaveText(expectedError);
   };
 
   // Helper function to verify no error is displayed
@@ -77,12 +77,7 @@ test.describe('Error Handling', () => {
       await metamask.rejectTransaction();
 
       // Verify error is displayed
-      await verifyErrorDisplay(page, 'Swap failed:');
-
-      // Verify the exact error message
-      const errorElement = page.locator('[data-testid="error-message"]');
-      const errorText = await errorElement.textContent();
-      expect(errorText).toBe('Swap failed: user rejected action');
+      await verifyErrorDisplay(page, 'Swap failed: user rejected action');
     });
 
     test('should show error when user rejects add liquidity', async ({
@@ -136,7 +131,10 @@ test.describe('Error Handling', () => {
       await metamask.rejectTransaction();
 
       // Verify error is displayed
-      await verifyErrorDisplay(page, 'Add liquidity failed:');
+      await verifyErrorDisplay(
+        page,
+        'Add liquidity failed: user rejected action'
+      );
     });
 
     test('should show error when user rejects remove liquidity', async ({
@@ -212,7 +210,10 @@ test.describe('Error Handling', () => {
       await metamask.rejectTransaction();
 
       // Verify error is displayed
-      await verifyErrorDisplay(page, 'Remove liquidity failed:');
+      await verifyErrorDisplay(
+        page,
+        'Remove liquidity failed: user rejected action'
+      );
     });
   });
 
@@ -267,7 +268,7 @@ test.describe('Error Handling', () => {
       // Reject to create an error
       await page.waitForTimeout(3000);
       await metamask.rejectTransaction();
-      await verifyErrorDisplay(page, 'Swap failed:');
+      await verifyErrorDisplay(page, 'Swap failed: user rejected action');
 
       // Now perform a successful swap (switch back to ETH → SIMP if needed)
       const newSwapInput = swapSection.getByPlaceholder('ETH → SIMP');
@@ -341,7 +342,7 @@ test.describe('Error Handling', () => {
       // Reject to create an error
       await page.waitForTimeout(3000);
       await metamask.rejectTransaction();
-      await verifyErrorDisplay(page, 'Swap failed:');
+      await verifyErrorDisplay(page, 'Swap failed: user rejected action');
 
       // Now perform successful add liquidity
       const liquiditySection = page
