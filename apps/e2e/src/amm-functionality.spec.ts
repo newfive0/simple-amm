@@ -1,5 +1,5 @@
 import { testWithSynpress } from '@synthetixio/synpress';
-import { MetaMask, metaMaskFixtures } from '@synthetixio/synpress/playwright';
+import { metaMaskFixtures } from '@synthetixio/synpress/playwright';
 import { argosScreenshot } from '@argos-ci/playwright';
 import basicSetup from '../test/wallet-setup/basic.setup';
 import {
@@ -10,6 +10,7 @@ import {
   updateBalancesAfterSwapSimpForEth,
 } from './utils/balance-calculator';
 import { getGasCostsFromRecentTransactions } from './utils/gas-tracker';
+import { createMetaMask, connectWallet } from './utils/test-helpers';
 
 const test = testWithSynpress(metaMaskFixtures(basicSetup));
 const { expect } = test;
@@ -74,12 +75,7 @@ test.describe('AMM Functionality', () => {
     metamaskPage,
     extensionId,
   }) => {
-    const metamask = new MetaMask(
-      context,
-      metamaskPage,
-      'Tester@1234',
-      extensionId
-    );
+    const metamask = createMetaMask(context, metamaskPage, extensionId);
 
     // Helper function to handle MetaMask transactions with 3 confirmations and return gas cost
     const handleTripleConfirmation = async (): Promise<number> => {
@@ -111,18 +107,7 @@ test.describe('AMM Functionality', () => {
 
     // STEP 1: Setup and connect wallet
     const setupAndConnect = async () => {
-      await page.goto('/');
-      await page
-        .locator('button')
-        .filter({ hasText: /connect/i })
-        .first()
-        .click();
-      await metamask.connectToDapp();
-
-      // Wait for connection to be established
-      await expect(
-        page.locator('text=Connected').or(page.locator('text=0x')).first()
-      ).toBeVisible({ timeout: 30000 });
+      await connectWallet(page, metamask);
 
       // Wait for AMM interface to load
       await expect(page.locator('text=Swap').first()).toBeVisible({

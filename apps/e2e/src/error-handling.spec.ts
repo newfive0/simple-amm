@@ -1,7 +1,7 @@
 import { testWithSynpress } from '@synthetixio/synpress';
-import { MetaMask, metaMaskFixtures } from '@synthetixio/synpress/playwright';
+import { metaMaskFixtures } from '@synthetixio/synpress/playwright';
 import basicSetup from '../test/wallet-setup/basic.setup';
-import { verifyErrorDisplay, verifyNoError } from './utils/test-helpers';
+import { createMetaMask, connectWallet, verifyErrorDisplay, verifyNoError } from './utils/test-helpers';
 
 const test = testWithSynpress(metaMaskFixtures(basicSetup));
 const { expect } = test;
@@ -13,26 +13,8 @@ test.describe('Transaction Rejection Errors', () => {
     metamaskPage,
     extensionId,
   }) => {
-    const metamask = new MetaMask(
-      context,
-      metamaskPage,
-      'Tester@1234',
-      extensionId
-    );
-
-    // Setup: Connect wallet first
-    await page.goto('/');
-    await page
-      .locator('button')
-      .filter({ hasText: /connect/i })
-      .first()
-      .click();
-    await metamask.connectToDapp();
-
-    // Wait for connection
-    await expect(
-      page.locator('text=Connected').or(page.locator('text=0x')).first()
-    ).toBeVisible({ timeout: 30000 });
+    const metamask = createMetaMask(context, metamaskPage, extensionId);
+    await connectWallet(page, metamask);
 
     // Navigate to swap section
     const swapSection = page
@@ -69,26 +51,8 @@ test.describe('Transaction Rejection Errors', () => {
     metamaskPage,
     extensionId,
   }) => {
-    const metamask = new MetaMask(
-      context,
-      metamaskPage,
-      'Tester@1234',
-      extensionId
-    );
-
-    // Setup: Connect wallet first
-    await page.goto('/');
-    await page
-      .locator('button')
-      .filter({ hasText: /connect/i })
-      .first()
-      .click();
-    await metamask.connectToDapp();
-
-    // Wait for connection
-    await expect(
-      page.locator('text=Connected').or(page.locator('text=0x')).first()
-    ).toBeVisible({ timeout: 30000 });
+    const metamask = createMetaMask(context, metamaskPage, extensionId);
+    await connectWallet(page, metamask);
 
     // Navigate to liquidity section
     const liquiditySection = page
@@ -126,26 +90,8 @@ test.describe('Transaction Rejection Errors', () => {
     metamaskPage,
     extensionId,
   }) => {
-    const metamask = new MetaMask(
-      context,
-      metamaskPage,
-      'Tester@1234',
-      extensionId
-    );
-
-    // Setup: Connect wallet and add liquidity first
-    await page.goto('/');
-    await page
-      .locator('button')
-      .filter({ hasText: /connect/i })
-      .first()
-      .click();
-    await metamask.connectToDapp();
-
-    // Wait for connection
-    await expect(
-      page.locator('text=Connected').or(page.locator('text=0x')).first()
-    ).toBeVisible({ timeout: 30000 });
+    const metamask = createMetaMask(context, metamaskPage, extensionId);
+    await connectWallet(page, metamask);
 
     // First add some liquidity (so we have LP tokens to remove)
     const liquiditySection = page
@@ -205,26 +151,8 @@ test.describe('Transaction Rejection Errors', () => {
     metamaskPage,
     extensionId,
   }) => {
-    const metamask = new MetaMask(
-      context,
-      metamaskPage,
-      'Tester@1234',
-      extensionId
-    );
-
-    // Setup: Connect wallet first
-    await page.goto('/');
-    await page
-      .locator('button')
-      .filter({ hasText: /connect/i })
-      .first()
-      .click();
-    await metamask.connectToDapp();
-
-    // Wait for connection
-    await expect(
-      page.locator('text=Connected').or(page.locator('text=0x')).first()
-    ).toBeVisible({ timeout: 30000 });
+    const metamask = createMetaMask(context, metamaskPage, extensionId);
+    await connectWallet(page, metamask);
 
     // Start a swap
     const swapSection = page
@@ -278,26 +206,8 @@ test.describe('Error Clearing', () => {
     metamaskPage,
     extensionId,
   }) => {
-    const metamask = new MetaMask(
-      context,
-      metamaskPage,
-      'Tester@1234',
-      extensionId
-    );
-
-    // Setup: Connect wallet first
-    await page.goto('/');
-    await page
-      .locator('button')
-      .filter({ hasText: /connect/i })
-      .first()
-      .click();
-    await metamask.connectToDapp();
-
-    // Wait for connection
-    await expect(
-      page.locator('text=Connected').or(page.locator('text=0x')).first()
-    ).toBeVisible({ timeout: 30000 });
+    const metamask = createMetaMask(context, metamaskPage, extensionId);
+    await connectWallet(page, metamask);
 
     // First, trigger an error by rejecting a transaction
     const swapSection = page
@@ -352,26 +262,8 @@ test.describe('Error Clearing', () => {
     metamaskPage,
     extensionId,
   }) => {
-    const metamask = new MetaMask(
-      context,
-      metamaskPage,
-      'Tester@1234',
-      extensionId
-    );
-
-    // Setup: Connect wallet first
-    await page.goto('/');
-    await page
-      .locator('button')
-      .filter({ hasText: /connect/i })
-      .first()
-      .click();
-    await metamask.connectToDapp();
-
-    // Wait for connection
-    await expect(
-      page.locator('text=Connected').or(page.locator('text=0x')).first()
-    ).toBeVisible({ timeout: 30000 });
+    const metamask = createMetaMask(context, metamaskPage, extensionId);
+    await connectWallet(page, metamask);
 
     // First, trigger an error by rejecting a swap
     const swapSection = page
