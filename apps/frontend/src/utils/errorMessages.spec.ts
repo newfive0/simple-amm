@@ -1,199 +1,280 @@
 import { describe, it, expect } from 'vitest';
-import { getFriendlyMessage } from './errorMessages';
+import { getFriendlyMessage, ERROR_OPERATIONS } from './errorMessages';
 
 describe('errorMessages', () => {
   describe('getFriendlyMessage', () => {
-    describe('Resource unavailable with pending request', () => {
-      it('should return wallet check message for -32002 error with "already pending" text', () => {
-        const error = {
-          code: -32002,
-          message: 'Request of type wallet_requestPermissions already pending',
-        };
+    describe('Ethers errors', () => {
+      it('should handle ethers ACTION_REJECTED error with shortMessage', () => {
+        const error = new Error('user rejected action');
+        (error as any).code = 'ACTION_REJECTED';
+        (error as any).shortMessage = 'User denied transaction';
 
-        const result = getFriendlyMessage(error);
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
+
+        expect(result).toBe('Swap failed: User denied transaction');
+      });
+
+      it('should handle ethers ACTION_REJECTED error without shortMessage', () => {
+        const error = new Error('user rejected action');
+        (error as any).code = 'ACTION_REJECTED';
+
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
+
+        expect(result).toBe('Swap failed: user rejected action');
+      });
+
+      it('should handle ethers CALL_EXCEPTION error', () => {
+        const error = new Error('execution reverted');
+        (error as any).code = 'CALL_EXCEPTION';
+        (error as any).shortMessage = 'Insufficient balance';
+
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
+
+        expect(result).toBe('Swap failed: Insufficient balance');
+      });
+
+      it('should handle ethers TRANSACTION_REPLACED error', () => {
+        const error = new Error('transaction replaced');
+        (error as any).code = 'TRANSACTION_REPLACED';
+        (error as any).shortMessage = 'Transaction was replaced';
+
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
+
+        expect(result).toBe('Swap failed: Transaction was replaced');
+      });
+
+      it('should handle ethers INSUFFICIENT_FUNDS error', () => {
+        const error = new Error('insufficient funds');
+        (error as any).code = 'INSUFFICIENT_FUNDS';
+        (error as any).shortMessage = 'Not enough ETH for gas';
+
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
+
+        expect(result).toBe('Swap failed: Not enough ETH for gas');
+      });
+    });
+
+    describe('Standard Error objects', () => {
+      it('should handle Error objects', () => {
+        const error = new Error('Connection timeout');
+
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
+
+        expect(result).toBe('Swap failed: Connection timeout');
+      });
+
+      it('should handle Error with empty message', () => {
+        const error = new Error('');
+
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
+
+        expect(result).toBe('Swap failed: ');
+      });
+    });
+
+    describe('Pending request handling', () => {
+      it('should transform "already pending" errors', () => {
+        const error = new Error(
+          'Request of type wallet_requestPermissions already pending'
+        );
+
+        const result = getFriendlyMessage(
+          ERROR_OPERATIONS.WALLET_CONNECTION,
+          error
+        );
 
         expect(result).toBe(
-          'Please check your wallet and approve the pending request.'
+          'Wallet connection failed: Please check your wallet and approve the pending request.'
         );
       });
 
-      it('should return wallet check message for error message containing "already pending"', () => {
+      it('should transform "request already pending" errors', () => {
         const error = new Error(
           'MetaMask - RPC Error: Request already pending for origin'
         );
 
-        const result = getFriendlyMessage(error);
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
 
         expect(result).toBe(
-          'Please check your wallet and approve the pending request.'
+          'Swap failed: Please check your wallet and approve the pending request.'
         );
       });
 
-      it('should not return wallet check message for errors without "already pending" text', () => {
-        const error = {
-          code: -32002,
-          message: 'Some other resource unavailable error',
-        };
+      it('should transform "permissions request already pending" errors', () => {
+        const error = new Error('Permissions request already pending');
 
-        const result = getFriendlyMessage(error);
+        const result = getFriendlyMessage(
+          ERROR_OPERATIONS.ADD_LIQUIDITY,
+          error
+        );
 
         expect(result).toBe(
-          'Some other resource unavailable error Please refresh and retry.'
+          'Add liquidity failed: Please check your wallet and approve the pending request.'
+        );
+      });
+
+      it('should handle case-insensitive pending messages', () => {
+        const error = new Error('REQUEST ALREADY PENDING');
+
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
+
+        expect(result).toBe(
+          'Swap failed: Please check your wallet and approve the pending request.'
         );
       });
     });
 
-    describe('Other error types', () => {
-      it('should handle user rejection errors', () => {
+    describe('JSON stringified fallback', () => {
+      it('should stringify string errors', () => {
+        const error = 'Network error occurred';
+
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
+
+        expect(result).toBe('Swap failed: "Network error occurred"');
+      });
+
+      it('should stringify objects with message property', () => {
         const error = {
           code: 4001,
           message: 'User rejected the request',
         };
 
-        const result = getFriendlyMessage(error);
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
 
         expect(result).toBe(
-          'User rejected the request Please refresh and retry.'
+          'Swap failed: {"code":4001,"message":"User rejected the request"}'
         );
       });
 
-      it('should handle Error objects', () => {
-        const error = new Error('Connection timeout');
-
-        const result = getFriendlyMessage(error);
-
-        expect(result).toBe('Connection timeout Please refresh and retry.');
-      });
-
-      it('should handle string errors', () => {
-        const error = 'Network error occurred';
-
-        const result = getFriendlyMessage(error);
-
-        expect(result).toBe('Network error occurred Please refresh and retry.');
-      });
-
-      it('should handle objects with message property', () => {
-        const error = {
-          message: 'Invalid chain ID',
-          data: { chainId: '0x1' },
-        };
-
-        const result = getFriendlyMessage(error);
-
-        expect(result).toBe('Invalid chain ID Please refresh and retry.');
-      });
-
-      it('should handle unknown error formats', () => {
-        const error = null;
-
-        const result = getFriendlyMessage(error);
-
-        expect(result).toBe('Unknown error. Please refresh and retry.');
-      });
-
-      it('should handle undefined errors', () => {
-        const error = undefined;
-
-        const result = getFriendlyMessage(error);
-
-        expect(result).toBe('Unknown error. Please refresh and retry.');
-      });
-
-      it('should handle objects without message property', () => {
+      it('should stringify objects without message property', () => {
         const error = { data: 'some data', status: 500 };
 
-        const result = getFriendlyMessage(error);
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
 
-        expect(result).toBe('Unknown error. Please refresh and retry.');
-      });
-    });
-
-    describe('Message extraction edge cases', () => {
-      it('should handle non-string message property', () => {
-        const error = {
-          message: 123,
-        };
-
-        const result = getFriendlyMessage(error);
-
-        expect(result).toBe('123 Please refresh and retry.');
+        expect(result).toBe('Swap failed: {"data":"some data","status":500}');
       });
 
-      it('should handle null message property', () => {
-        const error = {
-          message: null,
-        };
+      it('should stringify null', () => {
+        const error = null;
 
-        const result = getFriendlyMessage(error);
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
 
-        expect(result).toBe('Unknown error. Please refresh and retry.');
+        expect(result).toBe('Swap failed: null');
       });
 
-      it('should handle boolean values', () => {
+      it('should stringify undefined', () => {
+        const error = undefined;
+
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
+
+        expect(result).toBe('Swap failed: undefined');
+      });
+
+      it('should stringify boolean values', () => {
         const error = true;
 
-        const result = getFriendlyMessage(error);
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
 
-        expect(result).toBe('Unknown error. Please refresh and retry.');
+        expect(result).toBe('Swap failed: true');
       });
 
-      it('should handle number values', () => {
+      it('should stringify number values', () => {
         const error = 404;
 
-        const result = getFriendlyMessage(error);
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
 
-        expect(result).toBe('Unknown error. Please refresh and retry.');
+        expect(result).toBe('Swap failed: 404');
+      });
+
+      it('should stringify arrays', () => {
+        const error = ['error1', 'error2'];
+
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
+
+        expect(result).toBe('Swap failed: ["error1","error2"]');
       });
     });
 
-    describe('Real-world error scenarios', () => {
-      it('should handle MetaMask resource unavailable error', () => {
+    describe('Different operations', () => {
+      it('should prepend SWAP operation', () => {
+        const error = new Error('Transaction failed');
+
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
+
+        expect(result).toBe('Swap failed: Transaction failed');
+      });
+
+      it('should prepend ADD_LIQUIDITY operation', () => {
+        const error = new Error('Transaction failed');
+
+        const result = getFriendlyMessage(
+          ERROR_OPERATIONS.ADD_LIQUIDITY,
+          error
+        );
+
+        expect(result).toBe('Add liquidity failed: Transaction failed');
+      });
+
+      it('should prepend REMOVE_LIQUIDITY operation', () => {
+        const error = new Error('Transaction failed');
+
+        const result = getFriendlyMessage(
+          ERROR_OPERATIONS.REMOVE_LIQUIDITY,
+          error
+        );
+
+        expect(result).toBe('Remove liquidity failed: Transaction failed');
+      });
+
+      it('should prepend WALLET_CONNECTION operation', () => {
+        const error = new Error('Connection failed');
+
+        const result = getFriendlyMessage(
+          ERROR_OPERATIONS.WALLET_CONNECTION,
+          error
+        );
+
+        expect(result).toBe('Wallet connection failed: Connection failed');
+      });
+    });
+
+    describe('Complex error scenarios', () => {
+      it('should handle nested error objects', () => {
         const error = {
           code: -32002,
-          message:
-            "Request of type 'wallet_requestPermissions' already pending for origin http://localhost:3000. Please wait.",
+          message: 'Resource unavailable',
+          data: {
+            originalError: {
+              code: 4001,
+              message: 'User rejected',
+            },
+          },
         };
 
-        const result = getFriendlyMessage(error);
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
 
         expect(result).toBe(
-          'Please check your wallet and approve the pending request.'
+          'Swap failed: {"code":-32002,"message":"Resource unavailable","data":{"originalError":{"code":4001,"message":"User rejected"}}}'
         );
       });
 
-      it('should handle MetaMask user rejection', () => {
-        const error = {
-          code: 4001,
-          message: 'MetaMask Tx Signature: User denied transaction signature.',
-        };
+      it('should handle Error with custom properties', () => {
+        const error = new Error('Base error');
+        (error as any).customProp = 'custom value';
+        (error as any).code = 'CUSTOM_CODE';
 
-        const result = getFriendlyMessage(error);
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
 
-        expect(result).toBe(
-          'MetaMask Tx Signature: User denied transaction signature. Please refresh and retry.'
-        );
+        // Regular Error objects just return their message
+        expect(result).toBe('Swap failed: Base error');
       });
 
-      it('should handle network connection errors', () => {
-        const error = new Error('Failed to fetch');
+      it('should handle empty objects', () => {
+        const error = {};
 
-        const result = getFriendlyMessage(error);
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
 
-        expect(result).toBe('Failed to fetch Please refresh and retry.');
-      });
-
-      it('should handle RPC errors', () => {
-        const error = {
-          code: -32603,
-          message: 'Internal JSON-RPC error',
-        };
-
-        const result = getFriendlyMessage(error);
-
-        expect(result).toBe(
-          'Internal JSON-RPC error Please refresh and retry.'
-        );
+        expect(result).toBe('Swap failed: {}');
       });
     });
   });

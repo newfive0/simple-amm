@@ -1,52 +1,17 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { Token, AMMPool } from '@typechain-types';
-import { InputWithOutput } from '../shared/InputWithOutput';
 import { TabGroup } from '../shared/TabGroup';
+import { SwapInput } from './SwapInput';
 import { createSwapOutputCalculator } from '../../utils/expectedOutputCalculators';
 import { useErrorMessage } from '../../contexts/ErrorMessageContext';
+import {
+  getFriendlyMessage,
+  ERROR_OPERATIONS,
+} from '../../utils/errorMessages';
 import styles from './Swap.module.scss';
 
 export { DisabledSwap } from './DisabledSwap';
-
-interface SwapInputProps {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-  onClick: () => void;
-  buttonText: string;
-  isLoading: boolean;
-  generateExpectedOutput: (value: string) => string;
-  disabled?: boolean;
-}
-
-const SwapInput = ({
-  value,
-  onChange,
-  placeholder,
-  onClick,
-  buttonText,
-  isLoading,
-  generateExpectedOutput,
-  disabled = false,
-}: SwapInputProps) => (
-  <div className={styles.swapInput}>
-    <InputWithOutput
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      generateExpectedOutput={generateExpectedOutput}
-      disabled={disabled}
-    />
-    <button
-      onClick={onClick}
-      disabled={disabled || isLoading || !value}
-      className={styles.swapButton}
-    >
-      {isLoading ? 'Waiting...' : buttonText}
-    </button>
-  </div>
-);
 
 interface SwapProps {
   ammContract: AMMPool;
@@ -77,12 +42,6 @@ export const Swap = ({
     setTokenAmount('');
   }, [swapDirection]);
 
-  const handleError = (error: unknown) => {
-    const message =
-      error instanceof Error ? error.message : 'Unknown error occurred';
-    setErrorMessage(`Swap failed: ${message}`);
-  };
-
   const resetForm = () => {
     setEthAmount('');
     setTokenAmount('');
@@ -96,7 +55,7 @@ export const Swap = ({
       resetForm();
       setErrorMessage(''); // Clear any previous errors on success
     } catch (error) {
-      handleError(error);
+      setErrorMessage(getFriendlyMessage(ERROR_OPERATIONS.SWAP, error));
     } finally {
       setIsLoading(false);
     }

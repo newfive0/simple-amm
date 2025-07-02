@@ -10,6 +10,7 @@ import { ethers } from 'ethers';
 import { EIP1193Provider } from 'eip-1193';
 import {
   getFriendlyMessage,
+  ERROR_OPERATIONS,
   WALLET_REQUIRED_ERROR,
 } from '../utils/errorMessages';
 import { useErrorMessage } from './ErrorMessageContext';
@@ -106,7 +107,9 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     } catch (error) {
       // Reset state on connection failure and set error message
       resetWalletState();
-      setErrorMessage(getFriendlyMessage(error));
+      setErrorMessage(
+        getFriendlyMessage(ERROR_OPERATIONS.WALLET_CONNECTION, error)
+      );
     }
   }, [
     requestWalletConnection,

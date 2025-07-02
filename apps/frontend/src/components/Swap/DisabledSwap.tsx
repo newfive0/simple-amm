@@ -1,46 +1,7 @@
-import { InputWithOutput } from '../shared/InputWithOutput';
 import { TabGroup } from '../shared/TabGroup';
+import { SwapInput } from './SwapInput';
 import { createSwapOutputCalculator } from '../../utils/expectedOutputCalculators';
 import styles from './Swap.module.scss';
-
-interface SwapInputProps {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-  onClick: () => void;
-  buttonText: string;
-  isLoading: boolean;
-  generateExpectedOutput: (value: string) => string;
-  disabled?: boolean;
-}
-
-const SwapInput = ({
-  value,
-  onChange,
-  placeholder,
-  onClick,
-  buttonText,
-  isLoading,
-  generateExpectedOutput,
-  disabled = false,
-}: SwapInputProps) => (
-  <div className={styles.swapInput}>
-    <InputWithOutput
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      generateExpectedOutput={generateExpectedOutput}
-      disabled={disabled}
-    />
-    <button
-      onClick={onClick}
-      disabled={disabled || isLoading || !value}
-      className={styles.swapButton}
-    >
-      {isLoading ? 'Waiting...' : buttonText}
-    </button>
-  </div>
-);
 
 interface DisabledSwapProps {
   poolEthReserve?: number;

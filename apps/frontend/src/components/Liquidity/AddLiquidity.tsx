@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { ethers } from 'ethers';
 import { Token, AMMPool } from '@typechain-types';
-import { InputField } from './InputField';
+import { LiquidityInput } from './LiquidityInput';
 import { useErrorMessage } from '../../contexts/ErrorMessageContext';
+import {
+  getFriendlyMessage,
+  ERROR_OPERATIONS,
+} from '../../utils/errorMessages';
 import styles from './AddLiquidity.module.scss';
 
 interface AddLiquidityProps {
@@ -78,12 +82,6 @@ export const AddLiquidity = ({
     }
   };
 
-  const handleError = (error: unknown) => {
-    const message =
-      error instanceof Error ? error.message : 'Unknown error occurred';
-    setErrorMessage(`Failed to add liquidity: ${message}`);
-  };
-
   const resetForm = () => {
     setLiquidityEthAmount(0);
     setLiquidityTokenAmount(0);
@@ -117,7 +115,9 @@ export const AddLiquidity = ({
       resetForm();
       setErrorMessage(''); // Clear any previous errors on success
     } catch (error) {
-      handleError(error);
+      setErrorMessage(
+        getFriendlyMessage(ERROR_OPERATIONS.ADD_LIQUIDITY, error)
+      );
     } finally {
       setIsLoading(false);
     }
@@ -126,12 +126,12 @@ export const AddLiquidity = ({
   return (
     <>
       <div className={styles.inputRow}>
-        <InputField
+        <LiquidityInput
           value={liquidityEthAmount}
           onChange={handleEthAmountChange}
           placeholder="Enter ETH amount"
         />
-        <InputField
+        <LiquidityInput
           value={liquidityTokenAmount}
           onChange={handleTokenAmountChange}
           placeholder="Enter SIMP amount"

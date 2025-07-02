@@ -153,7 +153,7 @@ describe('AddLiquidity', () => {
 
     await waitFor(() => {
       expect(mockSetErrorMessage).toHaveBeenCalledWith(
-        'Failed to add liquidity: Transaction failed'
+        'Add liquidity failed: Transaction failed'
       );
     });
   });

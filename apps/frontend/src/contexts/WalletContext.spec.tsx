@@ -44,6 +44,7 @@ vi.mock('ethers', () => ({
   ethers: {
     BrowserProvider: vi.fn(() => mockBrowserProvider),
   },
+  isError: vi.fn(() => false), // Mock isError to always return false for tests
 }));
 
 // Mock window.ethereum
@@ -204,7 +205,7 @@ describe('WalletContext', () => {
         expect(screen.getByTestId('signer')).toHaveTextContent('null');
         expect(screen.getByTestId('account')).toHaveTextContent('');
         expect(screen.getByTestId('errorMessage')).toHaveTextContent(
-          'User rejected the request'
+          'Wallet connection failed: User rejected the request'
         );
       });
     });
@@ -446,7 +447,7 @@ describe('WalletContext', () => {
         expect(screen.getByTestId('signer')).toHaveTextContent('null');
         expect(screen.getByTestId('account')).toHaveTextContent('');
         expect(screen.getByTestId('errorMessage')).toHaveTextContent(
-          'Signer error'
+          'Wallet connection failed: Signer error'
         );
       });
     });
@@ -469,7 +470,7 @@ describe('WalletContext', () => {
 
       await waitFor(() => {
         expect(screen.getByTestId('errorMessage')).toHaveTextContent(
-          'User rejected the request'
+          'Wallet connection failed: User rejected the request'
         );
       });
 

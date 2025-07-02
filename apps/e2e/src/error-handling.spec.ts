@@ -82,7 +82,7 @@ test.describe('Error Handling', () => {
       // Verify the error contains rejection message
       const errorElement = page.locator('[data-testid="error-message"]');
       const errorText = await errorElement.textContent();
-      expect(errorText?.toLowerCase()).toContain('user denied');
+      expect(errorText?.toLowerCase()).toContain('user rejected');
     });
 
     test('should show error when user rejects add liquidity', async ({
@@ -136,7 +136,7 @@ test.describe('Error Handling', () => {
       await metamask.rejectTransaction();
 
       // Verify error is displayed
-      await verifyErrorDisplay(page, 'Failed to add liquidity:');
+      await verifyErrorDisplay(page, 'Add liquidity failed:');
     });
 
     test('should show error when user rejects remove liquidity', async ({
@@ -212,7 +212,7 @@ test.describe('Error Handling', () => {
       await metamask.rejectTransaction();
 
       // Verify error is displayed
-      await verifyErrorDisplay(page, 'Failed to remove liquidity:');
+      await verifyErrorDisplay(page, 'Remove liquidity failed:');
     });
   });
 
