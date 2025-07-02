@@ -12,6 +12,14 @@
         "parallel": false
       }
     },
+    "lint:fix": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": ["pnpm eslint . --fix", "solhint 'src/**/*.sol' --fix --noPrompt"],
+        "cwd": "libs/contracts",
+        "parallel": false
+      }
+    },
     "lint-js": {
       "executor": "nx:run-commands",
       "options": {
@@ -36,7 +44,7 @@
     "lint-sol-fix": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "solhint 'src/**/*.sol' --fix",
+        "command": "solhint 'src/**/*.sol' --fix --noPrompt",
         "cwd": "libs/contracts"
       }
     },
