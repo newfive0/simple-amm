@@ -30,7 +30,6 @@ const createMockErrorContext = (
 ): ErrorMessageContextType => ({
   errorMessage,
   setErrorMessage: vi.fn(),
-  clearErrorMessage: vi.fn(),
 });
 
 const renderHeaderWithMocks = (account = '', errorMessage = '') => {
@@ -61,6 +60,7 @@ describe('Header Component', () => {
 
     expect(screen.getByText('Very Simple AMM')).toBeInTheDocument();
     expect(screen.getByText('User rejected the request')).toBeInTheDocument();
+    expect(screen.getByTestId('error-message')).toBeInTheDocument();
   });
 
   it('should not display error section when error is empty', () => {

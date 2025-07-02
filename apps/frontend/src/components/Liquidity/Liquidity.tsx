@@ -11,10 +11,6 @@ export { DisabledLiquidity } from './DisabledLiquidity';
 interface LiquidityProps {
   ammContract: AMMPool;
   tokenContract: Token;
-  contractAddresses: {
-    tokenAddress: string;
-    ammPoolAddress: string;
-  };
   poolEthReserve: number;
   poolTokenReserve: number;
   lpTokenBalances: LiquidityBalances;
@@ -24,7 +20,6 @@ interface LiquidityProps {
 export const Liquidity = ({
   ammContract,
   tokenContract,
-  contractAddresses,
   poolEthReserve,
   poolTokenReserve,
   lpTokenBalances,
@@ -60,7 +55,6 @@ export const Liquidity = ({
         <AddLiquidity
           ammContract={ammContract}
           tokenContract={tokenContract}
-          contractAddresses={contractAddresses}
           poolEthReserve={poolEthReserve}
           poolTokenReserve={poolTokenReserve}
           onLiquidityComplete={onLiquidityComplete}

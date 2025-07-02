@@ -131,14 +131,11 @@ const ContractsSection = ({
     config.contracts.ammPoolAddress,
     signer
   );
-  const contractAddresses = config.contracts;
-
   return (
     <>
       <Swap
         ammContract={ammContract}
         tokenContract={tokenContract}
-        contractAddresses={contractAddresses}
         poolEthReserve={poolEthReserve}
         poolTokenReserve={poolTokenReserve}
         onSwapComplete={onSwapComplete}
@@ -147,7 +144,6 @@ const ContractsSection = ({
       <Liquidity
         ammContract={ammContract}
         tokenContract={tokenContract}
-        contractAddresses={contractAddresses}
         poolEthReserve={poolEthReserve}
         poolTokenReserve={poolTokenReserve}
         lpTokenBalances={lpTokenBalances}
