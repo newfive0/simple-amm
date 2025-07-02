@@ -142,7 +142,7 @@ describe('RemoveLiquidity', () => {
 
     await waitFor(() => {
       expect(mockSetErrorMessage).toHaveBeenCalledWith(
-        'Failed to remove liquidity: Transaction failed'
+        'Remove liquidity failed: Transaction failed'
       );
     });
   });

@@ -1,6 +1,6 @@
 import { render, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
-import { InputField } from './InputField';
+import { LiquidityInput } from './LiquidityInput';
 
 const mockSetErrorMessage = vi.fn();
 
@@ -10,7 +10,7 @@ vi.mock('../../contexts/ErrorMessageContext', () => ({
   }),
 }));
 
-describe('InputField', () => {
+describe('LiquidityInput', () => {
   const defaultProps = {
     value: 0,
     onChange: vi.fn(),
@@ -23,14 +23,16 @@ describe('InputField', () => {
   });
 
   it('should render with placeholder', () => {
-    const { getByPlaceholderText } = render(<InputField {...defaultProps} />);
+    const { getByPlaceholderText } = render(
+      <LiquidityInput {...defaultProps} />
+    );
 
     expect(getByPlaceholderText('Test placeholder')).toBeTruthy();
   });
 
   it('should display value when provided', () => {
     const { getByDisplayValue } = render(
-      <InputField {...defaultProps} value={10.5} />
+      <LiquidityInput {...defaultProps} value={10.5} />
     );
 
     expect(getByDisplayValue('10.5')).toBeTruthy();
@@ -38,7 +40,7 @@ describe('InputField', () => {
 
   it('should show empty string when value is 0', () => {
     const { getByPlaceholderText } = render(
-      <InputField {...defaultProps} value={0} />
+      <LiquidityInput {...defaultProps} value={0} />
     );
 
     const input = getByPlaceholderText('Test placeholder');
@@ -48,7 +50,7 @@ describe('InputField', () => {
   it('should call onChange with numeric value', () => {
     const mockOnChange = vi.fn();
     const { getByPlaceholderText } = render(
-      <InputField {...defaultProps} onChange={mockOnChange} />
+      <LiquidityInput {...defaultProps} onChange={mockOnChange} />
     );
 
     const input = getByPlaceholderText('Test placeholder');
@@ -60,7 +62,7 @@ describe('InputField', () => {
   it('should handle empty input', () => {
     const mockOnChange = vi.fn();
     const { getByPlaceholderText } = render(
-      <InputField {...defaultProps} onChange={mockOnChange} value={5} />
+      <LiquidityInput {...defaultProps} onChange={mockOnChange} value={5} />
     );
 
     const input = getByPlaceholderText('Test placeholder') as HTMLInputElement;
@@ -71,7 +73,7 @@ describe('InputField', () => {
 
   it('should be disabled when disabled prop is true', () => {
     const { getByPlaceholderText } = render(
-      <InputField {...defaultProps} disabled={true} />
+      <LiquidityInput {...defaultProps} disabled={true} />
     );
 
     const input = getByPlaceholderText('Test placeholder');
@@ -81,7 +83,11 @@ describe('InputField', () => {
   it('should not call onChange when disabled', () => {
     const mockOnChange = vi.fn();
     const { getByPlaceholderText } = render(
-      <InputField {...defaultProps} onChange={mockOnChange} disabled={true} />
+      <LiquidityInput
+        {...defaultProps}
+        onChange={mockOnChange}
+        disabled={true}
+      />
     );
 
     const input = getByPlaceholderText('Test placeholder');

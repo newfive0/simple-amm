@@ -1,19 +1,19 @@
 import { useErrorMessage } from '../../contexts/ErrorMessageContext';
 import styles from './InputField.module.scss';
 
-interface InputFieldProps {
+interface LiquidityInputProps {
   value: number;
   onChange: (value: number) => void;
   placeholder: string;
   disabled?: boolean;
 }
 
-export const InputField = ({
+export const LiquidityInput = ({
   value,
   onChange,
   placeholder,
   disabled = false,
-}: InputFieldProps) => {
+}: LiquidityInputProps) => {
   const { setErrorMessage } = useErrorMessage();
 
   return (

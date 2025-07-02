@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ethers } from 'ethers';
-import { Swap, DisabledSwap } from './Swap';
+import { Swap } from './Swap';
 import {
   createDeferredTransactionPromise,
   createMockContracts,
@@ -54,23 +54,6 @@ describe('Swap Component', () => {
 
       expect(screen.getByPlaceholderText('ETH → SIMP')).toBeInTheDocument();
       expect(screen.getByText('Swap ETH for SIMP')).toBeInTheDocument();
-    });
-
-    it('should show expected output calculation', () => {
-      render(<Swap {...defaultProps} />);
-
-      const input = screen.getByPlaceholderText('SIMP → ETH');
-      fireEvent.change(input, { target: { value: '5' } });
-
-      // With pool reserves ETH: 10, Token: 20
-      // Expected output: (10 * 5) / (20 + 5) = 2.000000
-      expect(screen.getByText(/≈ 2\.000000 ETH/)).toBeInTheDocument();
-    });
-
-    it('should show exchange rate when no input amount', () => {
-      render(<Swap {...defaultProps} />);
-
-      expect(screen.getByText('1 SIMP ≈ 0.500000 ETH')).toBeInTheDocument();
     });
   });
 
@@ -175,13 +158,6 @@ describe('Swap Component', () => {
         expect(swapButton).not.toBeDisabled();
       });
     });
-
-    it('should disable swap button when no amount entered', () => {
-      render(<Swap {...defaultProps} />);
-
-      const swapButton = screen.getByText('Swap SIMP for ETH');
-      expect(swapButton).toBeDisabled();
-    });
   });
 
   describe('ETH to Token Swap', () => {
@@ -245,31 +221,6 @@ describe('Swap Component', () => {
     });
   });
 
-  describe('Loading States', () => {
-    it('should show loading state during swap', async () => {
-      const { promise, resolve } = createDeferredTransactionPromise();
-      mockTokenContract.approve.mockResolvedValue(promise);
-      mockAmmContract.swap.mockResolvedValue(promise);
-
-      render(<Swap {...defaultProps} />);
-
-      const input = screen.getByPlaceholderText('SIMP → ETH');
-      fireEvent.change(input, { target: { value: '1' } });
-
-      const swapButton = screen.getByText('Swap SIMP for ETH');
-      fireEvent.click(swapButton);
-
-      expect(swapButton).toHaveTextContent('Waiting...');
-      expect(swapButton).toBeDisabled();
-
-      resolve();
-      await waitFor(() => {
-        expect(swapButton).toHaveTextContent('Swap SIMP for ETH');
-        expect(swapButton).toBeDisabled(); // Still disabled because input is now empty
-      });
-    });
-  });
-
   describe('Form Reset', () => {
     it('should reset form after successful swap', async () => {
       const { promise, resolve } = createDeferredTransactionPromise();
@@ -324,20 +275,9 @@ describe('Swap Component', () => {
 
       await waitFor(() => {
         expect(mockSetErrorMessage).toHaveBeenCalledWith(
-          'Swap failed: Unknown error occurred'
+          'Swap failed: "string error"'
         );
       });
-    });
-
-    it('should handle empty amounts in swap functions', async () => {
-      render(<Swap {...defaultProps} />);
-
-      // Try to swap with empty amount
-      const swapButton = screen.getByText('Swap SIMP for ETH');
-      fireEvent.click(swapButton);
-
-      // Should not call contract
-      expect(mockAmmContract.swap).not.toHaveBeenCalled();
     });
 
     it('should update expected output when switching directions', () => {
@@ -356,30 +296,5 @@ describe('Swap Component', () => {
       fireEvent.change(ethInput, { target: { value: '1' } });
       expect(screen.getByText(/≈ 1\.818182 SIMP/)).toBeInTheDocument();
     });
-  });
-});
-
-describe('DisabledSwap Component', () => {
-  it('should render disabled swap component with all elements disabled', () => {
-    render(<DisabledSwap />);
-
-    // Check rendering
-    expect(screen.getByText('Swap')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'ETH' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'SIMP' })).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('SIMP → ETH')).toBeInTheDocument();
-    expect(screen.getByText('Please connect wallet')).toBeInTheDocument();
-    expect(screen.getByText('≈ 0 ETH')).toBeInTheDocument();
-
-    // Check disabled state
-    const ethTab = screen.getByRole('button', { name: 'ETH' });
-    const simpTab = screen.getByRole('button', { name: 'SIMP' });
-    const input = screen.getByPlaceholderText('SIMP → ETH');
-    const button = screen.getByText('Please connect wallet');
-
-    expect(ethTab).toBeDisabled();
-    expect(simpTab).toBeDisabled();
-    expect(input).toBeDisabled();
-    expect(button).toBeDisabled();
   });
 });

@@ -5,6 +5,10 @@ import { LiquidityBalances } from '../../utils/balances';
 import { InputWithOutput } from '../shared/InputWithOutput';
 import { createRemoveLiquidityOutputCalculator } from '../../utils/expectedOutputCalculators';
 import { useErrorMessage } from '../../contexts/ErrorMessageContext';
+import {
+  getFriendlyMessage,
+  ERROR_OPERATIONS,
+} from '../../utils/errorMessages';
 import styles from './RemoveLiquidity.module.scss';
 
 interface RemoveLiquidityProps {
@@ -42,9 +46,9 @@ export const RemoveLiquidity = ({
       setRemoveLpAmount(0);
       setErrorMessage(''); // Clear any previous errors on success
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Unknown error occurred';
-      setErrorMessage(`Failed to remove liquidity: ${message}`);
+      setErrorMessage(
+        getFriendlyMessage(ERROR_OPERATIONS.REMOVE_LIQUIDITY, error)
+      );
     } finally {
       setIsLoading(false);
     }
