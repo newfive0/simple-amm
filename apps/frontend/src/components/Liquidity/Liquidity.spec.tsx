@@ -1,4 +1,4 @@
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import { Liquidity } from './Liquidity';
 import { createMockContracts } from '../../test-mocks';
@@ -68,7 +68,9 @@ describe('Liquidity', () => {
       <Liquidity {...defaultProps} />
     );
     const removeTab = getByRole('button', { name: 'Remove' });
-    fireEvent.click(removeTab);
+    act(() => {
+      fireEvent.click(removeTab);
+    });
 
     expect(getByPlaceholderText('LP Tokens to Remove')).toBeTruthy();
     expect(getByRole('button', { name: 'Remove Liquidity' })).toBeTruthy();
@@ -80,11 +82,15 @@ describe('Liquidity', () => {
     );
 
     // Switch to remove
-    fireEvent.click(getByRole('button', { name: 'Remove' }));
+    act(() => {
+      fireEvent.click(getByRole('button', { name: 'Remove' }));
+    });
     expect(getByPlaceholderText('LP Tokens to Remove')).toBeTruthy();
 
     // Switch back to add
-    fireEvent.click(getByRole('button', { name: 'Add' }));
+    act(() => {
+      fireEvent.click(getByRole('button', { name: 'Add' }));
+    });
     expect(getByPlaceholderText('Enter ETH amount')).toBeTruthy();
   });
 });

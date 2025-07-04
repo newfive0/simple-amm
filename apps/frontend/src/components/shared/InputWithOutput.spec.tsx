@@ -1,4 +1,4 @@
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import { InputWithOutput } from './InputWithOutput';
 
@@ -40,7 +40,9 @@ describe('InputWithOutput', () => {
     );
 
     const input = getByPlaceholderText('Enter amount');
-    fireEvent.change(input, { target: { value: '25' } });
+    act(() => {
+      fireEvent.change(input, { target: { value: '25' } });
+    });
 
     expect(mockOnChange).toHaveBeenCalledWith('25');
   });
@@ -92,7 +94,9 @@ describe('InputWithOutput', () => {
     );
 
     const input = getByPlaceholderText('Enter amount');
-    fireEvent.change(input, { target: { value: '100' } });
+    act(() => {
+      fireEvent.change(input, { target: { value: '100' } });
+    });
 
     expect(mockOnChange).not.toHaveBeenCalled();
   });

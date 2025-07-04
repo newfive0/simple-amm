@@ -1,4 +1,4 @@
-import { render, fireEvent, waitFor } from '@testing-library/react';
+import { render, fireEvent, waitFor, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import { AddLiquidity } from './AddLiquidity';
 import { createMockContracts, mockContractAddresses } from '../../test-mocks';
@@ -46,7 +46,9 @@ describe('AddLiquidity', () => {
     const ethInput = getByPlaceholderText('Enter ETH amount');
     const tokenInput = getByPlaceholderText('Enter SIMP amount');
 
-    fireEvent.change(ethInput, { target: { value: '5' } });
+    act(() => {
+      fireEvent.change(ethInput, { target: { value: '5' } });
+    });
 
     // Pool ratio: 20 SIMP / 10 ETH = 2:1
     expect(tokenInput).toHaveValue(10);
@@ -57,7 +59,9 @@ describe('AddLiquidity', () => {
     const ethInput = getByPlaceholderText('Enter ETH amount');
     const tokenInput = getByPlaceholderText('Enter SIMP amount');
 
-    fireEvent.change(tokenInput, { target: { value: '10' } });
+    act(() => {
+      fireEvent.change(tokenInput, { target: { value: '10' } });
+    });
 
     // Pool ratio: 10 ETH / 20 SIMP = 1:2
     expect(ethInput).toHaveValue(5);
@@ -75,7 +79,9 @@ describe('AddLiquidity', () => {
     const ethInput = getByPlaceholderText('Enter ETH amount');
     const tokenInput = getByPlaceholderText('Enter SIMP amount');
 
-    fireEvent.change(ethInput, { target: { value: '5' } });
+    act(() => {
+      fireEvent.change(ethInput, { target: { value: '5' } });
+    });
 
     expect(tokenInput).toHaveDisplayValue('');
   });
@@ -93,7 +99,9 @@ describe('AddLiquidity', () => {
     const ethInput = getByPlaceholderText('Enter ETH amount');
     const button = getByRole('button', { name: 'Add Liquidity' });
 
-    fireEvent.change(ethInput, { target: { value: '5' } });
+    act(() => {
+      fireEvent.change(ethInput, { target: { value: '5' } });
+    });
 
     expect(button).toBeEnabled();
   });
@@ -105,8 +113,10 @@ describe('AddLiquidity', () => {
     const ethInput = getByPlaceholderText('Enter ETH amount');
     const button = getByRole('button', { name: 'Add Liquidity' });
 
-    fireEvent.change(ethInput, { target: { value: '5' } });
-    fireEvent.click(button);
+    act(() => {
+      fireEvent.change(ethInput, { target: { value: '5' } });
+      fireEvent.click(button);
+    });
 
     await waitFor(() => {
       expect(mockTokenContract.approve).toHaveBeenCalledWith(
@@ -129,10 +139,12 @@ describe('AddLiquidity', () => {
       <AddLiquidity {...defaultProps} />
     );
     const ethInput = getByPlaceholderText('Enter ETH amount');
-
-    fireEvent.change(ethInput, { target: { value: '5' } });
     const button = getByRole('button', { name: 'Add Liquidity' });
-    fireEvent.click(button);
+
+    act(() => {
+      fireEvent.change(ethInput, { target: { value: '5' } });
+      fireEvent.click(button);
+    });
 
     expect(getByRole('button', { name: 'Waiting...' })).toBeTruthy();
   });
@@ -146,10 +158,12 @@ describe('AddLiquidity', () => {
       <AddLiquidity {...defaultProps} />
     );
     const ethInput = getByPlaceholderText('Enter ETH amount');
-
-    fireEvent.change(ethInput, { target: { value: '5' } });
     const button = getByRole('button', { name: 'Add Liquidity' });
-    fireEvent.click(button);
+
+    act(() => {
+      fireEvent.change(ethInput, { target: { value: '5' } });
+      fireEvent.click(button);
+    });
 
     await waitFor(() => {
       expect(mockSetErrorMessage).toHaveBeenCalledWith(
