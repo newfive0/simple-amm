@@ -54,7 +54,7 @@ describe('AMMPool', () => {
     await simplestToken
       .connect(user1)
       .approve(await ammPool.getAddress(), INITIAL_LIQUIDITY_SIMPLEST);
-    await ammPool.connect(user1).addLiquidity(INITIAL_LIQUIDITY_SIMPLEST, {
+    await ammPool.connect(user1).addLiquidity(INITIAL_LIQUIDITY_SIMPLEST, 0, {
       value: INITIAL_LIQUIDITY_ETH,
     });
 
@@ -84,7 +84,7 @@ describe('AMMPool', () => {
       // Add liquidity
       const addLiquidityTx = await ammPool
         .connect(user1)
-        .addLiquidity(INITIAL_LIQUIDITY_SIMPLEST, {
+        .addLiquidity(INITIAL_LIQUIDITY_SIMPLEST, 0, {
           value: INITIAL_LIQUIDITY_ETH,
         });
 
@@ -137,13 +137,13 @@ describe('AMMPool', () => {
       await expect(
         ammPool
           .connect(user1)
-          .addLiquidity(0, { value: INITIAL_LIQUIDITY_ETH }),
+          .addLiquidity(0, 0, { value: INITIAL_LIQUIDITY_ETH }),
       ).to.be.revertedWithCustomError(ammPool, 'InvalidAmount');
 
       await expect(
         ammPool
           .connect(user1)
-          .addLiquidity(INITIAL_LIQUIDITY_SIMPLEST, { value: 0 }),
+          .addLiquidity(INITIAL_LIQUIDITY_SIMPLEST, 0, { value: 0 }),
       ).to.be.revertedWithCustomError(ammPool, 'InvalidAmount');
     });
   });
@@ -180,7 +180,7 @@ describe('AMMPool', () => {
       // Perform swap
       const swapTx = await ammPool
         .connect(user2)
-        .swap(await simplestToken.getAddress(), simplestTokenSwapAmount);
+        .swap(await simplestToken.getAddress(), simplestTokenSwapAmount, 0);
 
       // Check reserves
       expect(await ammPool.reserveSimplest()).to.equal(
@@ -235,7 +235,7 @@ describe('AMMPool', () => {
       // Perform swap (using address(0) to indicate ETH)
       const swapTx = await ammPool
         .connect(user2)
-        .swap(ethers.ZeroAddress, 0, { value: ethSwapAmount });
+        .swap(ethers.ZeroAddress, 0, 0, { value: ethSwapAmount });
 
       // Check reserves
       expect(await ammPool.reserveETH()).to.equal(reserveETH + ethSwapAmount);
@@ -264,7 +264,7 @@ describe('AMMPool', () => {
         deployPoolWithLiquidityFixture,
       );
       await expect(
-        ammPool.connect(user2).swap(await simplestToken.getAddress(), 0),
+        ammPool.connect(user2).swap(await simplestToken.getAddress(), 0, 0),
       ).to.be.revertedWithCustomError(ammPool, 'InvalidAmount');
     });
 
@@ -274,8 +274,298 @@ describe('AMMPool', () => {
       );
       const invalidToken = owner.address; // using an address that's not a token
       await expect(
-        ammPool.connect(user2).swap(invalidToken, SWAP_AMOUNT),
+        ammPool.connect(user2).swap(invalidToken, SWAP_AMOUNT, 0),
       ).to.be.revertedWithCustomError(ammPool, 'UnsupportedToken');
+    });
+  });
+
+  describe('Slippage Protection', () => {
+    describe('Swap with Slippage Protection', () => {
+      it('should have a swap function that accepts minAmountOut parameter', async () => {
+        const { ammPool, simplestToken, user2 } = await loadFixture(
+          deployPoolWithLiquidityFixture,
+        );
+
+        const simplestTokenSwapAmount = ethers.parseEther('0.1');
+        
+        // Get the expected output first, then set reasonable minimum
+        const expectedOutput = await ammPool.getSwapOutput(
+          await simplestToken.getAddress(), 
+          simplestTokenSwapAmount
+        );
+        const minAmountOut = (expectedOutput * 95n) / 100n; // 5% slippage tolerance
+
+        await simplestToken
+          .connect(user2)
+          .approve(await ammPool.getAddress(), simplestTokenSwapAmount);
+
+        // This should work with slippage protection
+        await expect(
+          ammPool
+            .connect(user2)
+            .swap(
+              await simplestToken.getAddress(), 
+              simplestTokenSwapAmount, 
+              minAmountOut
+            )
+        ).to.not.be.reverted;
+      });
+
+      it('should revert when output is below minimum (slippage too high)', async () => {
+        const { ammPool, simplestToken, user2 } = await loadFixture(
+          deployPoolWithLiquidityFixture,
+        );
+
+        const simplestTokenSwapAmount = ethers.parseEther('0.1');
+        const unrealisticMinOutput = ethers.parseEther('1'); // Much higher than possible
+
+        await simplestToken
+          .connect(user2)
+          .approve(await ammPool.getAddress(), simplestTokenSwapAmount);
+
+        await expect(
+          ammPool
+            .connect(user2)
+            .swap(
+              await simplestToken.getAddress(), 
+              simplestTokenSwapAmount, 
+              unrealisticMinOutput
+            )
+        ).to.be.revertedWithCustomError(ammPool, 'InsufficientOutput');
+      });
+
+      it('should allow ETH swaps with slippage protection', async () => {
+        const { ammPool, user2 } = await loadFixture(
+          deployPoolWithLiquidityFixture,
+        );
+
+        const ethSwapAmount = ethers.parseEther('0.01');
+        const minAmountOut = ethers.parseEther('0.01'); // Reasonable minimum
+
+        await expect(
+          ammPool
+            .connect(user2)
+            .swap(ethers.ZeroAddress, 0, minAmountOut, { 
+              value: ethSwapAmount 
+            })
+        ).to.not.be.reverted;
+      });
+
+      it('should have view function to calculate expected swap output', async () => {
+        const { ammPool, simplestToken } = await loadFixture(
+          deployPoolWithLiquidityFixture,
+        );
+
+        const amountIn = ethers.parseEther('0.1');
+        
+        // Should be able to get expected output for token->ETH swap
+        const expectedOutput = await ammPool.getSwapOutput(
+          await simplestToken.getAddress(), 
+          amountIn
+        );
+        
+        expect(expectedOutput).to.be.gt(0);
+      });
+    });
+
+    describe('Add Liquidity with Slippage Protection', () => {
+      it('should accept minimum LP token parameter', async () => {
+        const { ammPool, simplestToken, user2 } = await loadFixture(
+          deployPoolWithLiquidityFixture,
+        );
+
+        const amountSimplest = ethers.parseEther('1');
+        const amountETH = ethers.parseEther('0.1');
+        const minLPTokens = ethers.parseEther('0.1'); // Reasonable minimum
+
+        await simplestToken
+          .connect(user2)
+          .approve(await ammPool.getAddress(), amountSimplest);
+
+        await expect(
+          ammPool
+            .connect(user2)
+            .addLiquidity(amountSimplest, minLPTokens, { 
+              value: amountETH 
+            })
+        ).to.not.be.reverted;
+      });
+
+      it('should revert when LP tokens received are below minimum', async () => {
+        const { ammPool, simplestToken, user2 } = await loadFixture(
+          deployPoolWithLiquidityFixture,
+        );
+
+        const amountSimplest = ethers.parseEther('1');
+        const amountETH = ethers.parseEther('0.1');
+        const unrealisticMinLP = ethers.parseEther('100'); // Much higher than possible
+
+        await simplestToken
+          .connect(user2)
+          .approve(await ammPool.getAddress(), amountSimplest);
+
+        await expect(
+          ammPool
+            .connect(user2)
+            .addLiquidity(amountSimplest, unrealisticMinLP, { 
+              value: amountETH 
+            })
+        ).to.be.revertedWithCustomError(ammPool, 'InsufficientOutput');
+      });
+
+      it('should have view function to calculate expected LP tokens', async () => {
+        const { ammPool } = await loadFixture(
+          deployPoolWithLiquidityFixture,
+        );
+
+        const amountSimplest = ethers.parseEther('1');
+        const amountETH = ethers.parseEther('0.1');
+        
+        const expectedLP = await ammPool.getLiquidityOutput(amountSimplest, amountETH);
+        expect(expectedLP).to.be.gt(0);
+      });
+    });
+
+    describe('Remove Liquidity with Slippage Protection', () => {
+      it('should accept minimum token amounts parameters', async () => {
+        const { ammPool, user1 } = await loadFixture(
+          deployPoolWithLiquidityFixture,
+        );
+
+        const lpTokenAmount = ethers.parseEther('0.5');
+        const minAmountSimplest = ethers.parseEther('0.1');
+        const minAmountETH = ethers.parseEther('0.01');
+
+        await expect(
+          ammPool
+            .connect(user1)
+            .removeLiquidity(lpTokenAmount, minAmountSimplest, minAmountETH)
+        ).to.not.be.reverted;
+      });
+
+      it('should revert when token amounts are below minimums', async () => {
+        const { ammPool, user1 } = await loadFixture(
+          deployPoolWithLiquidityFixture,
+        );
+
+        const lpTokenAmount = ethers.parseEther('0.5');
+        const unrealisticMinSimplest = ethers.parseEther('100');
+        const unrealisticMinETH = ethers.parseEther('10');
+
+        await expect(
+          ammPool
+            .connect(user1)
+            .removeLiquidity(lpTokenAmount, unrealisticMinSimplest, unrealisticMinETH)
+        ).to.be.revertedWithCustomError(ammPool, 'InsufficientOutput');
+      });
+
+      it('should have view function to calculate expected removal amounts', async () => {
+        const { ammPool } = await loadFixture(
+          deployPoolWithLiquidityFixture,
+        );
+
+        const lpTokenAmount = ethers.parseEther('0.5');
+        const [expectedSimplest, expectedETH] = await ammPool.getRemoveLiquidityOutput(lpTokenAmount);
+        
+        expect(expectedSimplest).to.be.gt(0);
+        expect(expectedETH).to.be.gt(0);
+      });
+    });
+
+    describe('Slippage Tolerance Calculations', () => {
+      it('should handle 1% slippage tolerance correctly', async () => {
+        const { ammPool, simplestToken, user2 } = await loadFixture(
+          deployPoolWithLiquidityFixture,
+        );
+
+        const amountIn = ethers.parseEther('0.1');
+        const expectedOutput = await ammPool.getSwapOutput(
+          await simplestToken.getAddress(), 
+          amountIn
+        );
+        
+        // 1% slippage tolerance
+        const minOutput = (expectedOutput * 99n) / 100n;
+
+        await simplestToken
+          .connect(user2)
+          .approve(await ammPool.getAddress(), amountIn);
+
+        await expect(
+          ammPool
+            .connect(user2)
+            .swap(await simplestToken.getAddress(), amountIn, minOutput)
+        ).to.not.be.reverted;
+      });
+
+      it('should handle 5% slippage tolerance correctly', async () => {
+        const { ammPool, simplestToken, user2 } = await loadFixture(
+          deployPoolWithLiquidityFixture,
+        );
+
+        const amountIn = ethers.parseEther('0.1');
+        const expectedOutput = await ammPool.getSwapOutput(
+          await simplestToken.getAddress(), 
+          amountIn
+        );
+        
+        // 5% slippage tolerance
+        const minOutput = (expectedOutput * 95n) / 100n;
+
+        await simplestToken
+          .connect(user2)
+          .approve(await ammPool.getAddress(), amountIn);
+
+        await expect(
+          ammPool
+            .connect(user2)
+            .swap(await simplestToken.getAddress(), amountIn, minOutput)
+        ).to.not.be.reverted;
+      });
+
+      it('should reject swaps when minimum output exceeds expected output', async () => {
+        const { ammPool, simplestToken, user2 } = await loadFixture(
+          deployPoolWithLiquidityFixture,
+        );
+
+        const amountIn = ethers.parseEther('0.1');
+        const expectedOutput = await ammPool.getSwapOutput(
+          await simplestToken.getAddress(), 
+          amountIn
+        );
+        
+        // Set minimum output slightly higher than expected to force slippage failure
+        const minOutput = expectedOutput + 1n; // Even 1 wei more should cause failure
+
+        await simplestToken
+          .connect(user2)
+          .approve(await ammPool.getAddress(), amountIn);
+
+        // This should fail due to slippage protection
+        await expect(
+          ammPool
+            .connect(user2)
+            .swap(await simplestToken.getAddress(), amountIn, minOutput)
+        ).to.be.revertedWithCustomError(ammPool, 'InsufficientOutput');
+      });
+    });
+
+    describe('Error Handling', () => {
+      it('should define InsufficientOutput error', async () => {
+        const { ammPool } = await loadFixture(deployPoolFixture);
+        
+        // Error should be defined in the contract
+        const errorExists = () => ammPool.interface.getError('InsufficientOutput');
+        expect(errorExists).to.not.throw();
+      });
+
+      it('should use InsufficientOutput error for slippage protection', async () => {
+        const { ammPool } = await loadFixture(deployPoolFixture);
+        
+        // InsufficientOutput error should be defined for slippage protection
+        const errorExists = () => ammPool.interface.getError('InsufficientOutput');
+        expect(errorExists).to.not.throw();
+      });
     });
   });
 });
