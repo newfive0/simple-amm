@@ -1,4 +1,3 @@
-import { ethers } from 'ethers';
 import { InputWithOutput } from '../shared/InputWithOutput';
 import styles from './Swap.module.scss';
 
@@ -25,13 +24,8 @@ export const SwapInput = ({
 }: SwapInputProps) => (
   <>
     <InputWithOutput
-      value={amountWei === 0n ? '' : ethers.formatUnits(amountWei, 18)}
-      onChange={(value) => {
-        const numValue = parseFloat(value || '0');
-        onChange(
-          isNaN(numValue) ? 0n : ethers.parseUnits(numValue.toString(), 18)
-        );
-      }}
+      amountWei={amountWei}
+      onChange={onChange}
       placeholder={placeholder}
       generateExpectedOutput={generateExpectedOutput}
       disabled={disabled}

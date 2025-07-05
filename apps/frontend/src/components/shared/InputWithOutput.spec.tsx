@@ -15,7 +15,7 @@ describe('InputWithOutput', () => {
 
     const { getByPlaceholderText, getByText } = render(
       <InputWithOutput
-        value="10"
+        amountWei={BigInt(10e18)}
         onChange={mockOnChange}
         placeholder="Enter amount"
         generateExpectedOutput={mockGenerateExpectedOutput}
@@ -24,7 +24,7 @@ describe('InputWithOutput', () => {
 
     expect(getByPlaceholderText('Enter amount')).toBeTruthy();
     expect(getByText('≈ 5 ETH')).toBeTruthy();
-    expect(mockGenerateExpectedOutput).toHaveBeenCalledWith('10');
+    expect(mockGenerateExpectedOutput).toHaveBeenCalledWith('10.0');
   });
 
   it('should call onChange when input value changes', () => {
@@ -32,7 +32,7 @@ describe('InputWithOutput', () => {
 
     const { getByPlaceholderText } = render(
       <InputWithOutput
-        value=""
+        amountWei={0n}
         onChange={mockOnChange}
         placeholder="Enter amount"
         generateExpectedOutput={mockGenerateExpectedOutput}
@@ -44,7 +44,7 @@ describe('InputWithOutput', () => {
       fireEvent.change(input, { target: { value: '25' } });
     });
 
-    expect(mockOnChange).toHaveBeenCalledWith('25');
+    expect(mockOnChange).toHaveBeenCalledWith(BigInt(25e18));
   });
 
   it('should display value in input', () => {
@@ -52,7 +52,7 @@ describe('InputWithOutput', () => {
 
     const { getByPlaceholderText } = render(
       <InputWithOutput
-        value="42"
+        amountWei={BigInt(42e18)}
         onChange={mockOnChange}
         placeholder="Enter amount"
         generateExpectedOutput={mockGenerateExpectedOutput}
@@ -60,7 +60,7 @@ describe('InputWithOutput', () => {
     );
 
     const input = getByPlaceholderText('Enter amount') as HTMLInputElement;
-    expect(input.value).toBe('42');
+    expect(input.value).toBe('42.0');
   });
 
   it('should be disabled when disabled prop is true', () => {
@@ -68,7 +68,7 @@ describe('InputWithOutput', () => {
 
     const { getByPlaceholderText } = render(
       <InputWithOutput
-        value=""
+        amountWei={0n}
         onChange={mockOnChange}
         placeholder="Enter amount"
         generateExpectedOutput={mockGenerateExpectedOutput}
@@ -85,7 +85,7 @@ describe('InputWithOutput', () => {
 
     const { getByPlaceholderText } = render(
       <InputWithOutput
-        value=""
+        amountWei={0n}
         onChange={mockOnChange}
         placeholder="Enter amount"
         generateExpectedOutput={mockGenerateExpectedOutput}
@@ -106,7 +106,7 @@ describe('InputWithOutput', () => {
 
     const { getByPlaceholderText } = render(
       <InputWithOutput
-        value="3.14"
+        amountWei={BigInt(3.14e18)}
         onChange={mockOnChange}
         placeholder="Enter amount"
         generateExpectedOutput={mockGenerateExpectedOutput}
@@ -123,7 +123,7 @@ describe('InputWithOutput', () => {
 
     const { getByPlaceholderText, container } = render(
       <InputWithOutput
-        value=""
+        amountWei={0n}
         onChange={mockOnChange}
         placeholder="Enter amount"
         generateExpectedOutput={mockGenerateExpectedOutput}
@@ -141,7 +141,7 @@ describe('InputWithOutput', () => {
 
     const { container, getByPlaceholderText } = render(
       <InputWithOutput
-        value=""
+        amountWei={0n}
         onChange={mockOnChange}
         placeholder="Enter amount"
         generateExpectedOutput={mockGenerateExpectedOutput}
@@ -166,13 +166,13 @@ describe('InputWithOutput', () => {
 
     render(
       <InputWithOutput
-        value="123"
+        amountWei={BigInt(123e18)}
         onChange={mockOnChange}
         placeholder="Enter amount"
         generateExpectedOutput={mockGenerateExpectedOutput}
       />
     );
 
-    expect(mockGenerateExpectedOutput).toHaveBeenCalledWith('123');
+    expect(mockGenerateExpectedOutput).toHaveBeenCalledWith('123.0');
   });
 });
