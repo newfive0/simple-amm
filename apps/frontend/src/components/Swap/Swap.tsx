@@ -132,13 +132,8 @@ export const Swap = ({
       {swapDirection === 'token-to-eth' ? (
         <SwapInput
           key="token-to-eth"
-          value={tokenAmount === 0n ? '' : ethers.formatUnits(tokenAmount, 18)}
-          onChange={(value) => {
-            const numValue = parseFloat(value || '0');
-            setTokenAmount(
-              isNaN(numValue) ? 0n : ethers.parseUnits(numValue.toString(), 18)
-            );
-          }}
+          amountWei={tokenAmount}
+          onChange={setTokenAmount}
           placeholder="SIMP → ETH"
           onClick={swapTokensForETH}
           buttonText="Swap SIMP for ETH"
@@ -153,13 +148,8 @@ export const Swap = ({
       ) : (
         <SwapInput
           key="eth-to-token"
-          value={ethAmount === 0n ? '' : ethers.formatUnits(ethAmount, 18)}
-          onChange={(value) => {
-            const numValue = parseFloat(value || '0');
-            setEthAmount(
-              isNaN(numValue) ? 0n : ethers.parseUnits(numValue.toString(), 18)
-            );
-          }}
+          amountWei={ethAmount}
+          onChange={setEthAmount}
           placeholder="ETH → SIMP"
           onClick={swapETHForTokens}
           buttonText="Swap ETH for SIMP"

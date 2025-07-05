@@ -29,7 +29,7 @@ export const DisabledSwap = ({
       </div>
       <SwapInput
         key="token-to-eth"
-        value=""
+        amountWei={0n}
         onChange={() => {}}
         placeholder="SIMP → ETH"
         onClick={() => {}}

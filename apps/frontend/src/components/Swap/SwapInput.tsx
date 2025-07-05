@@ -1,9 +1,10 @@
+import { ethers } from 'ethers';
 import { InputWithOutput } from '../shared/InputWithOutput';
 import styles from './Swap.module.scss';
 
 interface SwapInputProps {
-  value: string;
-  onChange: (value: string) => void;
+  amountWei: bigint;
+  onChange: (amountWei: bigint) => void;
   placeholder: string;
   onClick: () => void;
   buttonText: string;
@@ -13,7 +14,7 @@ interface SwapInputProps {
 }
 
 export const SwapInput = ({
-  value,
+  amountWei,
   onChange,
   placeholder,
   onClick,
@@ -24,15 +25,20 @@ export const SwapInput = ({
 }: SwapInputProps) => (
   <>
     <InputWithOutput
-      value={value}
-      onChange={onChange}
+      value={amountWei === 0n ? '' : ethers.formatUnits(amountWei, 18)}
+      onChange={(value) => {
+        const numValue = parseFloat(value || '0');
+        onChange(
+          isNaN(numValue) ? 0n : ethers.parseUnits(numValue.toString(), 18)
+        );
+      }}
       placeholder={placeholder}
       generateExpectedOutput={generateExpectedOutput}
       disabled={disabled}
     />
     <button
       onClick={onClick}
-      disabled={disabled || isLoading || !value}
+      disabled={disabled || isLoading || amountWei === 0n}
       className={styles.swapButton}
     >
       {isLoading ? 'Waiting...' : buttonText}
