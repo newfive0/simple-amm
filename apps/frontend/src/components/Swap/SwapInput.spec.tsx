@@ -5,13 +5,11 @@ import { SwapInput } from './SwapInput';
 const mockOnClick = vi.fn();
 const mockOnChange = vi.fn();
 const mockGenerateExpectedOutput = vi.fn((value: string) =>
-  value
-    ? `≈ ${(parseFloat(value) * 2).toFixed(6)} ETH`
-    : '1 SIMP ≈ 2.000000 ETH'
+  value ? `≈ ${(parseFloat(value) * 2).toFixed(4)} ETH` : '1 SIMP ≈ 2.0000 ETH'
 );
 
 const defaultProps = {
-  value: '',
+  amountWei: 0n,
   onChange: mockOnChange,
   placeholder: 'SIMP → ETH',
   onClick: mockOnClick,
@@ -44,13 +42,13 @@ describe('SwapInput Component', () => {
     it('should show expected output when no value', () => {
       render(<SwapInput {...defaultProps} />);
 
-      expect(screen.getByText('1 SIMP ≈ 2.000000 ETH')).toBeInTheDocument();
+      expect(screen.getByText('1 SIMP ≈ 2.0000 ETH')).toBeInTheDocument();
     });
 
     it('should show calculated output when value is provided', () => {
-      render(<SwapInput {...defaultProps} value="5" />);
+      render(<SwapInput {...defaultProps} amountWei={BigInt(5e18)} />);
 
-      expect(screen.getByText('≈ 10.000000 ETH')).toBeInTheDocument();
+      expect(screen.getByText('≈ 10.0000 ETH')).toBeInTheDocument();
     });
   });
 
@@ -61,11 +59,11 @@ describe('SwapInput Component', () => {
       const input = screen.getByPlaceholderText('SIMP → ETH');
       fireEvent.change(input, { target: { value: '2.5' } });
 
-      expect(mockOnChange).toHaveBeenCalledWith('2.5');
+      expect(mockOnChange).toHaveBeenCalledWith(BigInt(2.5e18));
     });
 
     it('should display the provided value', () => {
-      render(<SwapInput {...defaultProps} value="1.5" />);
+      render(<SwapInput {...defaultProps} amountWei={BigInt(1.5e18)} />);
 
       const input = screen.getByPlaceholderText('SIMP → ETH');
       expect(input).toHaveValue(1.5);
@@ -74,7 +72,7 @@ describe('SwapInput Component', () => {
 
   describe('Button Interaction', () => {
     it('should call onClick when button is clicked', () => {
-      render(<SwapInput {...defaultProps} value="1" />);
+      render(<SwapInput {...defaultProps} amountWei={BigInt(1e18)} />);
 
       const button = screen.getByRole('button', { name: 'Swap SIMP for ETH' });
       fireEvent.click(button);
@@ -83,14 +81,14 @@ describe('SwapInput Component', () => {
     });
 
     it('should be disabled when no value is provided', () => {
-      render(<SwapInput {...defaultProps} value="" />);
+      render(<SwapInput {...defaultProps} amountWei={0n} />);
 
       const button = screen.getByRole('button', { name: 'Swap SIMP for ETH' });
       expect(button).toBeDisabled();
     });
 
     it('should be enabled when value is provided', () => {
-      render(<SwapInput {...defaultProps} value="1" />);
+      render(<SwapInput {...defaultProps} amountWei={BigInt(1e18)} />);
 
       const button = screen.getByRole('button', { name: 'Swap SIMP for ETH' });
       expect(button).toBeEnabled();
@@ -99,7 +97,13 @@ describe('SwapInput Component', () => {
 
   describe('Loading State', () => {
     it('should show loading text when isLoading is true', () => {
-      render(<SwapInput {...defaultProps} value="1" isLoading={true} />);
+      render(
+        <SwapInput
+          {...defaultProps}
+          amountWei={BigInt(1e18)}
+          isLoading={true}
+        />
+      );
 
       expect(
         screen.getByRole('button', { name: 'Waiting...' })
@@ -107,14 +111,26 @@ describe('SwapInput Component', () => {
     });
 
     it('should disable button when isLoading is true', () => {
-      render(<SwapInput {...defaultProps} value="1" isLoading={true} />);
+      render(
+        <SwapInput
+          {...defaultProps}
+          amountWei={BigInt(1e18)}
+          isLoading={true}
+        />
+      );
 
       const button = screen.getByRole('button', { name: 'Waiting...' });
       expect(button).toBeDisabled();
     });
 
     it('should not call onClick when button is clicked during loading', () => {
-      render(<SwapInput {...defaultProps} value="1" isLoading={true} />);
+      render(
+        <SwapInput
+          {...defaultProps}
+          amountWei={BigInt(1e18)}
+          isLoading={true}
+        />
+      );
 
       const button = screen.getByRole('button', { name: 'Waiting...' });
       fireEvent.click(button);
@@ -132,7 +148,9 @@ describe('SwapInput Component', () => {
     });
 
     it('should disable button when disabled prop is true', () => {
-      render(<SwapInput {...defaultProps} value="1" disabled={true} />);
+      render(
+        <SwapInput {...defaultProps} amountWei={BigInt(1e18)} disabled={true} />
+      );
 
       const button = screen.getByRole('button', { name: 'Swap SIMP for ETH' });
       expect(button).toBeDisabled();
@@ -148,7 +166,9 @@ describe('SwapInput Component', () => {
     });
 
     it('should not call onClick when button is disabled', () => {
-      render(<SwapInput {...defaultProps} value="1" disabled={true} />);
+      render(
+        <SwapInput {...defaultProps} amountWei={BigInt(1e18)} disabled={true} />
+      );
 
       const button = screen.getByRole('button', { name: 'Swap SIMP for ETH' });
       fireEvent.click(button);
@@ -159,19 +179,21 @@ describe('SwapInput Component', () => {
 
   describe('Expected Output Generation', () => {
     it('should call generateExpectedOutput with current value', () => {
-      render(<SwapInput {...defaultProps} value="3" />);
+      render(<SwapInput {...defaultProps} amountWei={BigInt(3e18)} />);
 
-      expect(mockGenerateExpectedOutput).toHaveBeenCalledWith('3');
+      expect(mockGenerateExpectedOutput).toHaveBeenCalledWith('3.0');
     });
 
     it('should update expected output when value changes', () => {
-      const { rerender } = render(<SwapInput {...defaultProps} value="1" />);
+      const { rerender } = render(
+        <SwapInput {...defaultProps} amountWei={BigInt(1e18)} />
+      );
 
-      expect(screen.getByText('≈ 2.000000 ETH')).toBeInTheDocument();
+      expect(screen.getByText('≈ 2.0000 ETH')).toBeInTheDocument();
 
-      rerender(<SwapInput {...defaultProps} value="5" />);
+      rerender(<SwapInput {...defaultProps} amountWei={BigInt(5e18)} />);
 
-      expect(screen.getByText('≈ 10.000000 ETH')).toBeInTheDocument();
+      expect(screen.getByText('≈ 10.0000 ETH')).toBeInTheDocument();
     });
   });
 

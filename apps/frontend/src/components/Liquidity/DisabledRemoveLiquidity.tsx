@@ -7,7 +7,7 @@ export const DisabledRemoveLiquidity = () => {
   return (
     <>
       <InputWithOutput
-        value=""
+        amountWei={0n}
         onChange={() => {}}
         placeholder="LP Tokens to Remove"
         generateExpectedOutput={generateExpectedOutput}

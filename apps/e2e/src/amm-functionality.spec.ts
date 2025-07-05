@@ -165,8 +165,8 @@ test.describe('AMM Functionality', () => {
       await simpInput.fill('20');
 
       // Verify inputs are filled correctly
-      await expect(ethInput).toHaveValue('10');
-      await expect(simpInput).toHaveValue('20');
+      await expect(ethInput).toHaveValue('10.0');
+      await expect(simpInput).toHaveValue('20.0');
 
       // Click Add Liquidity button and track gas usage
       const addLiquidityButton = page.getByRole('button', {
@@ -224,7 +224,7 @@ test.describe('AMM Functionality', () => {
       await ethSwapInput.fill('1');
 
       // Verify the input is filled
-      await expect(ethSwapInput).toHaveValue('1');
+      await expect(ethSwapInput).toHaveValue('1.0');
 
       // Wait for SIMP output calculation to appear
       await expect(swapSection.locator('text=/≈.*SIMP/i')).toBeVisible({
@@ -285,7 +285,7 @@ test.describe('AMM Functionality', () => {
       await simpSwapInput.fill('1');
 
       // Verify the input is filled
-      await expect(simpSwapInput).toHaveValue('1');
+      await expect(simpSwapInput).toHaveValue('1.0');
 
       // Wait for ETH output calculation to appear
       await expect(swapSection.locator('text=/≈.*ETH/i')).toBeVisible({

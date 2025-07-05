@@ -24,8 +24,8 @@ const DashboardContent = () => {
     tokenBalance: 0,
   });
   const [poolReserves, setPoolReserves] = useState<PoolReserves>({
-    ethReserve: 0,
-    tokenReserve: 0,
+    ethReserve: 0n,
+    tokenReserve: 0n,
   });
   const [lpTokenBalances, setLpTokenBalances] = useState<LiquidityBalances>({
     userLPTokens: 0,
@@ -37,7 +37,7 @@ const DashboardContent = () => {
   const refreshAllBalances = useCallback(async () => {
     if (!signer || !ethereumProvider || !account) {
       setWalletBalances({ ethBalance: 0, tokenBalance: 0 });
-      setPoolReserves({ ethReserve: 0, tokenReserve: 0 });
+      setPoolReserves({ ethReserve: 0n, tokenReserve: 0n });
       setLpTokenBalances({
         userLPTokens: 0,
         totalLPTokens: 0,
@@ -103,8 +103,8 @@ const DashboardContent = () => {
 };
 
 interface ContractsSectionProps {
-  poolEthReserve: number;
-  poolTokenReserve: number;
+  poolEthReserve: bigint;
+  poolTokenReserve: bigint;
   lpTokenBalances: LiquidityBalances;
   onSwapComplete: () => Promise<void>;
   onLiquidityComplete: () => Promise<void>;

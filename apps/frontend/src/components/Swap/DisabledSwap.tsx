@@ -4,13 +4,13 @@ import { createSwapOutputCalculator } from '../../utils/expectedOutputCalculator
 import styles from './Swap.module.scss';
 
 interface DisabledSwapProps {
-  poolEthReserve?: number;
-  poolTokenReserve?: number;
+  poolEthReserve?: bigint;
+  poolTokenReserve?: bigint;
 }
 
 export const DisabledSwap = ({
-  poolEthReserve = 0,
-  poolTokenReserve = 0,
+  poolEthReserve = 0n,
+  poolTokenReserve = 0n,
 }: DisabledSwapProps) => {
   return (
     <div className={styles.swap}>
@@ -29,7 +29,7 @@ export const DisabledSwap = ({
       </div>
       <SwapInput
         key="token-to-eth"
-        value=""
+        amountWei={0n}
         onChange={() => {}}
         placeholder="SIMP → ETH"
         onClick={() => {}}

@@ -11,7 +11,7 @@ describe('slippageProtection', () => {
       const result = calculateMinAmountWithSlippage(expectedAmount);
 
       // 0.5% slippage = 99.5% of original
-      expect(result).toBe(BigInt(995e15));
+      expect(result).toBe(BigInt(0.995e18));
     });
 
     it('should apply custom slippage tolerance', () => {
@@ -23,7 +23,7 @@ describe('slippageProtection', () => {
       );
 
       // 1% slippage = 99% of original
-      expect(result).toBe(BigInt(990e15));
+      expect(result).toBe(BigInt(0.99e18));
     });
 
     it('should handle 5% slippage tolerance', () => {
@@ -35,7 +35,7 @@ describe('slippageProtection', () => {
       );
 
       // 5% slippage = 95% of original
-      expect(result).toBe(BigInt(950e15));
+      expect(result).toBe(BigInt(0.95e18));
     });
 
     it('should handle small amounts', () => {

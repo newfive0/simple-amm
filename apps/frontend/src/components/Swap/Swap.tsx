@@ -17,8 +17,8 @@ export { DisabledSwap } from './DisabledSwap';
 interface SwapProps {
   ammContract: AMMPool;
   tokenContract: Token;
-  poolEthReserve: number;
-  poolTokenReserve: number;
+  poolEthReserve: bigint;
+  poolTokenReserve: bigint;
   onSwapComplete: () => void;
 }
 
@@ -29,8 +29,8 @@ export const Swap = ({
   poolTokenReserve,
   onSwapComplete,
 }: SwapProps) => {
-  const [ethAmount, setEthAmount] = useState<string>('');
-  const [tokenAmount, setTokenAmount] = useState<string>('');
+  const [ethAmount, setEthAmount] = useState<bigint>(0n);
+  const [tokenAmount, setTokenAmount] = useState<bigint>(0n);
   const [isLoading, setIsLoading] = useState(false);
   const [swapDirection, setSwapDirection] = useState<
     'eth-to-token' | 'token-to-eth'
@@ -39,13 +39,13 @@ export const Swap = ({
 
   // Clear amounts when direction changes
   useEffect(() => {
-    setEthAmount('');
-    setTokenAmount('');
+    setEthAmount(0n);
+    setTokenAmount(0n);
   }, [swapDirection]);
 
   const resetForm = () => {
-    setEthAmount('');
-    setTokenAmount('');
+    setEthAmount(0n);
+    setTokenAmount(0n);
   };
 
   const executeSwapTransaction = async (callback: () => Promise<void>) => {
@@ -72,40 +72,40 @@ export const Swap = ({
   };
 
   const swapETHForTokens = async () => {
-    if (!ethAmount) return;
+    if (ethAmount === 0n) return;
 
     await executeSwapTransaction(async () => {
       // Get expected output from contract and apply slippage protection
       const expectedOutput = await ammContract.getSwapOutput(
         ethers.ZeroAddress,
-        ethers.parseEther(ethAmount)
+        ethAmount
       );
       const minAmountOut = calculateMinAmountWithSlippage(expectedOutput);
 
       const tx = await ammContract.swap(ethers.ZeroAddress, 0, minAmountOut, {
-        value: ethers.parseEther(ethAmount),
+        value: ethAmount,
       });
       await tx.wait();
     });
   };
 
   const swapTokensForETH = async () => {
-    if (!tokenAmount) return;
+    if (tokenAmount === 0n) return;
 
     await executeSwapTransaction(async () => {
-      await approveTokenSpending(tokenAmount);
+      await approveTokenSpending(ethers.formatUnits(tokenAmount, 18));
       const tokenAddress = await tokenContract.getAddress();
 
       // Get expected output from contract and apply slippage protection
       const expectedOutput = await ammContract.getSwapOutput(
         tokenAddress,
-        ethers.parseEther(tokenAmount)
+        tokenAmount
       );
       const minAmountOut = calculateMinAmountWithSlippage(expectedOutput);
 
       const tx = await ammContract.swap(
         tokenAddress,
-        ethers.parseEther(tokenAmount),
+        tokenAmount,
         minAmountOut
       );
       await tx.wait();
@@ -132,7 +132,7 @@ export const Swap = ({
       {swapDirection === 'token-to-eth' ? (
         <SwapInput
           key="token-to-eth"
-          value={tokenAmount}
+          amountWei={tokenAmount}
           onChange={setTokenAmount}
           placeholder="SIMP → ETH"
           onClick={swapTokensForETH}
@@ -148,7 +148,7 @@ export const Swap = ({
       ) : (
         <SwapInput
           key="eth-to-token"
-          value={ethAmount}
+          amountWei={ethAmount}
           onChange={setEthAmount}
           placeholder="ETH → SIMP"
           onClick={swapETHForTokens}

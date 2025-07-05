@@ -21,16 +21,16 @@ interface MockWalletInfoProps {
 interface MockSwapProps {
   ammContract: unknown;
   tokenContract: unknown;
-  poolEthReserve: number;
-  poolTokenReserve: number;
+  poolEthReserve: bigint;
+  poolTokenReserve: bigint;
   onSwapComplete: () => void;
 }
 
 interface MockLiquidityProps {
   ammContract: unknown;
   tokenContract: unknown;
-  poolEthReserve: number;
-  poolTokenReserve: number;
+  poolEthReserve: bigint;
+  poolTokenReserve: bigint;
   lpTokenBalances: {
     userLPTokens: number;
     totalLPTokens: number;
@@ -57,7 +57,8 @@ vi.mock('../Swap/Swap', () => ({
   }: MockSwapProps) => (
     <div data-testid="swap">
       <div>
-        Pool: {poolEthReserve.toFixed(4)} ETH / {poolTokenReserve.toFixed(4)}{' '}
+        Pool: {parseFloat(ethers.formatUnits(poolEthReserve, 18)).toFixed(4)}{' '}
+        ETH / {parseFloat(ethers.formatUnits(poolTokenReserve, 18)).toFixed(4)}{' '}
         SIMP
       </div>
       <button onClick={onSwapComplete}>Complete Swap</button>
@@ -74,7 +75,8 @@ vi.mock('../Liquidity/Liquidity', () => ({
   }: MockLiquidityProps) => (
     <div data-testid="liquidity">
       <div>
-        Pool: {poolEthReserve.toFixed(4)} ETH / {poolTokenReserve.toFixed(4)}{' '}
+        Pool: {parseFloat(ethers.formatUnits(poolEthReserve, 18)).toFixed(4)}{' '}
+        ETH / {parseFloat(ethers.formatUnits(poolTokenReserve, 18)).toFixed(4)}{' '}
         SIMP
       </div>
       <div>LP Tokens: {lpTokenBalances.userLPTokens.toFixed(4)}</div>
@@ -139,8 +141,8 @@ describe('ConnectedDashboard', () => {
     });
 
     mockGetPoolReserves.mockResolvedValue({
-      ethReserve: 10.0,
-      tokenReserve: 20.0,
+      ethReserve: BigInt(10e18),
+      tokenReserve: BigInt(20e18),
     });
 
     mockGetLiquidityBalances.mockResolvedValue({
@@ -318,8 +320,8 @@ describe('ConnectedDashboard', () => {
 
       mockGetWalletBalances.mockRejectedValue(new Error('Network error'));
       mockGetPoolReserves.mockResolvedValue({
-        ethReserve: 10.0,
-        tokenReserve: 20.0,
+        ethReserve: BigInt(10e18),
+        tokenReserve: BigInt(20e18),
       });
       mockGetLiquidityBalances.mockResolvedValue({
         userLPTokens: 5.0,
