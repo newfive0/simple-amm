@@ -32,12 +32,8 @@ export const InputWithOutput = ({
             onChange(0n);
             return;
           }
-          const numValue = parseFloat(value);
-          if (isNaN(numValue)) {
-            return;
-          }
           try {
-            const weiValue = ethers.parseUnits(numValue.toString(), 18);
+            const weiValue = ethers.parseUnits(value, 18);
             onChange(weiValue);
           } catch {
             // Invalid input, ignore
