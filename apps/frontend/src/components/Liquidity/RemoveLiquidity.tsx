@@ -14,8 +14,8 @@ import styles from './RemoveLiquidity.module.scss';
 
 interface RemoveLiquidityProps {
   ammContract: AMMPool;
-  poolEthReserve: number;
-  poolTokenReserve: number;
+  poolEthReserve: bigint;
+  poolTokenReserve: bigint;
   lpTokenBalances: LiquidityBalances;
   onLiquidityComplete: () => void;
 }
@@ -69,7 +69,7 @@ export const RemoveLiquidity = ({
   const generateExpectedOutput = createRemoveLiquidityOutputCalculator(
     poolEthReserve,
     poolTokenReserve,
-    lpTokenBalances.totalLPTokens
+    ethers.parseUnits(lpTokenBalances.totalLPTokens.toString(), 18)
   );
 
   return (

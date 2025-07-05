@@ -18,8 +18,8 @@ const mockOnLiquidityComplete = vi.fn();
 const defaultProps = {
   ammContract,
   tokenContract,
-  poolEthReserve: 10.0,
-  poolTokenReserve: 20.0,
+  poolEthReserve: BigInt(10 * 1e18), // 10 ETH in wei
+  poolTokenReserve: BigInt(20 * 1e18), // 20 tokens in wei
   onLiquidityComplete: mockOnLiquidityComplete,
 };
 
@@ -70,8 +70,8 @@ describe('AddLiquidity', () => {
   it('should not auto-calculate when pool is empty', () => {
     const emptyPoolProps = {
       ...defaultProps,
-      poolEthReserve: 0.0,
-      poolTokenReserve: 0.0,
+      poolEthReserve: 0n,
+      poolTokenReserve: 0n,
     };
     const { getByPlaceholderText } = render(
       <AddLiquidity {...emptyPoolProps} />

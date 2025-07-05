@@ -8,8 +8,8 @@ export interface WalletBalances {
 }
 
 export interface PoolReserves {
-  ethReserve: number;
-  tokenReserve: number;
+  ethReserve: bigint;
+  tokenReserve: bigint;
 }
 
 export interface LiquidityBalances {
@@ -53,8 +53,8 @@ export const getPoolReserves = async (
   ]);
 
   return {
-    ethReserve: Number(ethers.formatEther(ethReserve)),
-    tokenReserve: Number(ethers.formatEther(tokenReserve)),
+    ethReserve,
+    tokenReserve,
   };
 };
 

@@ -24,8 +24,8 @@ const mockOnSwapComplete = vi.fn();
 const defaultProps = {
   ammContract,
   tokenContract,
-  poolEthReserve: 10.0,
-  poolTokenReserve: 20.0,
+  poolEthReserve: BigInt(10 * 1e18), // 10 ETH in wei
+  poolTokenReserve: BigInt(20 * 1e18), // 20 tokens in wei
   onSwapComplete: mockOnSwapComplete,
 };
 
@@ -64,9 +64,9 @@ describe('Swap Component', () => {
       const input = screen.getByPlaceholderText('SIMP → ETH');
       fireEvent.change(input, { target: { value: '5' } });
 
-      // With pool reserves ETH: 10, Token: 20
-      // Expected output: (10 * 5) / (20 + 5) = 2.000000
-      expect(screen.getByText(/≈ 2\.000000 ETH/)).toBeInTheDocument();
+      // With pool reserves ETH: 10, Token: 20 and 0.3% fee
+      // AMM formula: (10 * (5 * 997 / 1000)) / (20 + (5 * 997 / 1000)) ≈ 1.995197
+      expect(screen.getByText(/≈ 1\.995197 ETH/)).toBeInTheDocument();
     });
 
     it('should calculate ETH to Token swap correctly', () => {
@@ -78,14 +78,14 @@ describe('Swap Component', () => {
       const input = screen.getByPlaceholderText('ETH → SIMP');
       fireEvent.change(input, { target: { value: '2' } });
 
-      // With pool reserves ETH: 10, Token: 20
-      // Expected output: (20 * 2) / (10 + 2) = 3.333333
-      expect(screen.getByText(/≈ 3\.333333 SIMP/)).toBeInTheDocument();
+      // With pool reserves ETH: 10, Token: 20 and 0.3% fee
+      // AMM formula: (20 * (2 * 997 / 1000)) / (10 + (2 * 997 / 1000)) ≈ 3.324996
+      expect(screen.getByText(/≈ 3\.324996 SIMP/)).toBeInTheDocument();
     });
 
     it('should handle zero pool reserves', () => {
       render(
-        <Swap {...defaultProps} poolEthReserve={0} poolTokenReserve={0} />
+        <Swap {...defaultProps} poolEthReserve={0n} poolTokenReserve={0n} />
       );
 
       const input = screen.getByPlaceholderText('SIMP → ETH');
@@ -288,7 +288,7 @@ describe('Swap Component', () => {
       // Start with Token to ETH (default)
       const tokenInput = screen.getByPlaceholderText('SIMP → ETH');
       fireEvent.change(tokenInput, { target: { value: '5' } });
-      expect(screen.getByText(/≈ 2\.000000 ETH/)).toBeInTheDocument();
+      expect(screen.getByText(/≈ 1\.995197 ETH/)).toBeInTheDocument();
 
       // Switch to ETH to Token
       const simpTab = screen.getByRole('button', { name: 'SIMP' });
@@ -296,7 +296,7 @@ describe('Swap Component', () => {
 
       const ethInput = screen.getByPlaceholderText('ETH → SIMP');
       fireEvent.change(ethInput, { target: { value: '1' } });
-      expect(screen.getByText(/≈ 1\.818182 SIMP/)).toBeInTheDocument();
+      expect(screen.getByText(/≈ 1\.813222 SIMP/)).toBeInTheDocument();
     });
   });
 });

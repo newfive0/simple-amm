@@ -49,7 +49,12 @@ describe('DisabledSwap Component', () => {
   });
 
   it('should show expected output calculation', () => {
-    render(<DisabledSwap poolEthReserve={10} poolTokenReserve={20} />);
+    render(
+      <DisabledSwap
+        poolEthReserve={BigInt(10 * 1e18)}
+        poolTokenReserve={BigInt(20 * 1e18)}
+      />
+    );
 
     // Should show expected output with specific calculation result
     expect(screen.getByText(/1 SIMP ≈ 0.500000 ETH/)).toBeInTheDocument();
