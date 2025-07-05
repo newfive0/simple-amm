@@ -14,6 +14,14 @@ import {
 } from '../../utils/ammCalculations';
 import styles from './AddLiquidity.module.scss';
 
+// Helper function to format BigInt amounts for input display (removes trailing zeros)
+const formatAmountForInput = (amount: bigint): string => {
+  if (amount === 0n) return '';
+  const formatted = ethers.formatUnits(amount, 18);
+  // Remove trailing zeros and unnecessary decimal point
+  return formatted.replace(/\.?0+$/, '');
+};
+
 interface AddLiquidityProps {
   ammContract: AMMPool;
   tokenContract: Token;
@@ -141,7 +149,7 @@ export const AddLiquidity = ({
           value={
             liquidityEthAmount === 0n
               ? 0
-              : parseFloat(ethers.formatUnits(liquidityEthAmount, 18))
+              : parseFloat(formatAmountForInput(liquidityEthAmount))
           }
           onChange={(value) => {
             const numValue = value || 0;
@@ -155,7 +163,7 @@ export const AddLiquidity = ({
           value={
             liquidityTokenAmount === 0n
               ? 0
-              : parseFloat(ethers.formatUnits(liquidityTokenAmount, 18))
+              : parseFloat(formatAmountForInput(liquidityTokenAmount))
           }
           onChange={(value) => {
             const numValue = value || 0;
