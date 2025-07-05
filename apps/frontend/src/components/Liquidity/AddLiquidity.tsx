@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { ethers } from 'ethers';
 import { Token, AMMPool } from '@typechain-types';
 import { LiquidityInput } from './LiquidityInput';
 import { useErrorMessage } from '../../contexts/ErrorMessageContext';
@@ -13,14 +12,6 @@ import {
   calculateRequiredEthAmount,
 } from '../../utils/ammCalculations';
 import styles from './AddLiquidity.module.scss';
-
-// Helper function to format BigInt amounts for input display (removes trailing zeros)
-const formatAmountForInput = (amount: bigint): string => {
-  if (amount === 0n) return '';
-  const formatted = ethers.formatUnits(amount, 18);
-  // Remove trailing zeros and unnecessary decimal point
-  return formatted.replace(/\.?0+$/, '');
-};
 
 interface AddLiquidityProps {
   ammContract: AMMPool;
@@ -72,9 +63,12 @@ export const AddLiquidity = ({
     }
   };
 
-  const handleEthAmountChange = (value: bigint) => {
-    setLiquidityEthAmount(value);
-    const correspondingTokenAmount = calculateCorrespondingAmount(value, true);
+  const handleEthAmountChange = (valueWei: bigint) => {
+    setLiquidityEthAmount(valueWei);
+    const correspondingTokenAmount = calculateCorrespondingAmount(
+      valueWei,
+      true
+    );
 
     const poolHasLiquidity = poolEthReserve > 0n && poolTokenReserve > 0n;
 
@@ -84,9 +78,12 @@ export const AddLiquidity = ({
     }
   };
 
-  const handleTokenAmountChange = (value: bigint) => {
-    setLiquidityTokenAmount(value);
-    const correspondingEthAmount = calculateCorrespondingAmount(value, false);
+  const handleTokenAmountChange = (valueWei: bigint) => {
+    setLiquidityTokenAmount(valueWei);
+    const correspondingEthAmount = calculateCorrespondingAmount(
+      valueWei,
+      false
+    );
 
     const poolHasLiquidity = poolEthReserve > 0n && poolTokenReserve > 0n;
 
@@ -146,31 +143,13 @@ export const AddLiquidity = ({
     <>
       <div className={styles.inputRow}>
         <LiquidityInput
-          value={
-            liquidityEthAmount === 0n
-              ? 0
-              : parseFloat(formatAmountForInput(liquidityEthAmount))
-          }
-          onChange={(value) => {
-            const numValue = value || 0;
-            handleEthAmountChange(
-              numValue === 0 ? 0n : ethers.parseUnits(numValue.toString(), 18)
-            );
-          }}
+          valueWei={liquidityEthAmount}
+          onChange={handleEthAmountChange}
           placeholder="Enter ETH amount"
         />
         <LiquidityInput
-          value={
-            liquidityTokenAmount === 0n
-              ? 0
-              : parseFloat(formatAmountForInput(liquidityTokenAmount))
-          }
-          onChange={(value) => {
-            const numValue = value || 0;
-            handleTokenAmountChange(
-              numValue === 0 ? 0n : ethers.parseUnits(numValue.toString(), 18)
-            );
-          }}
+          valueWei={liquidityTokenAmount}
+          onChange={handleTokenAmountChange}
           placeholder="Enter SIMP amount"
         />
       </div>

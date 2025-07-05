@@ -1,5 +1,6 @@
 import { render, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
+import { ethers } from 'ethers';
 import { LiquidityInput } from './LiquidityInput';
 
 const mockSetErrorMessage = vi.fn();
@@ -12,7 +13,7 @@ vi.mock('../../contexts/ErrorMessageContext', () => ({
 
 describe('LiquidityInput', () => {
   const defaultProps = {
-    value: 0,
+    valueWei: 0n,
     onChange: vi.fn(),
     placeholder: 'Test placeholder',
   };
@@ -32,7 +33,10 @@ describe('LiquidityInput', () => {
 
   it('should display value when provided', () => {
     const { getByDisplayValue } = render(
-      <LiquidityInput {...defaultProps} value={10.5} />
+      <LiquidityInput
+        {...defaultProps}
+        valueWei={ethers.parseUnits('10.5', 18)}
+      />
     );
 
     expect(getByDisplayValue('10.5')).toBeTruthy();
@@ -40,14 +44,14 @@ describe('LiquidityInput', () => {
 
   it('should show empty string when value is 0', () => {
     const { getByPlaceholderText } = render(
-      <LiquidityInput {...defaultProps} value={0} />
+      <LiquidityInput {...defaultProps} valueWei={0n} />
     );
 
     const input = getByPlaceholderText('Test placeholder');
     expect(input).toHaveValue(null);
   });
 
-  it('should call onChange with numeric value', () => {
+  it('should call onChange with BigInt wei value', () => {
     const mockOnChange = vi.fn();
     const { getByPlaceholderText } = render(
       <LiquidityInput {...defaultProps} onChange={mockOnChange} />
@@ -56,19 +60,23 @@ describe('LiquidityInput', () => {
     const input = getByPlaceholderText('Test placeholder');
     fireEvent.input(input, { target: { value: '123.45' } });
 
-    expect(mockOnChange).toHaveBeenCalledWith(123.45);
+    expect(mockOnChange).toHaveBeenCalledWith(ethers.parseUnits('123.45', 18));
   });
 
   it('should handle empty input', () => {
     const mockOnChange = vi.fn();
     const { getByPlaceholderText } = render(
-      <LiquidityInput {...defaultProps} onChange={mockOnChange} value={5} />
+      <LiquidityInput
+        {...defaultProps}
+        onChange={mockOnChange}
+        valueWei={ethers.parseUnits('5', 18)}
+      />
     );
 
     const input = getByPlaceholderText('Test placeholder') as HTMLInputElement;
     fireEvent.input(input, { target: { value: '' } });
 
-    expect(mockOnChange).toHaveBeenCalledWith(0);
+    expect(mockOnChange).toHaveBeenCalledWith(0n);
   });
 
   it('should be disabled when disabled prop is true', () => {
