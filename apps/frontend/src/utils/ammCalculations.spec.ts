@@ -325,14 +325,19 @@ describe('ammCalculations', () => {
         );
 
       // Should get close to original amounts (some precision loss expected)
-      expect(parseFloat(formatUnits(ethReturned, 18))).toBeCloseTo(
-        parseFloat(formatUnits(ethAmount, 18)),
-        10
-      );
-      expect(parseFloat(formatUnits(tokenReturned, 18))).toBeCloseTo(
-        parseFloat(formatUnits(tokenAmount, 18)),
-        10
-      );
+      // Allow for small precision differences in BigInt calculations
+      const ethDiff =
+        ethReturned > ethAmount
+          ? ethReturned - ethAmount
+          : ethAmount - ethReturned;
+      const tokenDiff =
+        tokenReturned > tokenAmount
+          ? tokenReturned - tokenAmount
+          : tokenAmount - tokenReturned;
+
+      // Tolerance of 1000 wei (very small amount)
+      expect(ethDiff).toBeLessThanOrEqual(1000n);
+      expect(tokenDiff).toBeLessThanOrEqual(1000n);
     });
 
     it('should handle large swap impact on reserves', () => {
