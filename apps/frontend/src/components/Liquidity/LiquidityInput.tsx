@@ -3,14 +3,14 @@ import { useErrorMessage } from '../../contexts/ErrorMessageContext';
 import styles from './InputField.module.scss';
 
 interface LiquidityInputProps {
-  valueWei: bigint;
-  onChange: (valueWei: bigint) => void;
+  amountWei: bigint;
+  onChange: (amountWei: bigint) => void;
   placeholder: string;
   disabled?: boolean;
 }
 
 export const LiquidityInput = ({
-  valueWei,
+  amountWei,
   onChange,
   placeholder,
   disabled = false,
@@ -22,7 +22,7 @@ export const LiquidityInput = ({
       <input
         type="number"
         step="0.01"
-        value={valueWei === 0n ? '' : ethers.formatUnits(valueWei, 18)}
+        value={amountWei === 0n ? '' : ethers.formatUnits(amountWei, 18)}
         onChange={(e) => {
           if (disabled) return;
           const value = e.target.value;

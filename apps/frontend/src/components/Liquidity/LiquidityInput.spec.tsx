@@ -13,7 +13,7 @@ vi.mock('../../contexts/ErrorMessageContext', () => ({
 
 describe('LiquidityInput', () => {
   const defaultProps = {
-    valueWei: 0n,
+    amountWei: 0n,
     onChange: vi.fn(),
     placeholder: 'Test placeholder',
   };
@@ -35,7 +35,7 @@ describe('LiquidityInput', () => {
     const { getByDisplayValue } = render(
       <LiquidityInput
         {...defaultProps}
-        valueWei={ethers.parseUnits('10.5', 18)}
+        amountWei={ethers.parseUnits('10.5', 18)}
       />
     );
 
@@ -44,7 +44,7 @@ describe('LiquidityInput', () => {
 
   it('should show empty string when value is 0', () => {
     const { getByPlaceholderText } = render(
-      <LiquidityInput {...defaultProps} valueWei={0n} />
+      <LiquidityInput {...defaultProps} amountWei={0n} />
     );
 
     const input = getByPlaceholderText('Test placeholder');
@@ -69,7 +69,7 @@ describe('LiquidityInput', () => {
       <LiquidityInput
         {...defaultProps}
         onChange={mockOnChange}
-        valueWei={ethers.parseUnits('5', 18)}
+        amountWei={ethers.parseUnits('5', 18)}
       />
     );
 

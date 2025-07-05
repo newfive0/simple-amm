@@ -18,8 +18,8 @@ const mockOnLiquidityComplete = vi.fn();
 const defaultProps = {
   ammContract,
   tokenContract,
-  poolEthReserve: BigInt(10 * 1e18), // 10 ETH in wei
-  poolTokenReserve: BigInt(20 * 1e18), // 20 tokens in wei
+  poolEthReserve: BigInt(10e18), // 10 ETH in wei
+  poolTokenReserve: BigInt(20e18), // 20 tokens in wei
   onLiquidityComplete: mockOnLiquidityComplete,
 };
 
@@ -121,12 +121,12 @@ describe('AddLiquidity', () => {
     await waitFor(() => {
       expect(mockTokenContract.approve).toHaveBeenCalledWith(
         mockContractAddresses.ammPoolAddress,
-        BigInt(10 * 1e18)
+        BigInt(10e18)
       );
       expect(mockAmmContract.addLiquidity).toHaveBeenCalledWith(
-        BigInt(10 * 1e18),
-        BigInt(995e15), // 0.5% slippage protection applied to 1 ETH
-        { value: BigInt(5 * 1e18) }
+        BigInt(10e18),
+        BigInt(0.995e18), // 0.5% slippage protection applied to 1 ETH
+        { value: BigInt(5e18) }
       );
       expect(mockOnLiquidityComplete).toHaveBeenCalled();
     });

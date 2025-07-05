@@ -33,56 +33,33 @@ export const AddLiquidity = ({
   const [isLoading, setIsLoading] = useState(false);
   const { setErrorMessage } = useErrorMessage();
 
-  const calculateCorrespondingAmount = (
-    amount: bigint,
-    isEthInput: boolean
-  ): bigint => {
-    if (amount === 0n) {
-      return 0n;
-    }
-
-    if (isEthInput) {
-      // Calculate required token amount based on ETH input
-      return calculateRequiredTokenAmount(
-        amount,
-        poolEthReserve,
-        poolTokenReserve
-      );
-    } else {
-      // Calculate required ETH amount based on token input
-      return calculateRequiredEthAmount(
-        amount,
-        poolEthReserve,
-        poolTokenReserve
-      );
-    }
-  };
-
-  const handleEthAmountChange = (valueWei: bigint) => {
-    setLiquidityEthAmount(valueWei);
+  const handleEthAmountChange = (amountWei: bigint) => {
+    setLiquidityEthAmount(amountWei);
 
     const poolHasLiquidity = poolEthReserve > 0n && poolTokenReserve > 0n;
 
     // If pool has liquidity, always update the other field (including clearing it)
     if (poolHasLiquidity) {
-      const correspondingTokenAmount = calculateCorrespondingAmount(
-        valueWei,
-        true
+      const correspondingTokenAmount = calculateRequiredTokenAmount(
+        amountWei,
+        poolEthReserve,
+        poolTokenReserve
       );
       setLiquidityTokenAmount(correspondingTokenAmount);
     }
   };
 
-  const handleTokenAmountChange = (valueWei: bigint) => {
-    setLiquidityTokenAmount(valueWei);
+  const handleTokenAmountChange = (amountWei: bigint) => {
+    setLiquidityTokenAmount(amountWei);
 
     const poolHasLiquidity = poolEthReserve > 0n && poolTokenReserve > 0n;
 
     // If pool has liquidity, always update the other field (including clearing it)
     if (poolHasLiquidity) {
-      const correspondingEthAmount = calculateCorrespondingAmount(
-        valueWei,
-        false
+      const correspondingEthAmount = calculateRequiredEthAmount(
+        amountWei,
+        poolEthReserve,
+        poolTokenReserve
       );
       setLiquidityEthAmount(correspondingEthAmount);
     }
@@ -138,12 +115,12 @@ export const AddLiquidity = ({
     <>
       <div className={styles.inputRow}>
         <LiquidityInput
-          valueWei={liquidityEthAmount}
+          amountWei={liquidityEthAmount}
           onChange={handleEthAmountChange}
           placeholder="Enter ETH amount"
         />
         <LiquidityInput
-          valueWei={liquidityTokenAmount}
+          amountWei={liquidityTokenAmount}
           onChange={handleTokenAmountChange}
           placeholder="Enter SIMP amount"
         />

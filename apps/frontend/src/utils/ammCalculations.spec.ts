@@ -21,14 +21,14 @@ describe('ammCalculations', () => {
 
   describe('Wei conversion utilities', () => {
     it('should convert wei to ETH correctly', () => {
-      expect(formatUnits(1000000000000000000n, 18)).toBe('1.0'); // 1 ETH
-      expect(formatUnits(500000000000000000n, 18)).toBe('0.5'); // 0.5 ETH
+      expect(formatUnits(BigInt(1e18), 18)).toBe('1.0'); // 1 ETH
+      expect(formatUnits(BigInt(0.5e18), 18)).toBe('0.5'); // 0.5 ETH
       expect(formatUnits(0n, 18)).toBe('0.0');
     });
 
     it('should convert ETH to wei correctly', () => {
-      expect(parseUnits('1', 18)).toBe(1000000000000000000n); // 1 ETH
-      expect(parseUnits('0.5', 18)).toBe(500000000000000000n); // 0.5 ETH
+      expect(parseUnits('1', 18)).toBe(BigInt(1e18)); // 1 ETH
+      expect(parseUnits('0.5', 18)).toBe(BigInt(0.5e18)); // 0.5 ETH
       expect(parseUnits('0', 18)).toBe(0n);
     });
   });

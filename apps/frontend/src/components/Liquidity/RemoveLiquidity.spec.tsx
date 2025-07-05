@@ -16,8 +16,8 @@ const mockOnLiquidityComplete = vi.fn();
 
 const defaultProps = {
   ammContract,
-  poolEthReserve: BigInt(10 * 1e18), // 10 ETH in wei
-  poolTokenReserve: BigInt(20 * 1e18), // 20 tokens in wei
+  poolEthReserve: BigInt(10e18), // 10 ETH in wei
+  poolTokenReserve: BigInt(20e18), // 20 tokens in wei
   lpTokenBalances: {
     userLPTokens: 5.0,
     totalLPTokens: 10.0,
@@ -110,9 +110,9 @@ describe('RemoveLiquidity', () => {
 
     await waitFor(() => {
       expect(mockAmmContract.removeLiquidity).toHaveBeenCalledWith(
-        BigInt(2.5 * 1e18),
-        BigInt(995e15), // 0.5% slippage protection applied
-        BigInt(995e15) // 0.5% slippage protection applied
+        BigInt(2.5e18),
+        BigInt(0.995e18), // 0.5% slippage protection applied
+        BigInt(0.995e18) // 0.5% slippage protection applied
       );
       expect(mockOnLiquidityComplete).toHaveBeenCalled();
     });

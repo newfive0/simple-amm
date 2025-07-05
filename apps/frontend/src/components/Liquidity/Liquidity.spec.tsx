@@ -18,8 +18,8 @@ const mockOnLiquidityComplete = vi.fn();
 const defaultProps = {
   ammContract,
   tokenContract,
-  poolEthReserve: BigInt(10 * 1e18), // 10 ETH in wei
-  poolTokenReserve: BigInt(20 * 1e18), // 20 tokens in wei
+  poolEthReserve: BigInt(10e18), // 10 ETH in wei
+  poolTokenReserve: BigInt(20e18), // 20 tokens in wei
   lpTokenBalances: {
     userLPTokens: 5.0,
     totalLPTokens: 10.0,

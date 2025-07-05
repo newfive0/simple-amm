@@ -24,8 +24,8 @@ const mockOnSwapComplete = vi.fn();
 const defaultProps = {
   ammContract,
   tokenContract,
-  poolEthReserve: BigInt(10 * 1e18), // 10 ETH in wei
-  poolTokenReserve: BigInt(20 * 1e18), // 20 tokens in wei
+  poolEthReserve: BigInt(10e18), // 10 ETH in wei
+  poolTokenReserve: BigInt(20e18), // 20 tokens in wei
   onSwapComplete: mockOnSwapComplete,
 };
 
@@ -126,8 +126,8 @@ describe('Swap Component', () => {
         expect(mockTokenContract.approve).toHaveBeenCalled();
         expect(mockAmmContract.swap).toHaveBeenCalledWith(
           mockContractAddresses.tokenAddress,
-          BigInt(1.5 * 1e18), // 1.5 SIMP in wei
-          BigInt(995e15) // 0.5% slippage protection applied
+          BigInt(1.5e18), // 1.5 SIMP in wei
+          BigInt(0.995e18) // 0.5% slippage protection applied
         );
       });
 
@@ -187,7 +187,7 @@ describe('Swap Component', () => {
           ethers.ZeroAddress,
           0,
           BigInt('995000000000000000'), // 0.5% slippage protection applied
-          { value: BigInt(1.5 * 1e18) } // 1.5 ETH in wei
+          { value: BigInt(1.5e18) } // 1.5 ETH in wei
         );
       });
 

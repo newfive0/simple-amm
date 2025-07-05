@@ -51,8 +51,8 @@ describe('DisabledSwap Component', () => {
   it('should show expected output calculation', () => {
     render(
       <DisabledSwap
-        poolEthReserve={BigInt(10 * 1e18)}
-        poolTokenReserve={BigInt(20 * 1e18)}
+        poolEthReserve={BigInt(10e18)}
+        poolTokenReserve={BigInt(20e18)}
       />
     );
 

@@ -80,8 +80,8 @@ export const createDefaultProps = (
   return {
     tokenContract,
     ammContract,
-    poolEthReserve: BigInt(10 * 1e18), // 10 ETH in wei
-    poolTokenReserve: BigInt(20 * 1e18), // 20 tokens in wei
+    poolEthReserve: BigInt(10e18), // 10 ETH in wei
+    poolTokenReserve: BigInt(20e18), // 20 tokens in wei
     ...overrides,
   };
 };
