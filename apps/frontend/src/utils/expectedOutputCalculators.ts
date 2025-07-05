@@ -15,13 +15,11 @@ export const createRemoveLiquidityOutputCalculator = (
   totalLPTokens: bigint
 ) => {
   return (lpAmountString: string): string => {
-    const lpAmount = parseFloat(lpAmountString);
-
-    if (!lpAmount || lpAmount <= 0 || totalLPTokens === 0n) {
+    if (!lpAmountString || lpAmountString === '0' || totalLPTokens === 0n) {
       return '0.0000 SIMP + 0.0000 ETH';
     }
 
-    const lpAmountWei = parseUnits(lpAmount.toString(), 18);
+    const lpAmountWei = parseUnits(lpAmountString, 18);
     const { ethAmount, tokenAmount } = calculateRemoveLiquidityOutput(
       lpAmountWei,
       poolEthReserve,
@@ -62,9 +60,7 @@ export const createSwapOutputCalculator = (
   };
 
   return (inputAmountString: string): string => {
-    const inputAmount = parseFloat(inputAmountString);
-
-    if (!inputAmount || inputAmount <= 0) {
+    if (!inputAmountString || inputAmountString === '0') {
       return getExchangeRate() || `≈ 0 ${outputToken}`;
     }
 
@@ -73,7 +69,7 @@ export const createSwapOutputCalculator = (
     }
 
     // Convert input to wei for calculation
-    const inputAmountWei = parseUnits(inputAmount.toString(), 18);
+    const inputAmountWei = parseUnits(inputAmountString, 18);
     let outputAmountWei: bigint;
 
     if (isEthToToken) {

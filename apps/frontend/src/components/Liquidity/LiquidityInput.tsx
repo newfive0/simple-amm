@@ -30,13 +30,8 @@ export const LiquidityInput = ({
             onChange(0n);
             return;
           }
-          const numValue = parseFloat(value);
-          if (isNaN(numValue)) {
-            setErrorMessage('Please enter a valid number');
-            return;
-          }
           try {
-            const weiValue = ethers.parseUnits(numValue.toString(), 18);
+            const weiValue = ethers.parseUnits(value, 18);
             onChange(weiValue);
           } catch {
             setErrorMessage('Please enter a valid number');
