@@ -14,7 +14,7 @@ export interface PoolReserves {
 }
 
 // Constants
-const INITIAL_ETH = 9999.995796117593;
+const INITIAL_ETH = 9999.9953; // Updated to match actual deployment gas costs
 const INITIAL_SIMP = 1000000;
 
 // Scale factor for integer arithmetic (18 decimal places to match ETH precision)
