@@ -41,11 +41,6 @@ export const AddLiquidity = ({
       return 0n;
     }
 
-    // If pool is empty, don't auto-calculate - let user set initial ratio
-    if (poolEthReserve === 0n || poolTokenReserve === 0n) {
-      return 0n;
-    }
-
     if (isEthInput) {
       // Calculate required token amount based on ETH input
       return calculateRequiredTokenAmount(
@@ -65,30 +60,30 @@ export const AddLiquidity = ({
 
   const handleEthAmountChange = (valueWei: bigint) => {
     setLiquidityEthAmount(valueWei);
-    const correspondingTokenAmount = calculateCorrespondingAmount(
-      valueWei,
-      true
-    );
 
     const poolHasLiquidity = poolEthReserve > 0n && poolTokenReserve > 0n;
 
     // If pool has liquidity, always update the other field (including clearing it)
     if (poolHasLiquidity) {
+      const correspondingTokenAmount = calculateCorrespondingAmount(
+        valueWei,
+        true
+      );
       setLiquidityTokenAmount(correspondingTokenAmount);
     }
   };
 
   const handleTokenAmountChange = (valueWei: bigint) => {
     setLiquidityTokenAmount(valueWei);
-    const correspondingEthAmount = calculateCorrespondingAmount(
-      valueWei,
-      false
-    );
 
     const poolHasLiquidity = poolEthReserve > 0n && poolTokenReserve > 0n;
 
     // If pool has liquidity, always update the other field (including clearing it)
     if (poolHasLiquidity) {
+      const correspondingEthAmount = calculateCorrespondingAmount(
+        valueWei,
+        false
+      );
       setLiquidityEthAmount(correspondingEthAmount);
     }
   };
