@@ -127,7 +127,7 @@ describe('Swap Component', () => {
         expect(mockAmmContract.swap).toHaveBeenCalledWith(
           mockContractAddresses.tokenAddress,
           BigInt(1.5 * 1e18), // 1.5 SIMP in wei
-          BigInt('995000000000000000') // 0.5% slippage protection applied
+          BigInt(995e15) // 0.5% slippage protection applied
         );
       });
 

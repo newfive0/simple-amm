@@ -7,35 +7,35 @@ import {
 describe('slippageProtection', () => {
   describe('calculateMinAmountWithSlippage', () => {
     it('should apply default 0.5% slippage tolerance', () => {
-      const expectedAmount = BigInt('1000000000000000000'); // 1 ETH
+      const expectedAmount = BigInt(1e18); // 1 ETH
       const result = calculateMinAmountWithSlippage(expectedAmount);
 
-      // 0.5% slippage = 99.5% of original = 995000000000000000
-      expect(result).toBe(BigInt('995000000000000000'));
+      // 0.5% slippage = 99.5% of original
+      expect(result).toBe(BigInt(995e15));
     });
 
     it('should apply custom slippage tolerance', () => {
-      const expectedAmount = BigInt('1000000000000000000'); // 1 ETH
+      const expectedAmount = BigInt(1e18); // 1 ETH
       const slippageTolerance = 1.0; // 1%
       const result = calculateMinAmountWithSlippage(
         expectedAmount,
         slippageTolerance
       );
 
-      // 1% slippage = 99% of original = 990000000000000000
-      expect(result).toBe(BigInt('990000000000000000'));
+      // 1% slippage = 99% of original
+      expect(result).toBe(BigInt(990e15));
     });
 
     it('should handle 5% slippage tolerance', () => {
-      const expectedAmount = BigInt('1000000000000000000'); // 1 ETH
+      const expectedAmount = BigInt(1e18); // 1 ETH
       const slippageTolerance = 5.0; // 5%
       const result = calculateMinAmountWithSlippage(
         expectedAmount,
         slippageTolerance
       );
 
-      // 5% slippage = 95% of original = 950000000000000000
-      expect(result).toBe(BigInt('950000000000000000'));
+      // 5% slippage = 95% of original
+      expect(result).toBe(BigInt(950e15));
     });
 
     it('should handle small amounts', () => {
@@ -54,7 +54,7 @@ describe('slippageProtection', () => {
     });
 
     it('should use default slippage tolerance when not provided', () => {
-      const expectedAmount = BigInt('2000000000000000000'); // 2 ETH
+      const expectedAmount = BigInt(2e18); // 2 ETH
       const result = calculateMinAmountWithSlippage(expectedAmount);
 
       // Should use DEFAULT_SLIPPAGE_TOLERANCE (0.5%)
@@ -63,7 +63,7 @@ describe('slippageProtection', () => {
     });
 
     it('should handle fractional percentage calculations correctly', () => {
-      const expectedAmount = BigInt('100000000000000000000'); // 100 ETH
+      const expectedAmount = BigInt(100e18); // 100 ETH
       const slippageTolerance = 0.1; // 0.1%
       const result = calculateMinAmountWithSlippage(
         expectedAmount,

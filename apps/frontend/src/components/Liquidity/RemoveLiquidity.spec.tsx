@@ -111,8 +111,8 @@ describe('RemoveLiquidity', () => {
     await waitFor(() => {
       expect(mockAmmContract.removeLiquidity).toHaveBeenCalledWith(
         BigInt(2.5 * 1e18),
-        BigInt('995000000000000000'), // 0.5% slippage protection applied
-        BigInt('995000000000000000') // 0.5% slippage protection applied
+        BigInt(995e15), // 0.5% slippage protection applied
+        BigInt(995e15) // 0.5% slippage protection applied
       );
       expect(mockOnLiquidityComplete).toHaveBeenCalled();
     });

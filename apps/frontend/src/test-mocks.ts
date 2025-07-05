@@ -44,11 +44,11 @@ export const createMockAMMContract = () => ({
   reserveSimplest: vi.fn(),
   getAddress: vi.fn().mockResolvedValue(mockContractAddresses.ammPoolAddress),
   // New view functions for slippage protection
-  getSwapOutput: vi.fn().mockResolvedValue(BigInt(1000000000000000000)), // 1 ETH in wei
-  getLiquidityOutput: vi.fn().mockResolvedValue(BigInt(1000000000000000000)), // 1 LP token in wei
+  getSwapOutput: vi.fn().mockResolvedValue(BigInt(1e18)), // 1 ETH in wei
+  getLiquidityOutput: vi.fn().mockResolvedValue(BigInt(1e18)), // 1 LP token in wei
   getRemoveLiquidityOutput: vi.fn().mockResolvedValue([
-    BigInt(1000000000000000000), // 1 token in wei
-    BigInt(1000000000000000000), // 1 ETH in wei
+    BigInt(1e18), // 1 token in wei
+    BigInt(1e18), // 1 ETH in wei
   ]),
 });
 
