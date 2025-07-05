@@ -9,6 +9,7 @@ import {
   getFriendlyMessage,
   ERROR_OPERATIONS,
 } from '../../utils/errorMessages';
+import { calculateMinAmountWithSlippage } from '../../utils/slippageProtection';
 import styles from './Swap.module.scss';
 
 export { DisabledSwap } from './DisabledSwap';
@@ -74,7 +75,14 @@ export const Swap = ({
     if (!ethAmount) return;
 
     await executeSwapTransaction(async () => {
-      const tx = await ammContract.swap(ethers.ZeroAddress, 0, {
+      // Get expected output from contract and apply slippage protection
+      const expectedOutput = await ammContract.getSwapOutput(
+        ethers.ZeroAddress,
+        ethers.parseEther(ethAmount)
+      );
+      const minAmountOut = calculateMinAmountWithSlippage(expectedOutput);
+
+      const tx = await ammContract.swap(ethers.ZeroAddress, 0, minAmountOut, {
         value: ethers.parseEther(ethAmount),
       });
       await tx.wait();
@@ -87,9 +95,18 @@ export const Swap = ({
     await executeSwapTransaction(async () => {
       await approveTokenSpending(tokenAmount);
       const tokenAddress = await tokenContract.getAddress();
-      const tx = await ammContract.swap(
+
+      // Get expected output from contract and apply slippage protection
+      const expectedOutput = await ammContract.getSwapOutput(
         tokenAddress,
         ethers.parseEther(tokenAmount)
+      );
+      const minAmountOut = calculateMinAmountWithSlippage(expectedOutput);
+
+      const tx = await ammContract.swap(
+        tokenAddress,
+        ethers.parseEther(tokenAmount),
+        minAmountOut
       );
       await tx.wait();
     });

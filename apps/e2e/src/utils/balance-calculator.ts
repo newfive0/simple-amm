@@ -3,6 +3,8 @@
  * Uses integer arithmetic to match smart contract precision exactly
  */
 
+import { ethers } from 'ethers';
+
 export interface BalanceState {
   ethBalance: number;
   simpBalance: number;
@@ -14,15 +16,15 @@ export interface PoolReserves {
 }
 
 // Constants
-const INITIAL_ETH = 9999.995796117593;
 const INITIAL_SIMP = 1000000;
+const TEST_WALLET_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'; // Hardhat default account 0
 
 // Scale factor for integer arithmetic (18 decimal places to match ETH precision)
 const SCALE = 10n ** 18n;
 
 // Internal state
 let currentBalances: BalanceState = {
-  ethBalance: INITIAL_ETH,
+  ethBalance: 0, // Will be initialized from RPC
   simpBalance: INITIAL_SIMP,
 };
 
@@ -52,10 +54,15 @@ function toNumber(value: bigint): number {
 
 /**
  * Initialize or reset the calculator state
+ * Gets actual ETH balance from RPC to account for deployment gas variations
  */
-export function initializeCalculator(): void {
+export async function initializeCalculator(): Promise<void> {
+  const provider = new ethers.JsonRpcProvider('http://127.0.0.1:8545');
+  const ethBalanceWei = await provider.getBalance(TEST_WALLET_ADDRESS);
+  const ethBalance = Number(ethers.formatEther(ethBalanceWei));
+
   currentBalances = {
-    ethBalance: INITIAL_ETH,
+    ethBalance,
     simpBalance: INITIAL_SIMP,
   };
   currentReserves = {

@@ -7,6 +7,7 @@ import {
   getFriendlyMessage,
   ERROR_OPERATIONS,
 } from '../../utils/errorMessages';
+import { calculateMinAmountWithSlippage } from '../../utils/slippageProtection';
 import styles from './AddLiquidity.module.scss';
 
 interface AddLiquidityProps {
@@ -105,8 +106,16 @@ export const AddLiquidity = ({
     try {
       await approveTokenSpending(liquidityTokenAmount);
 
+      // Get expected LP tokens from contract and apply slippage protection
+      const expectedLPTokens = await ammContract.getLiquidityOutput(
+        ethers.parseEther(liquidityTokenAmount.toString()),
+        ethers.parseEther(liquidityEthAmount.toString())
+      );
+      const minLPTokens = calculateMinAmountWithSlippage(expectedLPTokens);
+
       const addLiquidityTx = await ammContract.addLiquidity(
         ethers.parseEther(liquidityTokenAmount.toString()),
+        minLPTokens,
         { value: ethers.parseEther(liquidityEthAmount.toString()) }
       );
       await addLiquidityTx.wait();

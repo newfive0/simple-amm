@@ -9,6 +9,7 @@ import {
   getFriendlyMessage,
   ERROR_OPERATIONS,
 } from '../../utils/errorMessages';
+import { calculateMinAmountWithSlippage } from '../../utils/slippageProtection';
 import styles from './RemoveLiquidity.module.scss';
 
 interface RemoveLiquidityProps {
@@ -37,8 +38,19 @@ export const RemoveLiquidity = ({
 
     setIsLoading(true);
     try {
+      // Get expected amounts from contract and apply slippage protection
+      const [expectedSimplest, expectedETH] =
+        await ammContract.getRemoveLiquidityOutput(
+          ethers.parseEther(removeLpAmount.toString())
+        );
+      const minAmountSimplest =
+        calculateMinAmountWithSlippage(expectedSimplest);
+      const minAmountETH = calculateMinAmountWithSlippage(expectedETH);
+
       const removeLiquidityTx = await ammContract.removeLiquidity(
-        ethers.parseEther(removeLpAmount.toString())
+        ethers.parseEther(removeLpAmount.toString()),
+        minAmountSimplest,
+        minAmountETH
       );
       await removeLiquidityTx.wait();
 

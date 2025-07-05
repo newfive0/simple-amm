@@ -43,6 +43,13 @@ export const createMockAMMContract = () => ({
   reserveETH: vi.fn(),
   reserveSimplest: vi.fn(),
   getAddress: vi.fn().mockResolvedValue(mockContractAddresses.ammPoolAddress),
+  // New view functions for slippage protection
+  getSwapOutput: vi.fn().mockResolvedValue(BigInt(1e18)), // 1 ETH in wei
+  getLiquidityOutput: vi.fn().mockResolvedValue(BigInt(1e18)), // 1 LP token in wei
+  getRemoveLiquidityOutput: vi.fn().mockResolvedValue([
+    BigInt(1e18), // 1 token in wei
+    BigInt(1e18), // 1 ETH in wei
+  ]),
 });
 
 // Type-safe mock contract factories

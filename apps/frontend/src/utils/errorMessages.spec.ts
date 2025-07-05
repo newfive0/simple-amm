@@ -5,9 +5,12 @@ describe('errorMessages', () => {
   describe('getFriendlyMessage', () => {
     describe('Ethers errors', () => {
       it('should handle ethers ACTION_REJECTED error with shortMessage', () => {
-        const error = new Error('user rejected action');
-        (error as any).code = 'ACTION_REJECTED';
-        (error as any).shortMessage = 'User denied transaction';
+        const error = new Error('user rejected action') as Error & {
+          code?: string;
+          shortMessage?: string;
+        };
+        error.code = 'ACTION_REJECTED';
+        error.shortMessage = 'User denied transaction';
 
         const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
 
@@ -15,8 +18,11 @@ describe('errorMessages', () => {
       });
 
       it('should handle ethers ACTION_REJECTED error without shortMessage', () => {
-        const error = new Error('user rejected action');
-        (error as any).code = 'ACTION_REJECTED';
+        const error = new Error('user rejected action') as Error & {
+          code?: string;
+          shortMessage?: string;
+        };
+        error.code = 'ACTION_REJECTED';
 
         const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
 
@@ -24,9 +30,12 @@ describe('errorMessages', () => {
       });
 
       it('should handle ethers CALL_EXCEPTION error', () => {
-        const error = new Error('execution reverted');
-        (error as any).code = 'CALL_EXCEPTION';
-        (error as any).shortMessage = 'Insufficient balance';
+        const error = new Error('execution reverted') as Error & {
+          code?: string;
+          shortMessage?: string;
+        };
+        error.code = 'CALL_EXCEPTION';
+        error.shortMessage = 'Insufficient balance';
 
         const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
 
@@ -34,9 +43,12 @@ describe('errorMessages', () => {
       });
 
       it('should handle ethers TRANSACTION_REPLACED error', () => {
-        const error = new Error('transaction replaced');
-        (error as any).code = 'TRANSACTION_REPLACED';
-        (error as any).shortMessage = 'Transaction was replaced';
+        const error = new Error('transaction replaced') as Error & {
+          code?: string;
+          shortMessage?: string;
+        };
+        error.code = 'TRANSACTION_REPLACED';
+        error.shortMessage = 'Transaction was replaced';
 
         const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
 
@@ -44,9 +56,12 @@ describe('errorMessages', () => {
       });
 
       it('should handle ethers INSUFFICIENT_FUNDS error', () => {
-        const error = new Error('insufficient funds');
-        (error as any).code = 'INSUFFICIENT_FUNDS';
-        (error as any).shortMessage = 'Not enough ETH for gas';
+        const error = new Error('insufficient funds') as Error & {
+          code?: string;
+          shortMessage?: string;
+        };
+        error.code = 'INSUFFICIENT_FUNDS';
+        error.shortMessage = 'Not enough ETH for gas';
 
         const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
 
@@ -259,9 +274,12 @@ describe('errorMessages', () => {
       });
 
       it('should handle Error with custom properties', () => {
-        const error = new Error('Base error');
-        (error as any).customProp = 'custom value';
-        (error as any).code = 'CUSTOM_CODE';
+        const error = new Error('Base error') as Error & {
+          customProp?: string;
+          code?: string;
+        };
+        error.customProp = 'custom value';
+        error.code = 'CUSTOM_CODE';
 
         const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
 

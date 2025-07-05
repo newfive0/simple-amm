@@ -326,7 +326,7 @@ test.describe('AMM Functionality', () => {
     };
 
     // Initialize the calculator with starting balances and reserves
-    initializeCalculator();
+    await initializeCalculator();
 
     // Execute all steps
     await setupAndConnect();
