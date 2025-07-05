@@ -125,6 +125,7 @@ describe('AddLiquidity', () => {
       );
       expect(mockAmmContract.addLiquidity).toHaveBeenCalledWith(
         BigInt(10 * 1e18),
+        BigInt('995000000000000000'), // 0.5% slippage protection applied to 1 ETH
         { value: BigInt(5 * 1e18) }
       );
       expect(mockOnLiquidityComplete).toHaveBeenCalled();

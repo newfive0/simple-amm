@@ -126,7 +126,8 @@ describe('Swap Component', () => {
         expect(mockTokenContract.approve).toHaveBeenCalled();
         expect(mockAmmContract.swap).toHaveBeenCalledWith(
           mockContractAddresses.tokenAddress,
-          BigInt(1.5 * 1e18) // 1.5 SIMP in wei
+          BigInt(1.5 * 1e18), // 1.5 SIMP in wei
+          BigInt('995000000000000000') // 0.5% slippage protection applied
         );
       });
 
@@ -185,6 +186,7 @@ describe('Swap Component', () => {
         expect(mockAmmContract.swap).toHaveBeenCalledWith(
           ethers.ZeroAddress,
           0,
+          BigInt('995000000000000000'), // 0.5% slippage protection applied
           { value: BigInt(1.5 * 1e18) } // 1.5 ETH in wei
         );
       });
