@@ -2,14 +2,6 @@ import { ethers } from 'ethers';
 import { useErrorMessage } from '../../contexts/ErrorMessageContext';
 import styles from './InputField.module.scss';
 
-// Helper function to format BigInt amounts for input display (removes trailing zeros)
-const formatAmountForInput = (amount: bigint): string => {
-  if (amount === 0n) return '';
-  const formatted = ethers.formatUnits(amount, 18);
-  // Remove trailing zeros and unnecessary decimal point
-  return formatted.replace(/\.?0+$/, '');
-};
-
 interface LiquidityInputProps {
   valueWei: bigint;
   onChange: (valueWei: bigint) => void;
@@ -30,7 +22,7 @@ export const LiquidityInput = ({
       <input
         type="number"
         step="0.01"
-        value={formatAmountForInput(valueWei)}
+        value={valueWei === 0n ? '' : ethers.formatUnits(valueWei, 18)}
         onChange={(e) => {
           if (disabled) return;
           const value = e.target.value;

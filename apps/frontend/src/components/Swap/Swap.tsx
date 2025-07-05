@@ -22,14 +22,6 @@ interface SwapProps {
   onSwapComplete: () => void;
 }
 
-// Helper function to format BigInt amounts for input display (removes trailing zeros)
-const formatAmountForInput = (amount: bigint): string => {
-  if (amount === 0n) return '';
-  const formatted = ethers.formatUnits(amount, 18);
-  // Remove trailing zeros and unnecessary decimal point
-  return formatted.replace(/\.?0+$/, '');
-};
-
 export const Swap = ({
   ammContract,
   tokenContract,
@@ -140,7 +132,7 @@ export const Swap = ({
       {swapDirection === 'token-to-eth' ? (
         <SwapInput
           key="token-to-eth"
-          value={formatAmountForInput(tokenAmount)}
+          value={tokenAmount === 0n ? '' : ethers.formatUnits(tokenAmount, 18)}
           onChange={(value) => {
             const numValue = parseFloat(value || '0');
             setTokenAmount(
@@ -161,7 +153,7 @@ export const Swap = ({
       ) : (
         <SwapInput
           key="eth-to-token"
-          value={formatAmountForInput(ethAmount)}
+          value={ethAmount === 0n ? '' : ethers.formatUnits(ethAmount, 18)}
           onChange={(value) => {
             const numValue = parseFloat(value || '0');
             setEthAmount(
