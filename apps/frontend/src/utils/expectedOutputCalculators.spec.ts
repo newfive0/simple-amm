@@ -76,8 +76,8 @@ describe('expectedOutputCalculators', () => {
         'ETH' // outputToken
       );
 
-      expect(calculator('')).toBe('1 SIMP ≈ 0.500000 ETH');
-      expect(calculator('0')).toBe('1 SIMP ≈ 0.500000 ETH');
+      expect(calculator('')).toBe('1 SIMP ≈ 0.5000 ETH');
+      expect(calculator('0')).toBe('1 SIMP ≈ 0.5000 ETH');
     });
 
     it('should return exchange rate for empty input in ETH to token direction', () => {

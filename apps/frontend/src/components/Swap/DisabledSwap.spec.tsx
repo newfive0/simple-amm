@@ -57,6 +57,6 @@ describe('DisabledSwap Component', () => {
     );
 
     // Should show expected output with specific calculation result
-    expect(screen.getByText(/1 SIMP ≈ 0.500000 ETH/)).toBeInTheDocument();
+    expect(screen.getByText(/1 SIMP ≈ 0.5000 ETH/)).toBeInTheDocument();
   });
 });

@@ -65,8 +65,8 @@ describe('Swap Component', () => {
       fireEvent.change(input, { target: { value: '5' } });
 
       // With pool reserves ETH: 10, Token: 20 and 0.3% fee
-      // AMM formula: (10 * (5 * 997 / 1000)) / (20 + (5 * 997 / 1000)) ≈ 1.995197
-      expect(screen.getByText(/≈ 1\.995197 ETH/)).toBeInTheDocument();
+      // AMM formula: (10 * (5 * 997 / 1000)) / (20 + (5 * 997 / 1000)) ≈ 1.9952
+      expect(screen.getByText(/≈ 1\.9952 ETH/)).toBeInTheDocument();
     });
 
     it('should calculate ETH to Token swap correctly', () => {
@@ -79,8 +79,8 @@ describe('Swap Component', () => {
       fireEvent.change(input, { target: { value: '2' } });
 
       // With pool reserves ETH: 10, Token: 20 and 0.3% fee
-      // AMM formula: (20 * (2 * 997 / 1000)) / (10 + (2 * 997 / 1000)) ≈ 3.324996
-      expect(screen.getByText(/≈ 3\.324996 SIMP/)).toBeInTheDocument();
+      // AMM formula: (20 * (2 * 997 / 1000)) / (10 + (2 * 997 / 1000)) ≈ 3.3250
+      expect(screen.getByText(/≈ 3\.3250 SIMP/)).toBeInTheDocument();
     });
 
     it('should handle zero pool reserves', () => {
@@ -100,7 +100,7 @@ describe('Swap Component', () => {
       const input = screen.getByPlaceholderText('SIMP → ETH');
       fireEvent.change(input, { target: { value: 'invalid' } });
 
-      expect(screen.getByText('1 SIMP ≈ 0.500000 ETH')).toBeInTheDocument();
+      expect(screen.getByText('1 SIMP ≈ 0.5000 ETH')).toBeInTheDocument();
     });
   });
 
@@ -288,7 +288,7 @@ describe('Swap Component', () => {
       // Start with Token to ETH (default)
       const tokenInput = screen.getByPlaceholderText('SIMP → ETH');
       fireEvent.change(tokenInput, { target: { value: '5' } });
-      expect(screen.getByText(/≈ 1\.995197 ETH/)).toBeInTheDocument();
+      expect(screen.getByText(/≈ 1\.9952 ETH/)).toBeInTheDocument();
 
       // Switch to ETH to Token
       const simpTab = screen.getByRole('button', { name: 'SIMP' });
@@ -296,7 +296,7 @@ describe('Swap Component', () => {
 
       const ethInput = screen.getByPlaceholderText('ETH → SIMP');
       fireEvent.change(ethInput, { target: { value: '1' } });
-      expect(screen.getByText(/≈ 1\.813222 SIMP/)).toBeInTheDocument();
+      expect(screen.getByText(/≈ 1\.8132 SIMP/)).toBeInTheDocument();
     });
   });
 });

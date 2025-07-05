@@ -5,9 +5,7 @@ import { SwapInput } from './SwapInput';
 const mockOnClick = vi.fn();
 const mockOnChange = vi.fn();
 const mockGenerateExpectedOutput = vi.fn((value: string) =>
-  value
-    ? `≈ ${(parseFloat(value) * 2).toFixed(6)} ETH`
-    : '1 SIMP ≈ 2.000000 ETH'
+  value ? `≈ ${(parseFloat(value) * 2).toFixed(4)} ETH` : '1 SIMP ≈ 2.0000 ETH'
 );
 
 const defaultProps = {
@@ -44,13 +42,13 @@ describe('SwapInput Component', () => {
     it('should show expected output when no value', () => {
       render(<SwapInput {...defaultProps} />);
 
-      expect(screen.getByText('1 SIMP ≈ 2.000000 ETH')).toBeInTheDocument();
+      expect(screen.getByText('1 SIMP ≈ 2.0000 ETH')).toBeInTheDocument();
     });
 
     it('should show calculated output when value is provided', () => {
       render(<SwapInput {...defaultProps} amountWei={BigInt(5e18)} />);
 
-      expect(screen.getByText('≈ 10.000000 ETH')).toBeInTheDocument();
+      expect(screen.getByText('≈ 10.0000 ETH')).toBeInTheDocument();
     });
   });
 
@@ -191,11 +189,11 @@ describe('SwapInput Component', () => {
         <SwapInput {...defaultProps} amountWei={BigInt(1e18)} />
       );
 
-      expect(screen.getByText('≈ 2.000000 ETH')).toBeInTheDocument();
+      expect(screen.getByText('≈ 2.0000 ETH')).toBeInTheDocument();
 
       rerender(<SwapInput {...defaultProps} amountWei={BigInt(5e18)} />);
 
-      expect(screen.getByText('≈ 10.000000 ETH')).toBeInTheDocument();
+      expect(screen.getByText('≈ 10.0000 ETH')).toBeInTheDocument();
     });
   });
 

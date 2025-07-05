@@ -57,7 +57,7 @@ export const createSwapOutputCalculator = (
     } else {
       // Show 1 SIMP = x ETH
       const rate = calculateExchangeRate(poolTokenReserve, poolEthReserve);
-      return `1 ${inputToken} ≈ ${rate.toFixed(6)} ${outputToken}`;
+      return `1 ${inputToken} ≈ ${rate.toFixed(4)} ${outputToken}`;
     }
   };
 
@@ -94,6 +94,6 @@ export const createSwapOutputCalculator = (
 
     // Convert back to display format
     const outputAmount = parseFloat(formatUnits(outputAmountWei, 18));
-    return `≈ ${outputAmount.toFixed(6)} ${outputToken}`;
+    return `≈ ${outputAmount.toFixed(4)} ${outputToken}`;
   };
 };
