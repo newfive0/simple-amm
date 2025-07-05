@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { LiquidityHeader } from './LiquidityHeader';
 
@@ -37,7 +37,9 @@ describe('LiquidityHeader Component', () => {
     render(<LiquidityHeader {...defaultProps} activeTab="add" />);
 
     const removeButton = screen.getByRole('button', { name: 'Remove' });
-    fireEvent.click(removeButton);
+    act(() => {
+      fireEvent.click(removeButton);
+    });
 
     expect(mockOnTabChange).toHaveBeenCalledWith('remove');
   });
@@ -56,7 +58,9 @@ describe('LiquidityHeader Component', () => {
     render(<LiquidityHeader {...defaultProps} disabled={true} />);
 
     const removeButton = screen.getByRole('button', { name: 'Remove' });
-    fireEvent.click(removeButton);
+    act(() => {
+      fireEvent.click(removeButton);
+    });
 
     expect(mockOnTabChange).not.toHaveBeenCalled();
   });

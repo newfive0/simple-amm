@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { vi, describe, it, expect } from 'vitest';
 import { TabGroup } from './TabGroup';
 
@@ -41,7 +41,9 @@ describe('TabGroup Component', () => {
     render(<TabGroup {...defaultProps} />);
 
     const tab2 = screen.getByRole('button', { name: 'Tab 2' });
-    fireEvent.click(tab2);
+    act(() => {
+      fireEvent.click(tab2);
+    });
 
     expect(mockOnTabChange).toHaveBeenCalledWith('tab2');
   });
@@ -50,7 +52,9 @@ describe('TabGroup Component', () => {
     render(<TabGroup {...defaultProps} />);
 
     const activeTab = screen.getByRole('button', { name: 'Tab 1' });
-    fireEvent.click(activeTab);
+    act(() => {
+      fireEvent.click(activeTab);
+    });
 
     expect(mockOnTabChange).toHaveBeenCalledWith('tab1');
   });
@@ -98,7 +102,9 @@ describe('TabGroup Component', () => {
     render(<TabGroup {...propsWithDisabledTab} />);
 
     const disabledTab = screen.getByRole('button', { name: 'Tab 2' });
-    fireEvent.click(disabledTab);
+    act(() => {
+      fireEvent.click(disabledTab);
+    });
 
     expect(mockOnTabChange).not.toHaveBeenCalled();
   });

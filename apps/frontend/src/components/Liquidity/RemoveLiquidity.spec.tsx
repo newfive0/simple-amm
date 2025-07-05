@@ -1,4 +1,4 @@
-import { render, fireEvent, waitFor } from '@testing-library/react';
+import { render, fireEvent, waitFor, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import { RemoveLiquidity } from './RemoveLiquidity';
 import { createMockContracts } from '../../test-mocks';
@@ -56,7 +56,9 @@ describe('RemoveLiquidity', () => {
     );
 
     const lpInput = getByPlaceholderText('LP Tokens to Remove');
-    fireEvent.change(lpInput, { target: { value: '2.5' } });
+    act(() => {
+      fireEvent.change(lpInput, { target: { value: '2.5' } });
+    });
 
     // 2.5 LP tokens out of 10 total = 25% of pool
     // 25% of 10 ETH = 2.5 ETH
@@ -70,7 +72,9 @@ describe('RemoveLiquidity', () => {
     );
 
     const lpInput = getByPlaceholderText('LP Tokens to Remove');
-    fireEvent.change(lpInput, { target: { value: '' } });
+    act(() => {
+      fireEvent.change(lpInput, { target: { value: '' } });
+    });
 
     expect(getByText('0.0000 SIMP + 0.0000 ETH')).toBeTruthy();
   });
@@ -81,7 +85,9 @@ describe('RemoveLiquidity', () => {
     );
 
     const lpInput = getByPlaceholderText('LP Tokens to Remove');
-    fireEvent.change(lpInput, { target: { value: '1.5' } });
+    act(() => {
+      fireEvent.change(lpInput, { target: { value: '1.5' } });
+    });
 
     // 1.5 LP tokens out of 10 total = 15% of pool
     // 15% of 20 SIMP = 3 SIMP
@@ -95,10 +101,12 @@ describe('RemoveLiquidity', () => {
     );
 
     const lpInput = getByPlaceholderText('LP Tokens to Remove');
-    fireEvent.change(lpInput, { target: { value: '2.5' } });
-
     const removeButton = getByRole('button', { name: 'Remove Liquidity' });
-    fireEvent.click(removeButton);
+
+    act(() => {
+      fireEvent.change(lpInput, { target: { value: '2.5' } });
+      fireEvent.click(removeButton);
+    });
 
     await waitFor(() => {
       expect(mockAmmContract.removeLiquidity).toHaveBeenCalledWith(
@@ -117,12 +125,16 @@ describe('RemoveLiquidity', () => {
     );
 
     const lpInput = getByPlaceholderText('LP Tokens to Remove');
-    fireEvent.change(lpInput, { target: { value: '2.5' } });
-
     const removeButton = getByRole('button', { name: 'Remove Liquidity' });
-    fireEvent.click(removeButton);
 
-    expect(getByRole('button', { name: 'Waiting...' })).toBeTruthy();
+    act(() => {
+      fireEvent.change(lpInput, { target: { value: '2.5' } });
+      fireEvent.click(removeButton);
+    });
+
+    await waitFor(() => {
+      expect(getByRole('button', { name: 'Waiting...' })).toBeTruthy();
+    });
   });
 
   it('should handle transaction errors', async () => {
@@ -135,10 +147,12 @@ describe('RemoveLiquidity', () => {
     );
 
     const lpInput = getByPlaceholderText('LP Tokens to Remove');
-    fireEvent.change(lpInput, { target: { value: '2.5' } });
-
     const removeButton = getByRole('button', { name: 'Remove Liquidity' });
-    fireEvent.click(removeButton);
+
+    act(() => {
+      fireEvent.change(lpInput, { target: { value: '2.5' } });
+      fireEvent.click(removeButton);
+    });
 
     await waitFor(() => {
       expect(mockSetErrorMessage).toHaveBeenCalledWith(
@@ -160,7 +174,9 @@ describe('RemoveLiquidity', () => {
     );
 
     const lpInput = getByPlaceholderText('LP Tokens to Remove');
-    fireEvent.change(lpInput, { target: { value: '10' } });
+    act(() => {
+      fireEvent.change(lpInput, { target: { value: '10' } });
+    });
 
     const removeButton = getByRole('button', { name: 'Remove Liquidity' });
     expect(removeButton).toBeDisabled();
@@ -181,7 +197,9 @@ describe('RemoveLiquidity', () => {
     );
 
     const lpInput = getByPlaceholderText('LP Tokens to Remove');
-    fireEvent.change(lpInput, { target: { value: '1' } });
+    act(() => {
+      fireEvent.change(lpInput, { target: { value: '1' } });
+    });
 
     // With zero total LP tokens, output should be zero
     expect(getByText('0.0000 SIMP + 0.0000 ETH')).toBeTruthy();
