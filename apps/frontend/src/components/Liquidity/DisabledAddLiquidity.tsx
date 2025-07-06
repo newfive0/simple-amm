@@ -6,13 +6,13 @@ export const DisabledAddLiquidity = () => {
     <>
       <div className={styles.inputRow}>
         <LiquidityInput
-          value={0}
+          amountWei={0n}
           onChange={() => {}}
           placeholder="Enter ETH amount"
           disabled={true}
         />
         <LiquidityInput
-          value={0}
+          amountWei={0n}
           onChange={() => {}}
           placeholder="Enter SIMP amount"
           disabled={true}

@@ -1,15 +1,16 @@
+import { ethers } from 'ethers';
 import { useErrorMessage } from '../../contexts/ErrorMessageContext';
 import styles from './InputField.module.scss';
 
 interface LiquidityInputProps {
-  value: number;
-  onChange: (value: number) => void;
+  amountWei: bigint;
+  onChange: (amountWei: bigint) => void;
   placeholder: string;
   disabled?: boolean;
 }
 
 export const LiquidityInput = ({
-  value,
+  amountWei,
   onChange,
   placeholder,
   disabled = false,
@@ -21,20 +22,20 @@ export const LiquidityInput = ({
       <input
         type="number"
         step="0.01"
-        value={value === 0 ? '' : value.toString()}
+        value={amountWei === 0n ? '' : ethers.formatUnits(amountWei, 18)}
         onChange={(e) => {
           if (disabled) return;
           const value = e.target.value;
           if (value === '') {
-            onChange(0);
+            onChange(0n);
             return;
           }
-          const numValue = Number(value);
-          if (isNaN(numValue)) {
+          try {
+            const weiValue = ethers.parseUnits(value, 18);
+            onChange(weiValue);
+          } catch {
             setErrorMessage('Please enter a valid number');
-            return;
           }
-          onChange(numValue);
         }}
         placeholder={placeholder}
         className={styles.input}

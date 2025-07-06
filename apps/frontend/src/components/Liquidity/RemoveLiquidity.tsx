@@ -14,8 +14,8 @@ import styles from './RemoveLiquidity.module.scss';
 
 interface RemoveLiquidityProps {
   ammContract: AMMPool;
-  poolEthReserve: number;
-  poolTokenReserve: number;
+  poolEthReserve: bigint;
+  poolTokenReserve: bigint;
   lpTokenBalances: LiquidityBalances;
   onLiquidityComplete: () => void;
 }
@@ -27,12 +27,12 @@ export const RemoveLiquidity = ({
   lpTokenBalances,
   onLiquidityComplete,
 }: RemoveLiquidityProps) => {
-  const [removeLpAmount, setRemoveLpAmount] = useState<number>(0);
+  const [removeLpAmountWei, setRemoveLpAmountWei] = useState<bigint>(0n);
   const [isLoading, setIsLoading] = useState(false);
   const { setErrorMessage } = useErrorMessage();
 
   const removeLiquidity = async () => {
-    if (!removeLpAmount || removeLpAmount <= 0) {
+    if (removeLpAmountWei === 0n) {
       return;
     }
 
@@ -40,22 +40,20 @@ export const RemoveLiquidity = ({
     try {
       // Get expected amounts from contract and apply slippage protection
       const [expectedSimplest, expectedETH] =
-        await ammContract.getRemoveLiquidityOutput(
-          ethers.parseEther(removeLpAmount.toString())
-        );
+        await ammContract.getRemoveLiquidityOutput(removeLpAmountWei);
       const minAmountSimplest =
         calculateMinAmountWithSlippage(expectedSimplest);
       const minAmountETH = calculateMinAmountWithSlippage(expectedETH);
 
       const removeLiquidityTx = await ammContract.removeLiquidity(
-        ethers.parseEther(removeLpAmount.toString()),
+        removeLpAmountWei,
         minAmountSimplest,
         minAmountETH
       );
       await removeLiquidityTx.wait();
 
       onLiquidityComplete();
-      setRemoveLpAmount(0);
+      setRemoveLpAmountWei(0n);
       setErrorMessage(''); // Clear any previous errors on success
     } catch (error) {
       setErrorMessage(
@@ -69,24 +67,19 @@ export const RemoveLiquidity = ({
   const generateExpectedOutput = createRemoveLiquidityOutputCalculator(
     poolEthReserve,
     poolTokenReserve,
-    lpTokenBalances.totalLPTokens
+    ethers.parseUnits(lpTokenBalances.totalLPTokens.toString(), 18)
+  );
+
+  const userLPTokensWei = ethers.parseUnits(
+    lpTokenBalances.userLPTokens.toString(),
+    18
   );
 
   return (
     <>
       <InputWithOutput
-        value={removeLpAmount === 0 ? '' : removeLpAmount.toString()}
-        onChange={(value) => {
-          if (value === '') {
-            setRemoveLpAmount(0);
-            return;
-          }
-          const numValue = Number(value);
-          if (isNaN(numValue)) {
-            return;
-          }
-          setRemoveLpAmount(numValue);
-        }}
+        amountWei={removeLpAmountWei}
+        onChange={setRemoveLpAmountWei}
         placeholder="LP Tokens to Remove"
         generateExpectedOutput={generateExpectedOutput}
       />
@@ -94,9 +87,8 @@ export const RemoveLiquidity = ({
         onClick={removeLiquidity}
         disabled={
           isLoading ||
-          !removeLpAmount ||
-          removeLpAmount <= 0 ||
-          removeLpAmount > lpTokenBalances.userLPTokens
+          removeLpAmountWei === 0n ||
+          removeLpAmountWei > userLPTokensWei
         }
         className={styles.removeButton}
       >

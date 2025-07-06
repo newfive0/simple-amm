@@ -129,8 +129,8 @@ describe('Balance Utilities', () => {
       const result = await getPoolReserves(mockSigner);
 
       expect(result).toEqual({
-        ethReserve: 10.0,
-        tokenReserve: 20.0,
+        ethReserve: BigInt(10e18),
+        tokenReserve: BigInt(20e18),
       });
 
       expect(mockAmmContract.reserveETH).toHaveBeenCalled();
@@ -144,8 +144,8 @@ describe('Balance Utilities', () => {
       const result = await getPoolReserves(mockSigner);
 
       expect(result).toEqual({
-        ethReserve: 0.0,
-        tokenReserve: 0.0,
+        ethReserve: BigInt(0),
+        tokenReserve: BigInt(0),
       });
     });
 
@@ -156,8 +156,8 @@ describe('Balance Utilities', () => {
       const result = await getPoolReserves(mockSigner);
 
       expect(result).toEqual({
-        ethReserve: 15.5,
-        tokenReserve: 31.25,
+        ethReserve: BigInt(15.5e18),
+        tokenReserve: BigInt(31.25e18),
       });
     });
 
@@ -219,7 +219,10 @@ describe('Balance Utilities', () => {
       ]);
 
       expect(walletBalances).toEqual({ ethBalance: 3.0, tokenBalance: 500.0 });
-      expect(poolBalances).toEqual({ ethReserve: 12.0, tokenReserve: 24.0 });
+      expect(poolBalances).toEqual({
+        ethReserve: BigInt(12e18),
+        tokenReserve: BigInt(24e18),
+      });
     });
 
     it('should handle large numbers correctly', async () => {

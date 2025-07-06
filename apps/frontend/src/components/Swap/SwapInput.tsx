@@ -2,8 +2,8 @@ import { InputWithOutput } from '../shared/InputWithOutput';
 import styles from './Swap.module.scss';
 
 interface SwapInputProps {
-  value: string;
-  onChange: (value: string) => void;
+  amountWei: bigint;
+  onChange: (amountWei: bigint) => void;
   placeholder: string;
   onClick: () => void;
   buttonText: string;
@@ -13,7 +13,7 @@ interface SwapInputProps {
 }
 
 export const SwapInput = ({
-  value,
+  amountWei,
   onChange,
   placeholder,
   onClick,
@@ -24,7 +24,7 @@ export const SwapInput = ({
 }: SwapInputProps) => (
   <>
     <InputWithOutput
-      value={value}
+      amountWei={amountWei}
       onChange={onChange}
       placeholder={placeholder}
       generateExpectedOutput={generateExpectedOutput}
@@ -32,7 +32,7 @@ export const SwapInput = ({
     />
     <button
       onClick={onClick}
-      disabled={disabled || isLoading || !value}
+      disabled={disabled || isLoading || amountWei === 0n}
       className={styles.swapButton}
     >
       {isLoading ? 'Waiting...' : buttonText}

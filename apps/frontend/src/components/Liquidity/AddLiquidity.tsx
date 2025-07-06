@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { ethers } from 'ethers';
 import { Token, AMMPool } from '@typechain-types';
 import { LiquidityInput } from './LiquidityInput';
 import { useErrorMessage } from '../../contexts/ErrorMessageContext';
@@ -8,13 +7,17 @@ import {
   ERROR_OPERATIONS,
 } from '../../utils/errorMessages';
 import { calculateMinAmountWithSlippage } from '../../utils/slippageProtection';
+import {
+  calculateRequiredTokenAmount,
+  calculateRequiredEthAmount,
+} from '../../utils/ammCalculations';
 import styles from './AddLiquidity.module.scss';
 
 interface AddLiquidityProps {
   ammContract: AMMPool;
   tokenContract: Token;
-  poolEthReserve: number;
-  poolTokenReserve: number;
+  poolEthReserve: bigint;
+  poolTokenReserve: bigint;
   onLiquidityComplete: () => void;
 }
 
@@ -25,80 +28,56 @@ export const AddLiquidity = ({
   poolTokenReserve,
   onLiquidityComplete,
 }: AddLiquidityProps) => {
-  const [liquidityEthAmount, setLiquidityEthAmount] = useState<number>(0);
-  const [liquidityTokenAmount, setLiquidityTokenAmount] = useState<number>(0);
+  const [liquidityEthAmount, setLiquidityEthAmount] = useState<bigint>(0n);
+  const [liquidityTokenAmount, setLiquidityTokenAmount] = useState<bigint>(0n);
   const [isLoading, setIsLoading] = useState(false);
   const { setErrorMessage } = useErrorMessage();
 
-  const calculateCorrespondingAmount = (
-    amount: number,
-    isEthInput: boolean
-  ): number => {
-    if (!amount || amount === 0) {
-      return 0;
-    }
+  const handleEthAmountChange = (amountWei: bigint) => {
+    setLiquidityEthAmount(amountWei);
 
-    const poolEthFloat = poolEthReserve;
-    const poolTokenFloat = poolTokenReserve;
-
-    // If pool is empty, don't auto-calculate - let user set initial ratio
-    if (poolEthFloat === 0 || poolTokenFloat === 0) {
-      return 0;
-    }
-
-    if (isEthInput) {
-      // Calculate required token amount based on ETH input
-      return (amount * poolTokenFloat) / poolEthFloat;
-    } else {
-      // Calculate required ETH amount based on token input
-      return (amount * poolEthFloat) / poolTokenFloat;
-    }
-  };
-
-  const handleEthAmountChange = (value: number) => {
-    setLiquidityEthAmount(value);
-    const correspondingTokenAmount = calculateCorrespondingAmount(value, true);
-
-    const poolEthFloat = poolEthReserve;
-    const poolTokenFloat = poolTokenReserve;
-    const poolHasLiquidity = poolEthFloat > 0 && poolTokenFloat > 0;
+    const poolHasLiquidity = poolEthReserve > 0n && poolTokenReserve > 0n;
 
     // If pool has liquidity, always update the other field (including clearing it)
     if (poolHasLiquidity) {
+      const correspondingTokenAmount = calculateRequiredTokenAmount(
+        amountWei,
+        poolEthReserve,
+        poolTokenReserve
+      );
       setLiquidityTokenAmount(correspondingTokenAmount);
     }
   };
 
-  const handleTokenAmountChange = (value: number) => {
-    setLiquidityTokenAmount(value);
-    const correspondingEthAmount = calculateCorrespondingAmount(value, false);
+  const handleTokenAmountChange = (amountWei: bigint) => {
+    setLiquidityTokenAmount(amountWei);
 
-    const poolEthFloat = poolEthReserve;
-    const poolTokenFloat = poolTokenReserve;
-    const poolHasLiquidity = poolEthFloat > 0 && poolTokenFloat > 0;
+    const poolHasLiquidity = poolEthReserve > 0n && poolTokenReserve > 0n;
 
     // If pool has liquidity, always update the other field (including clearing it)
     if (poolHasLiquidity) {
+      const correspondingEthAmount = calculateRequiredEthAmount(
+        amountWei,
+        poolEthReserve,
+        poolTokenReserve
+      );
       setLiquidityEthAmount(correspondingEthAmount);
     }
   };
 
   const resetForm = () => {
-    setLiquidityEthAmount(0);
-    setLiquidityTokenAmount(0);
+    setLiquidityEthAmount(0n);
+    setLiquidityTokenAmount(0n);
   };
 
-  const approveTokenSpending = async (amount: number) => {
+  const approveTokenSpending = async (amount: bigint) => {
     const ammPoolAddress = await ammContract.getAddress();
-    const approveTx = await tokenContract.approve(
-      ammPoolAddress,
-      ethers.parseEther(amount.toString())
-    );
+    const approveTx = await tokenContract.approve(ammPoolAddress, amount);
     await approveTx.wait();
   };
 
   const addLiquidity = async () => {
-    if (!liquidityEthAmount || !liquidityTokenAmount) {
+    if (liquidityEthAmount === 0n || liquidityTokenAmount === 0n) {
       return;
     }
 
@@ -108,15 +87,15 @@ export const AddLiquidity = ({
 
       // Get expected LP tokens from contract and apply slippage protection
       const expectedLPTokens = await ammContract.getLiquidityOutput(
-        ethers.parseEther(liquidityTokenAmount.toString()),
-        ethers.parseEther(liquidityEthAmount.toString())
+        liquidityTokenAmount,
+        liquidityEthAmount
       );
       const minLPTokens = calculateMinAmountWithSlippage(expectedLPTokens);
 
       const addLiquidityTx = await ammContract.addLiquidity(
-        ethers.parseEther(liquidityTokenAmount.toString()),
+        liquidityTokenAmount,
         minLPTokens,
-        { value: ethers.parseEther(liquidityEthAmount.toString()) }
+        { value: liquidityEthAmount }
       );
       await addLiquidityTx.wait();
 
@@ -136,19 +115,21 @@ export const AddLiquidity = ({
     <>
       <div className={styles.inputRow}>
         <LiquidityInput
-          value={liquidityEthAmount}
+          amountWei={liquidityEthAmount}
           onChange={handleEthAmountChange}
           placeholder="Enter ETH amount"
         />
         <LiquidityInput
-          value={liquidityTokenAmount}
+          amountWei={liquidityTokenAmount}
           onChange={handleTokenAmountChange}
           placeholder="Enter SIMP amount"
         />
       </div>
       <button
         onClick={addLiquidity}
-        disabled={isLoading || !liquidityEthAmount || !liquidityTokenAmount}
+        disabled={
+          isLoading || liquidityEthAmount === 0n || liquidityTokenAmount === 0n
+        }
         className={styles.addButton}
       >
         {isLoading ? 'Waiting...' : 'Add Liquidity'}

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ethers } from 'ethers';
 import { Token, AMMPool } from '@typechain-types';
 import { LiquidityBalances } from '../../utils/balances';
 import { LiquidityHeader } from './LiquidityHeader';
@@ -11,8 +12,8 @@ export { DisabledLiquidity } from './DisabledLiquidity';
 interface LiquidityProps {
   ammContract: AMMPool;
   tokenContract: Token;
-  poolEthReserve: number;
-  poolTokenReserve: number;
+  poolEthReserve: bigint;
+  poolTokenReserve: bigint;
   lpTokenBalances: LiquidityBalances;
   onLiquidityComplete: () => void;
 }
@@ -30,8 +31,9 @@ export const Liquidity = ({
   const PoolBalances = () => (
     <div className={styles.poolBalances}>
       <p>
-        <strong>Pool Reserves:</strong> {poolTokenReserve.toFixed(4)} SIMP +{' '}
-        {poolEthReserve.toFixed(4)} ETH
+        <strong>Pool Reserves:</strong>{' '}
+        {parseFloat(ethers.formatUnits(poolTokenReserve, 18)).toFixed(4)} SIMP +{' '}
+        {parseFloat(ethers.formatUnits(poolEthReserve, 18)).toFixed(4)} ETH
       </p>
       {lpTokenBalances.userLPTokens > 0 && (
         <p>
