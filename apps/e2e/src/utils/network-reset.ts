@@ -1,4 +1,4 @@
-import { reset } from '@nomicfoundation/hardhat-network-helpers';
+import { ethers } from 'ethers';
 
 function getDeploymentBlockNumber(): number {
   const blockNumber = process.env.DEPLOYMENT_BLOCK_NUMBER;
@@ -12,5 +12,15 @@ function getDeploymentBlockNumber(): number {
 
 export async function resetToCleanState(): Promise<void> {
   const blockNumber = getDeploymentBlockNumber();
-  await reset('http://localhost:8545', blockNumber);
+  const provider = new ethers.JsonRpcProvider('http://localhost:8545');
+
+  // Reset to specific block using hardhat_reset RPC method
+  await provider.send('hardhat_reset', [
+    {
+      forking: {
+        jsonRpcUrl: 'http://localhost:8545',
+        blockNumber: blockNumber,
+      },
+    },
+  ]);
 }
