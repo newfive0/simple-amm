@@ -74,6 +74,11 @@ test.describe('Transaction Rejection Errors', () => {
     await ethInput.fill('1');
     await simpInput.fill('2');
 
+    // Set up dialog handler for confirmation popup
+    page.on('dialog', async (dialog) => {
+      await dialog.accept();
+    });
+
     // Click Add Liquidity
     const addButton = page.getByRole('button', { name: 'Add Liquidity' });
     await addButton.click();
@@ -107,6 +112,11 @@ test.describe('Transaction Rejection Errors', () => {
     const simpInput = liquiditySection.getByPlaceholder('Enter SIMP amount');
     await ethInput.fill('1');
     await simpInput.fill('2');
+
+    // Set up dialog handler for confirmation popup
+    page.on('dialog', async (dialog) => {
+      await dialog.accept();
+    });
 
     const addButton = page.getByRole('button', { name: 'Add Liquidity' });
     await addButton.click();
@@ -307,6 +317,11 @@ test.describe('Error Clearing', () => {
     const simpInputLiq = liquiditySection.getByPlaceholder('Enter SIMP amount');
     await ethInputLiq.fill('1');
     await simpInputLiq.fill('2');
+
+    // Set up dialog handler for confirmation popup
+    page.on('dialog', async (dialog) => {
+      await dialog.accept();
+    });
 
     const addButton = page.getByRole('button', { name: 'Add Liquidity' });
     await addButton.click();
