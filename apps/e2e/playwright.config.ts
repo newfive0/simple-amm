@@ -10,7 +10,10 @@ export default defineConfig({
   fullyParallel: false, // MetaMask tests should run sequentially
 
   // Always generate HTML report
-  reporter: [['html', { open: 'never' }]],
+  reporter: [
+    ['html', { open: 'never' }],
+    ['@argos-ci/playwright/reporter', { uploadToArgos: !!process.env.CI }],
+  ],
 
   use: {
     baseURL: 'http://localhost:4300',
