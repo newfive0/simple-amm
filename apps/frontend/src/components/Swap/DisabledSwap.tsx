@@ -1,6 +1,6 @@
 import { TabGroup } from '../shared/TabGroup';
 import { SwapInput } from './SwapInput';
-import { createSwapOutputCalculator } from '../../utils/expectedOutputCalculators';
+import { createSwapOutputCalculator } from '../../utils/outputDisplayFormatters';
 import styles from './Swap.module.scss';
 
 interface DisabledSwapProps {

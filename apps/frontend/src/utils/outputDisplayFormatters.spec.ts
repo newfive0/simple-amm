@@ -3,9 +3,9 @@ import { parseUnits } from 'ethers';
 import {
   createRemoveLiquidityOutputCalculator,
   createSwapOutputCalculator,
-} from './expectedOutputCalculators';
+} from './outputDisplayFormatters';
 
-describe('expectedOutputCalculators', () => {
+describe('outputDisplayFormatters', () => {
   describe('createRemoveLiquidityOutputCalculator', () => {
     it('should calculate correct output for valid inputs', () => {
       const calculator = createRemoveLiquidityOutputCalculator(

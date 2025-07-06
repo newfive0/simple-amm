@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import { Token, AMMPool } from '@typechain-types';
 import { TabGroup } from '../shared/TabGroup';
 import { SwapInput } from './SwapInput';
-import { createSwapOutputCalculator } from '../../utils/expectedOutputCalculators';
+import { createSwapOutputCalculator } from '../../utils/outputDisplayFormatters';
 import { useErrorMessage } from '../../contexts/ErrorMessageContext';
 import {
   getFriendlyMessage,

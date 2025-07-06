@@ -3,7 +3,7 @@ import { ethers } from 'ethers';
 import { AMMPool } from '@typechain-types';
 import { LiquidityBalances } from '../../utils/balances';
 import { InputWithOutput } from '../shared/InputWithOutput';
-import { createRemoveLiquidityOutputCalculator } from '../../utils/expectedOutputCalculators';
+import { createRemoveLiquidityOutputCalculator } from '../../utils/outputDisplayFormatters';
 import { useErrorMessage } from '../../contexts/ErrorMessageContext';
 import {
   getFriendlyMessage,
