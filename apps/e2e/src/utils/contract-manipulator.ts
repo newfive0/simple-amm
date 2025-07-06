@@ -50,7 +50,9 @@ export class ContractManipulator {
     const ammAddress = process.env.AMM_POOL_ADDRESS;
 
     if (!tokenAddress || !ammAddress) {
-      throw new Error('TOKEN_ADDRESS and AMM_POOL_ADDRESS environment variables must be set. Run "nx copy-artifacts contracts" first.');
+      throw new Error(
+        'TOKEN_ADDRESS and AMM_POOL_ADDRESS environment variables must be set. Run "nx copy-artifacts contracts" first.'
+      );
     }
 
     this.contractAddresses = {
