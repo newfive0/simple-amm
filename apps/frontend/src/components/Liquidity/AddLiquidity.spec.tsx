@@ -23,10 +23,17 @@ const defaultProps = {
   onLiquidityComplete: mockOnLiquidityComplete,
 };
 
+// Mock window.confirm
+const mockConfirm = vi.fn();
+Object.defineProperty(window, 'confirm', {
+  value: mockConfirm,
+});
+
 describe('AddLiquidity', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSetErrorMessage.mockClear();
+    mockConfirm.mockReturnValue(true); // Default to confirming
     mockTokenContract.approve.mockResolvedValue({
       wait: vi.fn().mockResolvedValue({}),
     });
