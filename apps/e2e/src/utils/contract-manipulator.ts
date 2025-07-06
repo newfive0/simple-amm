@@ -11,8 +11,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Contract addresses (loaded from e2e deployment config)
-const DEPLOYMENT_CONFIG_PATH = '../config/deployment.json';
+// Contract ABI paths
 const AMM_ABI_PATH =
   '../../../../libs/contracts/artifacts/src/AMMPool.sol/AMMPool.json';
 const TOKEN_ABI_PATH =
@@ -46,13 +45,17 @@ export class ContractManipulator {
     this.provider = new ethers.JsonRpcProvider(RPC_URL);
     this.wallet = new ethers.Wallet(TEST_PRIVATE_KEY, this.provider);
 
-    // Load contract addresses from e2e deployment config
-    const configPath = path.resolve(__dirname, DEPLOYMENT_CONFIG_PATH);
-    const deploymentConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    // Load contract addresses from environment variables
+    const tokenAddress = process.env.TOKEN_ADDRESS;
+    const ammAddress = process.env.AMM_POOL_ADDRESS;
+
+    if (!tokenAddress || !ammAddress) {
+      throw new Error('TOKEN_ADDRESS and AMM_POOL_ADDRESS environment variables must be set. Run "nx copy-artifacts contracts" first.');
+    }
 
     this.contractAddresses = {
-      token: deploymentConfig.contractAddresses.token,
-      amm: deploymentConfig.contractAddresses.ammPool,
+      token: tokenAddress,
+      amm: ammAddress,
     };
 
     // Load contract ABIs

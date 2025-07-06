@@ -1,24 +1,13 @@
 import { reset } from '@nomicfoundation/hardhat-network-helpers';
-import * as fs from 'fs';
-import * as path from 'path';
-
-interface DeploymentConfig {
-  contractAddresses: {
-    token: string;
-    ammPool: string;
-  };
-  deployment: {
-    blockNumber: number;
-    chainId: number;
-  };
-  generatedAt: string;
-}
 
 function getDeploymentBlockNumber(): number {
-  const configPath = path.join(__dirname, '..', 'config', 'deployment.json');
-  const configData = fs.readFileSync(configPath, 'utf8');
-  const config: DeploymentConfig = JSON.parse(configData);
-  return config.deployment.blockNumber;
+  const blockNumber = process.env.DEPLOYMENT_BLOCK_NUMBER;
+  if (!blockNumber) {
+    throw new Error(
+      'DEPLOYMENT_BLOCK_NUMBER environment variable not set. Run "nx copy-artifacts contracts" first.'
+    );
+  }
+  return parseInt(blockNumber, 10);
 }
 
 export async function resetToCleanState(): Promise<void> {

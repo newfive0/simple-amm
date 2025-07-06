@@ -128,6 +128,9 @@ importers:
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.1
+      dotenv:
+        specifier: ^16.0.0
+        version: 16.4.7
       ethers:
         specifier: ^6.0.0
         version: 6.14.4

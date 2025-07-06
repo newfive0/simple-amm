@@ -6,7 +6,7 @@
 DEPLOYED_ADDRESSES_SOURCE="$(dirname "$0")/../ignition/deployments/chain-31337/deployed_addresses.json"
 JOURNAL_SOURCE="$(dirname "$0")/../ignition/deployments/chain-31337/journal.jsonl"
 ENV_TARGET="$(dirname "$0")/../../../apps/frontend/artifacts/.env.local"
-E2E_TARGET="$(dirname "$0")/../../../apps/e2e/src/config/deployment.json"
+E2E_ENV_TARGET="$(dirname "$0")/../../../apps/e2e/.env.local"
 
 # Check if deployment files exist
 if [ ! -f "$DEPLOYED_ADDRESSES_SOURCE" ]; then
@@ -43,7 +43,7 @@ if [ -z "$DEPLOYMENT_BLOCK" ]; then
     exit 1
 fi
 
-# Generate .env.local file
+# Generate .env.local file for frontend
 cat > "$ENV_TARGET" << EOF
 # Auto-generated contract addresses from deployment
 # Generated on $(date)
@@ -52,22 +52,14 @@ VITE_AMM_POOL_ADDRESS=$AMM_POOL_ADDRESS
 VITE_NETWORK_CHAIN_ID=31337
 EOF
 
-# Create e2e config directory if it doesn't exist
-mkdir -p "$(dirname "$E2E_TARGET")"
-
-# Generate deployment config for e2e tests
-cat > "$E2E_TARGET" << EOF
-{
-  "contractAddresses": {
-    "token": "$TOKEN_ADDRESS",
-    "ammPool": "$AMM_POOL_ADDRESS"
-  },
-  "deployment": {
-    "blockNumber": $DEPLOYMENT_BLOCK,
-    "chainId": 31337
-  },
-  "generatedAt": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-}
+# Generate .env.local file for e2e tests
+cat > "$E2E_ENV_TARGET" << EOF
+# Auto-generated contract addresses and deployment info for e2e tests
+# Generated on $(date)
+TOKEN_ADDRESS=$TOKEN_ADDRESS
+AMM_POOL_ADDRESS=$AMM_POOL_ADDRESS
+DEPLOYMENT_BLOCK_NUMBER=$DEPLOYMENT_BLOCK
+CHAIN_ID=31337
 EOF
 
 echo "Environment variables generated successfully!"
@@ -75,4 +67,4 @@ echo "Token Address: $TOKEN_ADDRESS"
 echo "AMM Pool Address: $AMM_POOL_ADDRESS"
 echo "Deployment Block: $DEPLOYMENT_BLOCK"
 echo "Frontend config saved to: $ENV_TARGET"
-echo "E2E config saved to: $E2E_TARGET"
+echo "E2E config saved to: $E2E_ENV_TARGET"

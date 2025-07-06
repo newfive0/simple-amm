@@ -58,6 +58,10 @@ done
 echo "Waiting for synpress setup to complete..."
 wait $SYNPRESS_PID
 
+# Install Playwright browsers if not already installed
+echo "Installing Playwright browsers..."
+npx playwright install
+
 # Run tests
 echo "Running e2e tests..."
 npx playwright test --config=playwright.config.ts $GREP_PATTERN $TEST_FILES

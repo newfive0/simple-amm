@@ -18,6 +18,7 @@
     "@playwright/test": "^1.36.0",
     "@synthetixio/synpress": "^4.1.0",
     "@types/node": "^20.0.0",
+    "dotenv": "^16.0.0",
     "ethers": "^6.0.0",
     "typescript": "~5.7.2"
   }
