@@ -9,6 +9,7 @@ import {
 } from './utils/test-helpers';
 import { ContractManipulator } from './utils/contract-manipulator';
 import { initializeCalculator } from './utils/balance-calculator';
+import { resetToCleanState } from './utils/network-reset';
 
 const test = testWithSynpress(metaMaskFixtures(basicSetup));
 const { expect } = test;
@@ -20,6 +21,7 @@ test.describe('Liquidity Slippage Scenarios', () => {
     metamaskPage,
     extensionId,
   }) => {
+    await resetToCleanState();
     const metamask = createMetaMask(context, metamaskPage, extensionId);
     const contractManipulator = new ContractManipulator();
 

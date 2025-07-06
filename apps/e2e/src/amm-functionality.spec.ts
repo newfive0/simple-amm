@@ -11,6 +11,7 @@ import {
 } from './utils/balance-calculator';
 import { getGasCostsFromRecentTransactions } from './utils/gas-tracker';
 import { createMetaMask, connectWallet } from './utils/test-helpers';
+import { resetToCleanState } from './utils/network-reset';
 
 const test = testWithSynpress(metaMaskFixtures(basicSetup));
 const { expect } = test;
@@ -18,6 +19,7 @@ const { expect } = test;
 test('should display AMM page with disabled elements before connection', async ({
   page,
 }) => {
+  await resetToCleanState();
   await page.goto('/');
 
   // Wait for the main heading to be visible
@@ -75,6 +77,7 @@ test.describe('AMM Functionality', () => {
     metamaskPage,
     extensionId,
   }) => {
+    await resetToCleanState();
     const metamask = createMetaMask(context, metamaskPage, extensionId);
 
     // Helper function to handle MetaMask transactions with 3 confirmations and return gas cost

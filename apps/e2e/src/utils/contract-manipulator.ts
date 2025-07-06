@@ -11,9 +11,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Contract addresses (loaded from deployment artifacts)
-const DEPLOYED_ADDRESSES_PATH =
-  '../../../../libs/contracts/ignition/deployments/chain-31337/deployed_addresses.json';
+// Contract addresses (loaded from e2e deployment config)
+const DEPLOYMENT_CONFIG_PATH = '../config/deployment.json';
 const AMM_ABI_PATH =
   '../../../../libs/contracts/artifacts/src/AMMPool.sol/AMMPool.json';
 const TOKEN_ABI_PATH =
@@ -47,15 +46,13 @@ export class ContractManipulator {
     this.provider = new ethers.JsonRpcProvider(RPC_URL);
     this.wallet = new ethers.Wallet(TEST_PRIVATE_KEY, this.provider);
 
-    // Load contract addresses
-    const addressesPath = path.resolve(__dirname, DEPLOYED_ADDRESSES_PATH);
-    const deployedAddresses = JSON.parse(
-      fs.readFileSync(addressesPath, 'utf8')
-    );
+    // Load contract addresses from e2e deployment config
+    const configPath = path.resolve(__dirname, DEPLOYMENT_CONFIG_PATH);
+    const deploymentConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
     this.contractAddresses = {
-      token: deployedAddresses['TokenModule#SimplestToken'],
-      amm: deployedAddresses['AMMPoolModule#AMMPool'],
+      token: deploymentConfig.contractAddresses.token,
+      amm: deploymentConfig.contractAddresses.ammPool,
     };
 
     // Load contract ABIs

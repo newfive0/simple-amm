@@ -4,11 +4,18 @@
 # This automatically creates .env.local with contract addresses after deployment
 
 DEPLOYED_ADDRESSES_SOURCE="$(dirname "$0")/../ignition/deployments/chain-31337/deployed_addresses.json"
+JOURNAL_SOURCE="$(dirname "$0")/../ignition/deployments/chain-31337/journal.jsonl"
 ENV_TARGET="$(dirname "$0")/../../../apps/frontend/artifacts/.env.local"
+E2E_TARGET="$(dirname "$0")/../../../apps/e2e/src/config/deployment.json"
 
-# Check if deployment file exists
+# Check if deployment files exist
 if [ ! -f "$DEPLOYED_ADDRESSES_SOURCE" ]; then
     echo "Error: Deployed addresses not found at $DEPLOYED_ADDRESSES_SOURCE"
+    exit 1
+fi
+
+if [ ! -f "$JOURNAL_SOURCE" ]; then
+    echo "Error: Deployment journal not found at $JOURNAL_SOURCE"
     exit 1
 fi
 
@@ -22,9 +29,17 @@ mkdir -p "$(dirname "$ENV_TARGET")"
 TOKEN_ADDRESS=$(cat "$DEPLOYED_ADDRESSES_SOURCE" | grep -o '"TokenModule#SimplestToken": "[^"]*"' | cut -d'"' -f4)
 AMM_POOL_ADDRESS=$(cat "$DEPLOYED_ADDRESSES_SOURCE" | grep -o '"AMMPoolModule#AMMPool": "[^"]*"' | cut -d'"' -f4)
 
-# Validate addresses were extracted
+# Extract deployment block number (last deployment completed)
+DEPLOYMENT_BLOCK=$(grep '"blockNumber"' "$JOURNAL_SOURCE" | tail -1 | grep -o '"blockNumber":[0-9]*' | cut -d':' -f2)
+
+# Validate addresses and block number were extracted
 if [ -z "$TOKEN_ADDRESS" ] || [ -z "$AMM_POOL_ADDRESS" ]; then
     echo "Error: Could not extract contract addresses from deployment file"
+    exit 1
+fi
+
+if [ -z "$DEPLOYMENT_BLOCK" ]; then
+    echo "Error: Could not extract deployment block number from journal file"
     exit 1
 fi
 
@@ -37,7 +52,27 @@ VITE_AMM_POOL_ADDRESS=$AMM_POOL_ADDRESS
 VITE_NETWORK_CHAIN_ID=31337
 EOF
 
+# Create e2e config directory if it doesn't exist
+mkdir -p "$(dirname "$E2E_TARGET")"
+
+# Generate deployment config for e2e tests
+cat > "$E2E_TARGET" << EOF
+{
+  "contractAddresses": {
+    "token": "$TOKEN_ADDRESS",
+    "ammPool": "$AMM_POOL_ADDRESS"
+  },
+  "deployment": {
+    "blockNumber": $DEPLOYMENT_BLOCK,
+    "chainId": 31337
+  },
+  "generatedAt": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+}
+EOF
+
 echo "Environment variables generated successfully!"
 echo "Token Address: $TOKEN_ADDRESS"
 echo "AMM Pool Address: $AMM_POOL_ADDRESS"
-echo "Saved to: $ENV_TARGET"
+echo "Deployment Block: $DEPLOYMENT_BLOCK"
+echo "Frontend config saved to: $ENV_TARGET"
+echo "E2E config saved to: $E2E_TARGET"
