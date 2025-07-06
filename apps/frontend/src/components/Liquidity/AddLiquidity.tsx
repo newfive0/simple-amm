@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ethers } from 'ethers';
 import { Token, AMMPool } from '@typechain-types';
 import { LiquidityInput } from './LiquidityInput';
 import { useErrorMessage } from '../../contexts/ErrorMessageContext';
@@ -90,15 +91,15 @@ export const AddLiquidity = ({
       );
 
       // Show alert with expected output and wait for user confirmation
-      const ethAmount = Number(liquidityEthAmount) / 1e18;
-      const simpAmount = Number(liquidityTokenAmount) / 1e18;
-      const expectedLP = Number(expectedLPTokens) / 1e18;
+      const ethAmount = ethers.formatEther(liquidityEthAmount);
+      const simpAmount = ethers.formatUnits(liquidityTokenAmount, 18);
+      const expectedLP = ethers.formatUnits(expectedLPTokens, 18);
 
       const confirmed = window.confirm(
         `Expected Output:\n` +
-          `ETH: ${ethAmount.toFixed(4)}\n` +
-          `SIMP: ${simpAmount.toFixed(4)}\n` +
-          `Expected LP Tokens: ${expectedLP.toFixed(4)}\n\n` +
+          `ETH: ${Number(ethAmount).toFixed(4)}\n` +
+          `SIMP: ${Number(simpAmount).toFixed(4)}\n` +
+          `Expected LP Tokens: ${Number(expectedLP).toFixed(4)}\n\n` +
           `Do you want to proceed?`
       );
 
