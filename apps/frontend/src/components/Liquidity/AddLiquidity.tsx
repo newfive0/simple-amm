@@ -83,13 +83,34 @@ export const AddLiquidity = ({
 
     setIsLoading(true);
     try {
-      await approveTokenSpending(liquidityTokenAmount);
-
-      // Get expected LP tokens from contract and apply slippage protection
+      // Get expected LP tokens from contract FIRST
       const expectedLPTokens = await ammContract.getLiquidityOutput(
         liquidityTokenAmount,
         liquidityEthAmount
       );
+
+      // Show alert with expected output and wait for user confirmation
+      const ethAmount = Number(liquidityEthAmount) / 1e18;
+      const simpAmount = Number(liquidityTokenAmount) / 1e18;
+      const expectedLP = Number(expectedLPTokens) / 1e18;
+
+      const confirmed = window.confirm(
+        `Expected Output:\n` +
+          `ETH: ${ethAmount.toFixed(4)}\n` +
+          `SIMP: ${simpAmount.toFixed(4)}\n` +
+          `Expected LP Tokens: ${expectedLP.toFixed(4)}\n\n` +
+          `Do you want to proceed?`
+      );
+
+      if (!confirmed) {
+        setIsLoading(false);
+        return;
+      }
+
+      // After user confirmation, proceed with approval
+      await approveTokenSpending(liquidityTokenAmount);
+
+      // Apply slippage protection using the previously fetched expected amount
       const minLPTokens = calculateMinAmountWithSlippage(expectedLPTokens);
 
       const addLiquidityTx = await ammContract.addLiquidity(

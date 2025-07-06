@@ -37,10 +37,9 @@ contract AMMPool {
         if (totalLPTokens == 0) {
             lpTokenAmount = Math.sqrt(amountSimplest * msg.value);
         } else {
-            lpTokenAmount = min(
-                (amountSimplest * totalLPTokens) / reserveSimplest,
-                (msg.value * totalLPTokens) / reserveETH
-            );
+            uint256 lpFromSimplest = (amountSimplest * totalLPTokens) / reserveSimplest;
+            uint256 lpFromETH = (msg.value * totalLPTokens) / reserveETH;
+            lpTokenAmount = min(lpFromSimplest, lpFromETH);
         }
 
         if (lpTokenAmount < minLPTokens) revert InsufficientOutput();

@@ -174,6 +174,11 @@ test.describe('AMM Functionality', () => {
       });
       await expect(addLiquidityButton).toBeEnabled();
 
+      // Set up dialog handler for confirmation popup
+      page.on('dialog', async (dialog) => {
+        await dialog.accept();
+      });
+
       // Perform add liquidity operation
       await addLiquidityButton.click();
       const gasUsed = await handleTripleConfirmation();
