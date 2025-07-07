@@ -83,6 +83,20 @@
         "cwd": "libs/contracts"
       }
     },
+    "copy-typechain-types": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./scripts/copy-typechain-types.sh",
+        "cwd": "libs/contracts"
+      }
+    },
+    "copy-deploy-addresses": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "./scripts/copy-deploy-addresses.sh",
+        "cwd": "libs/contracts"
+      }
+    },
     "install": {
       "executor": "nx:run-commands",
       "options": {

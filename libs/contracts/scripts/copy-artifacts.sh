@@ -1,68 +1,16 @@
 #!/bin/bash
 
-# Script to generate environment variables from deployed contract addresses
-# This automatically creates .env.local with contract addresses after deployment
+# Script to copy both deployed contract addresses and TypeChain types
+# This is a convenience script that runs both copy-deploy-addresses.sh and copy-typechain-types.sh
 
-DEPLOYED_ADDRESSES_SOURCE="$(dirname "$0")/../ignition/deployments/chain-31337/deployed_addresses.json"
-FRONTEND_ENV_TARGET="$(dirname "$0")/../../../apps/frontend/artifacts/.env.local"
-E2E_ENV_TARGET="$(dirname "$0")/../../../apps/e2e/artifacts/.env.local"
+SCRIPT_DIR="$(dirname "$0")"
 
-# Check if deployment file exists
-if [ ! -f "$DEPLOYED_ADDRESSES_SOURCE" ]; then
-    echo "Error: Deployed addresses not found at $DEPLOYED_ADDRESSES_SOURCE"
-    exit 1
-fi
+echo "Copying deployed contract addresses..."
+"$SCRIPT_DIR/copy-deploy-addresses.sh"
 
-# Extract addresses from JSON and generate environment variables
-echo "Generating environment variables from deployed addresses..."
+echo ""
+echo "Copying TypeChain types..."
+"$SCRIPT_DIR/copy-typechain-types.sh"
 
-# Create artifacts directories if they don't exist
-mkdir -p "$(dirname "$FRONTEND_ENV_TARGET")"
-mkdir -p "$(dirname "$E2E_ENV_TARGET")"
-
-# Parse JSON and extract addresses
-TOKEN_ADDRESS=$(cat "$DEPLOYED_ADDRESSES_SOURCE" | grep -o '"TokenModule#SimplestToken": "[^"]*"' | cut -d'"' -f4)
-AMM_POOL_ADDRESS=$(cat "$DEPLOYED_ADDRESSES_SOURCE" | grep -o '"AMMPoolModule#AMMPool": "[^"]*"' | cut -d'"' -f4)
-
-# Validate addresses were extracted
-if [ -z "$TOKEN_ADDRESS" ] || [ -z "$AMM_POOL_ADDRESS" ]; then
-    echo "Error: Could not extract contract addresses from deployment file"
-    exit 1
-fi
-
-# Generate .env.local files for both frontend and e2e
-generate_env_file() {
-    local target_file="$1"
-    cat > "$target_file" << EOF
-# Auto-generated contract addresses from deployment
-# Generated on $(date)
-VITE_TOKEN_ADDRESS=$TOKEN_ADDRESS
-VITE_AMM_POOL_ADDRESS=$AMM_POOL_ADDRESS
-VITE_NETWORK_CHAIN_ID=31337
-EOF
-}
-
-# Generate environment files
-generate_env_file "$FRONTEND_ENV_TARGET"
-generate_env_file "$E2E_ENV_TARGET"
-
-# Copy TypeChain types to both frontend and e2e projects
-TYPECHAIN_SOURCE="$(dirname "$0")/../artifacts/typechain-types"
-TYPECHAIN_FRONTEND_TARGET="$(dirname "$0")/../../../apps/frontend/artifacts/typechain-types"
-TYPECHAIN_E2E_TARGET="$(dirname "$0")/../../../apps/e2e/artifacts/typechain-types"
-
-if [ -d "$TYPECHAIN_SOURCE" ]; then
-    echo "Copying TypeChain artifacts to frontend and e2e projects..."
-    cp -r "$TYPECHAIN_SOURCE" "$TYPECHAIN_FRONTEND_TARGET"
-    cp -r "$TYPECHAIN_SOURCE" "$TYPECHAIN_E2E_TARGET"
-    echo "TypeChain artifacts copied to both projects!"
-else
-    echo "Warning: TypeChain artifacts not found at $TYPECHAIN_SOURCE"
-    echo "Run 'nx build contracts' to generate TypeChain types first"
-fi
-
-echo "Environment variables generated successfully!"
-echo "Token Address: $TOKEN_ADDRESS"
-echo "AMM Pool Address: $AMM_POOL_ADDRESS"
-echo "Frontend env saved to: $FRONTEND_ENV_TARGET"
-echo "E2E env saved to: $E2E_ENV_TARGET"
+echo ""
+echo "All artifacts copied successfully!"
