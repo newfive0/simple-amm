@@ -48,26 +48,16 @@ export class ContractManipulator {
 
     try {
       // Approve token spending
-      console.log(
-        `[ContractManipulator] Approving ${ethers.formatEther(tokenAmount)} SIMP tokens`
-      );
       const approveTx = await this.tokenContract.approve(
         await this.ammContract.getAddress(),
         tokenAmount
       );
       await approveTx.wait();
 
-      // Get expected LP tokens for minimal slippage protection
-      const expectedLPTokens = await this.ammContract.getLiquidityOutput(
-        tokenAmount,
-        ethAmount
-      );
-      const minLPTokens = (expectedLPTokens * 995n) / 1000n; // 0.5% slippage tolerance
-
-      // Add liquidity to pool
+      // Add liquidity to pool (no slippage protection for simplicity)
       const addLiquidityTx = await this.ammContract.addLiquidity(
         tokenAmount,
-        minLPTokens,
+        0, // minLPTokens = 0 for simplicity
         { value: ethAmount }
       );
       await addLiquidityTx.wait();
@@ -88,24 +78,11 @@ export class ContractManipulator {
     );
 
     try {
-      // Get expected outputs for slippage protection
-      const ethReserve = await this.ammContract.reserveETH();
-      const tokenReserve = await this.ammContract.reserveSimplest();
-      const totalLPTokens = await this.ammContract.totalLPTokens();
-
-      // Calculate expected outputs (proportional to LP token share)
-      const expectedEth = (ethReserve * lpTokenAmount) / totalLPTokens;
-      const expectedTokens = (tokenReserve * lpTokenAmount) / totalLPTokens;
-
-      // Apply slippage tolerance
-      const minEth = (expectedEth * 995n) / 1000n; // 0.5% slippage
-      const minTokens = (expectedTokens * 995n) / 1000n; // 0.5% slippage
-
-      // Remove liquidity
+      // Remove liquidity (no slippage protection for simplicity)
       const removeLiquidityTx = await this.ammContract.removeLiquidity(
         lpTokenAmount,
-        minEth,
-        minTokens
+        0, // minAmountSimplest = 0 for simplicity
+        0 // minAmountETH = 0 for simplicity
       );
       await removeLiquidityTx.wait();
 
@@ -125,17 +102,12 @@ export class ContractManipulator {
     );
 
     try {
-      const tokenAddress = await this.tokenContract.getAddress();
-      const minTokenOutput = await this.ammContract.getSwapOutput(
-        tokenAddress,
-        ethAmount
-      );
-      const minTokenAmount = (minTokenOutput * 995n) / 1000n; // 0.5% slippage
-
+      // For ETH → SIMP swap: tokenIn = address(0), amountIn = 0 (uses msg.value), minAmountOut = 0
+      const ethAddress = '0x0000000000000000000000000000000000000000';
       const swapTx = await this.ammContract.swap(
-        tokenAddress,
-        ethAmount,
-        minTokenAmount,
+        ethAddress, // tokenIn = address(0) for ETH
+        0, // amountIn = 0 since we use msg.value for ETH amount
+        0, // minAmountOut = 0 for simplicity
         { value: ethAmount }
       );
       await swapTx.wait();
@@ -165,17 +137,12 @@ export class ContractManipulator {
       );
       await approveTx.wait();
 
-      const ethAddress = '0x0000000000000000000000000000000000000000'; // ETH address
-      const minEthOutput = await this.ammContract.getSwapOutput(
-        ethAddress,
-        tokenAmount
-      );
-      const minEthAmount = (minEthOutput * 995n) / 1000n; // 0.5% slippage
-
+      // For SIMP → ETH swap: tokenIn = tokenAddress, amountIn = tokenAmount, minAmountOut = 0
+      const tokenAddress = await this.tokenContract.getAddress();
       const swapTx = await this.ammContract.swap(
-        ethAddress,
-        tokenAmount,
-        minEthAmount
+        tokenAddress, // tokenIn = token address for SIMP
+        tokenAmount, // amountIn = token amount to swap
+        0 // minAmountOut = 0 for simplicity
       );
       await swapTx.wait();
 
