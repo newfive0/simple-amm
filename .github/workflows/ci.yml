@@ -38,6 +38,9 @@ jobs:
       - name: Build contracts (generates TypeChain types)
         run: pnpm exec nx build contracts
 
+      - name: Copy TypeChain types before lint/typecheck
+        run: pnpm exec nx copy-typechain-types contracts
+
       - name: Lint all projects
         run: pnpm exec nx run-many -t lint
 
