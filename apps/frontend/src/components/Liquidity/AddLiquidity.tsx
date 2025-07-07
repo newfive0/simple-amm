@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Token, AMMPool } from '@typechain-types';
 import { LiquidityInput } from './LiquidityInput';
+import { ConfirmationDialog } from '../shared/ConfirmationDialog';
 import { useErrorMessage } from '../../contexts/ErrorMessageContext';
 import {
   getFriendlyMessage,
@@ -31,6 +32,8 @@ export const AddLiquidity = ({
   const [liquidityEthAmount, setLiquidityEthAmount] = useState<bigint>(0n);
   const [liquidityTokenAmount, setLiquidityTokenAmount] = useState<bigint>(0n);
   const [isLoading, setIsLoading] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [expectedLPTokens, setExpectedLPTokens] = useState<bigint>(0n);
   const { setErrorMessage } = useErrorMessage();
 
   const handleEthAmountChange = (amountWei: bigint) => {
@@ -83,14 +86,31 @@ export const AddLiquidity = ({
 
     setIsLoading(true);
     try {
-      await approveTokenSpending(liquidityTokenAmount);
-
-      // Get expected LP tokens from contract and apply slippage protection
-      const expectedLPTokens = await ammContract.getLiquidityOutput(
+      // Get expected LP tokens from contract and show confirmation dialog
+      const expectedLP = await ammContract.getLiquidityOutput(
         liquidityTokenAmount,
         liquidityEthAmount
       );
+      setExpectedLPTokens(expectedLP);
+      setShowConfirmDialog(true);
+      setIsLoading(false);
+    } catch (error) {
+      setErrorMessage(
+        getFriendlyMessage(ERROR_OPERATIONS.ADD_LIQUIDITY, error)
+      );
+      setIsLoading(false);
+    }
+  };
+
+  const handleConfirmAddLiquidity = async () => {
+    setShowConfirmDialog(false);
+    setIsLoading(true);
+
+    try {
       const minLPTokens = calculateMinAmountWithSlippage(expectedLPTokens);
+
+      // Proceed with approval and add liquidity
+      await approveTokenSpending(liquidityTokenAmount);
 
       const addLiquidityTx = await ammContract.addLiquidity(
         liquidityTokenAmount,
@@ -109,6 +129,11 @@ export const AddLiquidity = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCancelAddLiquidity = () => {
+    setShowConfirmDialog(false);
+    setIsLoading(false);
   };
 
   return (
@@ -134,6 +159,26 @@ export const AddLiquidity = ({
       >
         {isLoading ? 'Waiting...' : 'Add Liquidity'}
       </button>
+
+      <ConfirmationDialog
+        isOpen={showConfirmDialog}
+        title="Add Liquidity Confirmation"
+        onConfirm={handleConfirmAddLiquidity}
+        onCancel={handleCancelAddLiquidity}
+        confirmText="Proceed"
+        cancelText="Cancel"
+      >
+        <div>
+          <p>
+            <strong>Expected Output:</strong>
+          </p>
+          <p>ETH: {(Number(liquidityEthAmount) / 1e18).toFixed(4)}</p>
+          <p>SIMP: {(Number(liquidityTokenAmount) / 1e18).toFixed(4)}</p>
+          <p>
+            Expected LP Tokens: {(Number(expectedLPTokens) / 1e18).toFixed(4)}
+          </p>
+        </div>
+      </ConfirmationDialog>
     </>
   );
 };

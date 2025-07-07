@@ -78,6 +78,12 @@ test.describe('Transaction Rejection Errors', () => {
     const addButton = page.getByRole('button', { name: 'Add Liquidity' });
     await addButton.click();
 
+    // Wait for confirmation dialog to appear and click Proceed
+    await page.waitForTimeout(2000); // Wait for dialog to show
+    const proceedButton = page.getByRole('button', { name: 'Proceed' });
+    await expect(proceedButton).toBeVisible({ timeout: 5000 });
+    await proceedButton.click();
+
     // Reject the first transaction (spending cap approval)
     await page.waitForTimeout(3000);
     await metamask.rejectTransaction();
@@ -110,6 +116,12 @@ test.describe('Transaction Rejection Errors', () => {
 
     const addButton = page.getByRole('button', { name: 'Add Liquidity' });
     await addButton.click();
+
+    // Wait for confirmation dialog to appear and click Proceed
+    await page.waitForTimeout(2000); // Wait for dialog to show
+    const proceedButton = page.getByRole('button', { name: 'Proceed' });
+    await expect(proceedButton).toBeVisible({ timeout: 5000 });
+    await proceedButton.click();
 
     // Confirm all transactions for adding liquidity
     await page.waitForTimeout(3000);
@@ -310,6 +322,12 @@ test.describe('Error Clearing', () => {
 
     const addButton = page.getByRole('button', { name: 'Add Liquidity' });
     await addButton.click();
+
+    // Wait for confirmation dialog to appear and click Proceed
+    await page.waitForTimeout(2000); // Wait for dialog to show
+    const proceedButton = page.getByRole('button', { name: 'Proceed' });
+    await expect(proceedButton).toBeVisible({ timeout: 5000 });
+    await proceedButton.click();
 
     // Confirm all transactions
     await page.waitForTimeout(3000);

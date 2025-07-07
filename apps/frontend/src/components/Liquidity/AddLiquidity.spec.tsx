@@ -1,13 +1,13 @@
-import { render, fireEvent, waitFor, act } from '@testing-library/react';
+import {
+  render,
+  fireEvent,
+  waitFor,
+  act,
+  screen,
+} from '@testing-library/react';
 import { vi } from 'vitest';
 import { AddLiquidity } from './AddLiquidity';
 import { createMockContracts, mockContractAddresses } from '../../test-mocks';
-
-// Mock window.confirm for tests
-Object.defineProperty(window, 'confirm', {
-  writable: true,
-  value: vi.fn(() => true),
-});
 
 const mockSetErrorMessage = vi.fn();
 vi.mock('../../contexts/ErrorMessageContext', () => ({
@@ -112,7 +112,9 @@ describe('AddLiquidity', () => {
     expect(button).toBeEnabled();
   });
 
-  it('should handle successful liquidity addition', async () => {
+  it('should show confirmation dialog when add liquidity is clicked', async () => {
+    mockAmmContract.getLiquidityOutput.mockResolvedValue(BigInt(1e18));
+
     const { getByRole, getByPlaceholderText } = render(
       <AddLiquidity {...defaultProps} />
     );
@@ -122,6 +124,51 @@ describe('AddLiquidity', () => {
     act(() => {
       fireEvent.change(ethInput, { target: { value: '5' } });
       fireEvent.click(button);
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByText('Add Liquidity Confirmation')
+      ).toBeInTheDocument();
+      expect(screen.getByText('Expected Output:')).toBeInTheDocument();
+      expect(screen.getByText('ETH: 5.0000')).toBeInTheDocument();
+      expect(screen.getByText('SIMP: 10.0000')).toBeInTheDocument();
+      expect(
+        screen.getByText('Expected LP Tokens: 1.0000')
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Proceed' })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Cancel' })
+      ).toBeInTheDocument();
+    });
+  });
+
+  it('should handle successful liquidity addition after dialog confirmation', async () => {
+    mockAmmContract.getLiquidityOutput.mockResolvedValue(BigInt(1e18));
+
+    const { getByRole, getByPlaceholderText } = render(
+      <AddLiquidity {...defaultProps} />
+    );
+    const ethInput = getByPlaceholderText('Enter ETH amount');
+    const button = getByRole('button', { name: 'Add Liquidity' });
+
+    act(() => {
+      fireEvent.change(ethInput, { target: { value: '5' } });
+      fireEvent.click(button);
+    });
+
+    // Wait for dialog to appear and click proceed
+    await waitFor(() => {
+      expect(
+        screen.getByText('Add Liquidity Confirmation')
+      ).toBeInTheDocument();
+    });
+
+    const proceedButton = screen.getByRole('button', { name: 'Proceed' });
+    act(() => {
+      fireEvent.click(proceedButton);
     });
 
     await waitFor(() => {
@@ -141,7 +188,9 @@ describe('AddLiquidity', () => {
     expect(ethInput).toHaveDisplayValue('');
   });
 
-  it('should show loading state during transaction', async () => {
+  it('should cancel liquidity addition when dialog is cancelled', async () => {
+    mockAmmContract.getLiquidityOutput.mockResolvedValue(BigInt(1e18));
+
     const { getByRole, getByPlaceholderText } = render(
       <AddLiquidity {...defaultProps} />
     );
@@ -153,10 +202,65 @@ describe('AddLiquidity', () => {
       fireEvent.click(button);
     });
 
+    // Wait for dialog to appear and click cancel
+    await waitFor(() => {
+      expect(
+        screen.getByText('Add Liquidity Confirmation')
+      ).toBeInTheDocument();
+    });
+
+    const cancelButton = screen.getByRole('button', { name: 'Cancel' });
+    act(() => {
+      fireEvent.click(cancelButton);
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText('Add Liquidity Confirmation')
+      ).not.toBeInTheDocument();
+    });
+
+    // Should not proceed with transaction
+    expect(mockTokenContract.approve).not.toHaveBeenCalled();
+    expect(mockAmmContract.addLiquidity).not.toHaveBeenCalled();
+    expect(mockOnLiquidityComplete).not.toHaveBeenCalled();
+
+    // Form should still have values
+    expect(ethInput).toHaveDisplayValue('5.0');
+  });
+
+  it('should show loading state during dialog confirmation', async () => {
+    mockAmmContract.getLiquidityOutput.mockResolvedValue(BigInt(1e18));
+
+    const { getByRole, getByPlaceholderText } = render(
+      <AddLiquidity {...defaultProps} />
+    );
+    const ethInput = getByPlaceholderText('Enter ETH amount');
+    const button = getByRole('button', { name: 'Add Liquidity' });
+
+    act(() => {
+      fireEvent.change(ethInput, { target: { value: '5' } });
+      fireEvent.click(button);
+    });
+
+    // Should show dialog, not loading state initially
+    await waitFor(() => {
+      expect(
+        screen.getByText('Add Liquidity Confirmation')
+      ).toBeInTheDocument();
+    });
+
+    const proceedButton = screen.getByRole('button', { name: 'Proceed' });
+    act(() => {
+      fireEvent.click(proceedButton);
+    });
+
+    // Now should show loading state
     expect(getByRole('button', { name: 'Waiting...' })).toBeTruthy();
   });
 
-  it('should handle transaction errors', async () => {
+  it('should handle transaction errors after dialog confirmation', async () => {
+    mockAmmContract.getLiquidityOutput.mockResolvedValue(BigInt(1e18));
     mockTokenContract.approve.mockRejectedValue(
       new Error('Transaction failed')
     );
@@ -172,11 +276,51 @@ describe('AddLiquidity', () => {
       fireEvent.click(button);
     });
 
+    // Wait for dialog and confirm
+    await waitFor(() => {
+      expect(
+        screen.getByText('Add Liquidity Confirmation')
+      ).toBeInTheDocument();
+    });
+
+    const proceedButton = screen.getByRole('button', { name: 'Proceed' });
+    act(() => {
+      fireEvent.click(proceedButton);
+    });
+
     await waitFor(() => {
       expect(mockSetErrorMessage).toHaveBeenCalledWith(
         'Add liquidity failed: Transaction failed'
       );
     });
+  });
+
+  it('should handle errors when getting liquidity output', async () => {
+    mockAmmContract.getLiquidityOutput.mockRejectedValue(
+      new Error('Contract call failed')
+    );
+
+    const { getByRole, getByPlaceholderText } = render(
+      <AddLiquidity {...defaultProps} />
+    );
+    const ethInput = getByPlaceholderText('Enter ETH amount');
+    const button = getByRole('button', { name: 'Add Liquidity' });
+
+    act(() => {
+      fireEvent.change(ethInput, { target: { value: '5' } });
+      fireEvent.click(button);
+    });
+
+    await waitFor(() => {
+      expect(mockSetErrorMessage).toHaveBeenCalledWith(
+        'Add liquidity failed: Contract call failed'
+      );
+    });
+
+    // Should not show dialog
+    expect(
+      screen.queryByText('Add Liquidity Confirmation')
+    ).not.toBeInTheDocument();
   });
 
   it('should use SIMP token symbol', () => {
