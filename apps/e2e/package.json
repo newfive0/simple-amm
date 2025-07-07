@@ -3,11 +3,6 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "nx": {
-    "implicitDependencies": [
-      "@simple-amm/frontend"
-    ]
-  },
   "scripts": {
     "test": "playwright test"
   },

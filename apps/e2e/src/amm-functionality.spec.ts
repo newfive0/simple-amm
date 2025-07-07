@@ -10,7 +10,12 @@ import {
   updateBalancesAfterSwapSimpForEth,
 } from './utils/balance-calculator';
 import { getGasCostsFromRecentTransactions } from './utils/gas-tracker';
-import { createMetaMask, connectWallet } from './utils/test-helpers';
+import {
+  createMetaMask,
+  connectWallet,
+  verifyErrorDisplay,
+} from './utils/test-helpers';
+import { ContractManipulator } from './utils/contract-manipulator';
 
 const test = testWithSynpress(metaMaskFixtures(basicSetup));
 const { expect } = test;
@@ -330,6 +335,83 @@ test.describe('AMM Functionality', () => {
       await argosScreenshot(page, 'swap-simp-to-eth-success');
     };
 
+    // STEP 5: Test slippage protection via contract manipulation during transaction
+    const testSlippageProtection = async () => {
+      // Create contract manipulator instance
+      const contractManipulator = new ContractManipulator();
+
+      // Navigate to liquidity section
+      await expect(
+        page.getByRole('heading', { name: 'Liquidity' })
+      ).toBeVisible();
+
+      // Ensure we're on the Add tab
+      const addTab = page.getByRole('button', { name: 'Add', exact: true });
+      await expect(addTab).toBeVisible();
+      await addTab.click();
+
+      // Get the liquidity section
+      const liquiditySection = page
+        .getByRole('heading', { name: 'Liquidity' })
+        .locator('../..');
+
+      // Wait for the input fields to appear
+      await expect(
+        liquiditySection.getByPlaceholder('Enter ETH amount')
+      ).toBeVisible({ timeout: 10000 });
+
+      // Fill in amounts for liquidity addition (1 ETH + proportional SIMP)
+      const ethInput = liquiditySection.getByPlaceholder('Enter ETH amount');
+      await ethInput.fill('1');
+
+      const simpInput = liquiditySection.getByPlaceholder('Enter SIMP amount');
+      await simpInput.fill('2'); // This will be auto-calculated to correct ratio
+
+      // Step 1: Set up dialog handler to manipulate BEFORE accepting
+      page.on('dialog', async (dialog) => {
+        // Step 2: Dialog appeared - expected output has been calculated and shown
+        // Now manipulate pool state with unequal ratios to create actual slippage
+        await contractManipulator.manipulatePoolRatio(
+          BigInt(100e18), // 100 ETH
+          BigInt(50e18) // 50 SIMP tokens
+        );
+        await page.waitForTimeout(2000);
+
+        // Step 3: User accepts dialog with outdated expected output
+        await dialog.accept();
+      });
+
+      // Step 4: User clicks Add Liquidity button - triggers expected output calculation and dialog
+      const addLiquidityButton = page.getByRole('button', {
+        name: 'Add Liquidity',
+      });
+      await expect(addLiquidityButton).toBeEnabled();
+      await addLiquidityButton.click();
+
+      // Wait for dialog to be handled and processing to continue
+      await page.waitForTimeout(5000);
+
+      // Step 5: Confirm MetaMask spending cap UI
+      await metamask.confirmTransaction();
+      await page.waitForTimeout(2000);
+
+      // Step 6: Confirm token approval transaction
+      await metamask.confirmTransaction();
+      await page.waitForTimeout(2000);
+
+      // Step 7: The addLiquidity transaction should fail due to slippage protection
+      // Wait a bit longer for the transaction to complete and error to appear
+      await page.waitForTimeout(10000);
+
+      // Verify the exact error message appears due to slippage protection
+      await verifyErrorDisplay(
+        page,
+        'Add liquidity failed: execution reverted (unknown custom error)'
+      );
+
+      await argosScreenshot(page, 'liquidity-slippage-error');
+    };
+
     // Initialize the calculator with starting balances and reserves
     await initializeCalculator();
 
@@ -338,5 +420,6 @@ test.describe('AMM Functionality', () => {
     await addLiquidity();
     await swapEthForSimp();
     await swapSimpForEth();
+    await testSlippageProtection(); // Test slippage protection via contract manipulation
   });
 });
