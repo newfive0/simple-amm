@@ -77,10 +77,7 @@ test.describe('AMM Functionality', () => {
   }) => {
     const metamask = createMetaMask(context, metamaskPage, extensionId);
 
-    // Set up dialog handler for confirmation popup
-    page.on('dialog', async (dialog) => {
-      await dialog.accept();
-    });
+    // Note: No longer need global dialog handler since we use React ConfirmationDialog
 
     // Helper function to handle MetaMask transactions with 3 confirmations and return gas cost
     const handleTripleConfirmation = async (): Promise<number> => {
@@ -181,6 +178,13 @@ test.describe('AMM Functionality', () => {
 
       // Perform add liquidity operation
       await addLiquidityButton.click();
+
+      // Wait for confirmation dialog to appear and click Proceed
+      await page.waitForTimeout(2000); // Wait for dialog to show
+      const proceedButton = page.getByRole('button', { name: 'Proceed' });
+      await expect(proceedButton).toBeVisible({ timeout: 5000 });
+      await proceedButton.click();
+
       const gasUsed = await handleTripleConfirmation();
 
       // Wait for transaction to complete
