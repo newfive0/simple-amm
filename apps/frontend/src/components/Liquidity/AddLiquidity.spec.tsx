@@ -3,6 +3,12 @@ import { vi } from 'vitest';
 import { AddLiquidity } from './AddLiquidity';
 import { createMockContracts, mockContractAddresses } from '../../test-mocks';
 
+// Mock window.confirm for tests
+Object.defineProperty(window, 'confirm', {
+  writable: true,
+  value: vi.fn(() => true),
+});
+
 const mockSetErrorMessage = vi.fn();
 vi.mock('../../contexts/ErrorMessageContext', () => ({
   useErrorMessage: () => ({
