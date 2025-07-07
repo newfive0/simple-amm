@@ -77,6 +77,11 @@ test.describe('AMM Functionality', () => {
   }) => {
     const metamask = createMetaMask(context, metamaskPage, extensionId);
 
+    // Set up dialog handler for confirmation popup
+    page.on('dialog', async (dialog) => {
+      await dialog.accept();
+    });
+
     // Helper function to handle MetaMask transactions with 3 confirmations and return gas cost
     const handleTripleConfirmation = async (): Promise<number> => {
       await page.waitForTimeout(3000);

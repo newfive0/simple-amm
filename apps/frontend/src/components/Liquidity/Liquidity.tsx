@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ethers } from 'ethers';
+import { formatEther, formatUnits } from 'ethers';
 import { Token, AMMPool } from '@typechain-types';
 import { LiquidityBalances } from '../../utils/balances';
 import { LiquidityHeader } from './LiquidityHeader';
@@ -32,8 +32,8 @@ export const Liquidity = ({
     <div className={styles.poolBalances}>
       <p>
         <strong>Pool Reserves:</strong>{' '}
-        {parseFloat(ethers.formatUnits(poolTokenReserve, 18)).toFixed(4)} SIMP +{' '}
-        {parseFloat(ethers.formatUnits(poolEthReserve, 18)).toFixed(4)} ETH
+        {parseFloat(formatUnits(poolTokenReserve, 18)).toFixed(4)} SIMP +{' '}
+        {parseFloat(formatEther(poolEthReserve)).toFixed(4)} ETH
       </p>
       {lpTokenBalances.userLPTokens > 0 && (
         <p>
