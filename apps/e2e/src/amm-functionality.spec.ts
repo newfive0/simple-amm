@@ -343,4 +343,73 @@ test.describe('AMM Functionality', () => {
     await swapEthForSimp();
     await swapSimpForEth();
   });
+
+  test('should perform contract manipulation operations', async ({
+    context,
+    page,
+    metamaskPage,
+    extensionId,
+  }) => {
+    const metamask = createMetaMask(context, metamaskPage, extensionId);
+
+    // Import ContractManipulator
+    const { ContractManipulator } = await import(
+      './utils/contract-manipulator'
+    );
+
+    // Connect wallet first to ensure environment is ready
+    await connectWallet(page, metamask);
+
+    // Wait for AMM interface to load
+    await expect(page.locator('text=Swap').first()).toBeVisible({
+      timeout: 10000,
+    });
+
+    // Initialize contract manipulator
+    const manipulator = new ContractManipulator();
+
+    // Test 1: Get initial pool state
+    console.log('[Test] Getting initial pool state...');
+    const initialState = await manipulator.getPoolState();
+    console.log('[Test] Initial pool state:', {
+      ethReserve: initialState.ethReserve.toString(),
+      tokenReserve: initialState.tokenReserve.toString(),
+      totalLPTokens: initialState.totalLPTokens.toString(),
+    });
+
+    // Test 2: Perform ETH to SIMP swap to get some tokens
+    console.log('[Test] Performing ETH to SIMP swap...');
+    await manipulator.swapEthForTokens(BigInt(0.5e18)); // 0.5 ETH to SIMP
+
+    // Test 3: Get pool state after first swap
+    const swapState1 = await manipulator.getPoolState();
+    console.log('[Test] Pool state after ETH → SIMP swap:', {
+      ethReserve: swapState1.ethReserve.toString(),
+      tokenReserve: swapState1.tokenReserve.toString(),
+      totalLPTokens: swapState1.totalLPTokens.toString(),
+    });
+
+    // Test 4: Perform SIMP to ETH swap with some tokens we got
+    console.log('[Test] Performing SIMP to ETH swap...');
+    await manipulator.swapTokensForEth(BigInt(0.5e18)); // 0.5 SIMP back to ETH
+
+    // Test 5: Perform another ETH to SIMP swap
+    console.log('[Test] Performing another ETH to SIMP swap...');
+    await manipulator.swapEthForTokens(BigInt(1e18)); // 1 ETH to SIMP
+
+    // Test 6: Get final pool state
+    const finalState = await manipulator.getPoolState();
+    console.log('[Test] Final pool state:', {
+      ethReserve: finalState.ethReserve.toString(),
+      tokenReserve: finalState.tokenReserve.toString(),
+      totalLPTokens: finalState.totalLPTokens.toString(),
+    });
+
+    // Verify that operations had an effect
+    expect(swapState1.ethReserve).toBeGreaterThan(initialState.ethReserve);
+    expect(swapState1.tokenReserve).toBeLessThan(initialState.tokenReserve);
+    expect(finalState.ethReserve).not.toEqual(initialState.ethReserve);
+
+    console.log('[Test] Contract manipulation test completed successfully');
+  });
 });

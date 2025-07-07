@@ -3,11 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "nx": {
-    "implicitDependencies": [
-      "@simple-amm/frontend"
-    ]
-  },
+  "nx": {},
   "scripts": {
     "test": "playwright test"
   },
@@ -16,6 +12,7 @@
     "@argos-ci/playwright": "^5.0.4",
     "@playwright/test": "^1.36.0",
     "@synthetixio/synpress": "^4.1.0",
+    "dotenv": "^16.4.5",
     "ethers": "^6.0.0"
   }
 }
