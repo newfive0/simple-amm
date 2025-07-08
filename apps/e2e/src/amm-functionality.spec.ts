@@ -2,13 +2,7 @@ import { testWithSynpress } from '@synthetixio/synpress';
 import { metaMaskFixtures } from '@synthetixio/synpress/playwright';
 import { argosScreenshot } from '@argos-ci/playwright';
 import basicSetup from '../test/wallet-setup/basic.setup';
-import {
-  initializeCalculator,
-  getCurrentBalances,
-  updateBalancesAfterAddLiquidity,
-  updateBalancesAfterSwapEthForSimp,
-  updateBalancesAfterSwapSimpForEth,
-} from './utils/balance-calculator';
+import { BalanceCalculator } from './utils/balance-calculator';
 import { getGasCostsFromRecentTransactions } from './utils/gas-tracker';
 import {
   createMetaMask,
@@ -81,6 +75,7 @@ test.describe('AMM Functionality', () => {
     extensionId,
   }) => {
     const metamask = createMetaMask(context, metamaskPage, extensionId);
+    const balanceCalculator = new BalanceCalculator();
 
     // Helper function to handle MetaMask transactions with 3 confirmations and return gas cost
     const handleTripleConfirmation = async (): Promise<number> => {
@@ -125,7 +120,7 @@ test.describe('AMM Functionality', () => {
       });
 
       // Verify the displayed balances match our expected initial balances
-      const currentBalances = getCurrentBalances();
+      const currentBalances = balanceCalculator.getCurrentBalances();
       const expectedBalanceText = `Balance: ${currentBalances.simpBalance.toFixed(4)} SIMP | ${currentBalances.ethBalance.toFixed(4)} ETH`;
       const balanceElement = page.getByText('Balance:').locator('..');
       await expect(balanceElement).toHaveText(expectedBalanceText, {
@@ -198,8 +193,8 @@ test.describe('AMM Functionality', () => {
       await expect(simpInput).toHaveValue('');
 
       // Update our balance tracker and verify the UI reflects the new balances
-      updateBalancesAfterAddLiquidity(100, 2000, gasUsed);
-      const updatedBalances = getCurrentBalances();
+      balanceCalculator.updateBalancesAfterAddLiquidity(100, 2000, gasUsed);
+      const updatedBalances = balanceCalculator.getCurrentBalances();
       const expectedBalanceText = `Balance: ${updatedBalances.simpBalance.toFixed(4)} SIMP | ${updatedBalances.ethBalance.toFixed(4)} ETH`;
       const balanceElement = page.getByText('Balance:').locator('..');
       await expect(balanceElement).toHaveText(expectedBalanceText, {
@@ -258,10 +253,10 @@ test.describe('AMM Functionality', () => {
       await expect(ethSwapInput).toHaveValue('');
 
       // Update our balance tracker with the swap results and gas costs
-      updateBalancesAfterSwapEthForSimp(1, ethSwapGasUsed);
+      balanceCalculator.updateBalancesAfterSwapEthForSimp(1, ethSwapGasUsed);
 
       // Verify the UI displays the updated balances
-      const swapUpdatedBalances = getCurrentBalances();
+      const swapUpdatedBalances = balanceCalculator.getCurrentBalances();
       const expectedBalanceText = `Balance: ${swapUpdatedBalances.simpBalance.toFixed(4)} SIMP | ${swapUpdatedBalances.ethBalance.toFixed(4)} ETH`;
       const balanceElement = page.getByText('Balance:').locator('..');
       await expect(balanceElement).toHaveText(expectedBalanceText, {
@@ -322,10 +317,10 @@ test.describe('AMM Functionality', () => {
       await expect(simpSwapInput).toHaveValue('', { timeout: 10000 });
 
       // Update our balance tracker with the swap results and gas costs
-      updateBalancesAfterSwapSimpForEth(1, simpToEthGasUsed);
+      balanceCalculator.updateBalancesAfterSwapSimpForEth(1, simpToEthGasUsed);
 
       // Verify the UI displays the final balances after all transactions
-      const finalBalances = getCurrentBalances();
+      const finalBalances = balanceCalculator.getCurrentBalances();
       const expectedBalanceText = `Balance: ${finalBalances.simpBalance.toFixed(4)} SIMP | ${finalBalances.ethBalance.toFixed(4)} ETH`;
       const balanceElement = page.getByText('Balance:').locator('..');
       await expect(balanceElement).toHaveText(expectedBalanceText, {
@@ -433,7 +428,7 @@ test.describe('AMM Functionality', () => {
     };
 
     // Initialize the balance calculator to track token and ETH balances
-    await initializeCalculator();
+    await balanceCalculator.initialize();
 
     // Execute the complete AMM functionality test sequence:
     await setupAndConnect();

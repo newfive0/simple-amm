@@ -1,5 +1,5 @@
 /**
- * Utility functions for calculating expected balances in AMM functionality tests
+ * Utility class for calculating expected balances in AMM functionality tests
  * Uses integer arithmetic to match smart contract precision exactly
  */
 
@@ -15,166 +15,171 @@ export interface PoolReserves {
   simpReserve: number;
 }
 
-// Constants
-const INITIAL_SIMP = 1000000;
-const TEST_WALLET_ADDRESS = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'; // Hardhat default account 0
-
-// Scale factor for integer arithmetic (18 decimal places to match ETH precision)
-const SCALE = 10n ** 18n;
-
-// Internal state
-let currentBalances: BalanceState = {
-  ethBalance: 0, // Will be initialized from RPC
-  simpBalance: INITIAL_SIMP,
-};
-
-let currentReserves: PoolReserves = {
-  ethReserve: 0,
-  simpReserve: 0,
-};
-
 /**
- * Convert number to scaled BigInt for integer arithmetic
- * Uses string conversion to avoid JavaScript precision issues
+ * Balance calculator class for tracking wallet and pool state during AMM tests
  */
-function toBigInt(value: number): bigint {
-  // Convert to string with sufficient precision to avoid floating-point issues
-  const str = value.toFixed(18);
-  const [integer, decimal = ''] = str.split('.');
-  const paddedDecimal = decimal.padEnd(18, '0');
-  return BigInt(integer + paddedDecimal);
-}
+export class BalanceCalculator {
+  // Constants
+  private static readonly INITIAL_SIMP = 1000000;
+  private static readonly TEST_WALLET_ADDRESS =
+    '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'; // Hardhat default account 0
+  private static readonly SCALE = 10n ** 18n; // Scale factor for integer arithmetic (18 decimal places)
 
-/**
- * Convert scaled BigInt back to number
- */
-function toNumber(value: bigint): number {
-  return Number(value) / Number(SCALE);
-}
+  // Instance state
+  private balances: BalanceState;
+  private reserves: PoolReserves;
 
-/**
- * Initialize or reset the calculator state
- * Gets actual ETH balance from RPC to account for deployment gas variations
- */
-export async function initializeCalculator(): Promise<void> {
-  const provider = new ethers.JsonRpcProvider('http://127.0.0.1:8545');
-  const ethBalanceWei = await provider.getBalance(TEST_WALLET_ADDRESS);
-  const ethBalance = Number(ethers.formatEther(ethBalanceWei));
+  constructor() {
+    this.balances = {
+      ethBalance: 0, // Will be initialized from RPC
+      simpBalance: BalanceCalculator.INITIAL_SIMP,
+    };
+    this.reserves = {
+      ethReserve: 0,
+      simpReserve: 0,
+    };
+  }
 
-  currentBalances = {
-    ethBalance,
-    simpBalance: INITIAL_SIMP,
-  };
-  currentReserves = {
-    ethReserve: 0,
-    simpReserve: 0,
-  };
-}
+  /**
+   * Convert number to scaled BigInt for integer arithmetic
+   * Uses string conversion to avoid JavaScript precision issues
+   */
+  private toBigInt(value: number): bigint {
+    // Convert to string with sufficient precision to avoid floating-point issues
+    const str = value.toFixed(18);
+    const [integer, decimal = ''] = str.split('.');
+    const paddedDecimal = decimal.padEnd(18, '0');
+    return BigInt(integer + paddedDecimal);
+  }
 
-/**
- * Get current balances
- */
-export function getCurrentBalances(): BalanceState {
-  return { ...currentBalances };
-}
+  /**
+   * Convert scaled BigInt back to number
+   */
+  private toNumber(value: bigint): number {
+    return Number(value) / Number(BalanceCalculator.SCALE);
+  }
 
-/**
- * Get current pool reserves
- */
-export function getCurrentReserves(): PoolReserves {
-  return { ...currentReserves };
-}
+  /**
+   * Initialize or reset the calculator state
+   * Gets actual ETH balance from RPC to account for deployment gas variations
+   */
+  async initialize(): Promise<void> {
+    const provider = new ethers.JsonRpcProvider('http://127.0.0.1:8545');
+    const ethBalanceWei = await provider.getBalance(
+      BalanceCalculator.TEST_WALLET_ADDRESS
+    );
+    const ethBalance = Number(ethers.formatEther(ethBalanceWei));
 
-/**
- * Update balances and pool reserves after adding liquidity
- * @param ethAmount ETH amount added to liquidity
- * @param simpAmount SIMP amount added to liquidity
- * @param actualGasCost Actual gas cost in ETH (required)
- */
-export function updateBalancesAfterAddLiquidity(
-  ethAmount: number,
-  simpAmount: number,
-  actualGasCost: number
-): void {
-  const gasCost = actualGasCost;
-  currentBalances = {
-    ethBalance: currentBalances.ethBalance - ethAmount - gasCost,
-    simpBalance: currentBalances.simpBalance - simpAmount,
-  };
-  currentReserves = {
-    ethReserve: currentReserves.ethReserve + ethAmount,
-    simpReserve: currentReserves.simpReserve + simpAmount,
-  };
-}
+    this.balances = {
+      ethBalance,
+      simpBalance: BalanceCalculator.INITIAL_SIMP,
+    };
+    this.reserves = {
+      ethReserve: 0,
+      simpReserve: 0,
+    };
+  }
 
-/**
- * Update balances and pool reserves after swapping ETH for SIMP
- * Uses contract's exact integer arithmetic with 0.3% fee: amountInWithFee = amountIn * 997 / 1000
- * @param ethSwapAmount ETH amount being swapped
- * @param actualGasCost Actual gas cost in ETH (required)
- */
-export function updateBalancesAfterSwapEthForSimp(
-  ethSwapAmount: number,
-  actualGasCost: number
-): void {
-  // Convert to BigInt for integer arithmetic
-  const amountIn = toBigInt(ethSwapAmount);
-  const reserveSimplest = toBigInt(currentReserves.simpReserve);
-  const reserveETH = toBigInt(currentReserves.ethReserve);
+  /**
+   * Get current balances
+   */
+  getCurrentBalances(): BalanceState {
+    return { ...this.balances };
+  }
 
-  // Apply 0.3% fee exactly as contract does: (amountIn * 997) / 1000
-  const amountInWithFee = (amountIn * 997n) / 1000n;
+  /**
+   * Get current pool reserves
+   */
+  getCurrentReserves(): PoolReserves {
+    return { ...this.reserves };
+  }
 
-  // Calculate SIMP output using contract's exact formula
-  // amountOut = (reserveSimplest * amountInWithFee) / (reserveETH + amountInWithFee)
-  const simpOutputBigInt =
-    (reserveSimplest * amountInWithFee) / (reserveETH + amountInWithFee);
-  const simpOutput = toNumber(simpOutputBigInt);
+  /**
+   * Update balances and pool reserves after adding liquidity
+   * @param ethAmount ETH amount added to liquidity
+   * @param simpAmount SIMP amount added to liquidity
+   * @param actualGasCost Actual gas cost in ETH (required)
+   */
+  updateBalancesAfterAddLiquidity(
+    ethAmount: number,
+    simpAmount: number,
+    actualGasCost: number
+  ): void {
+    this.balances = {
+      ethBalance: this.balances.ethBalance - ethAmount - actualGasCost,
+      simpBalance: this.balances.simpBalance - simpAmount,
+    };
+    this.reserves = {
+      ethReserve: this.reserves.ethReserve + ethAmount,
+      simpReserve: this.reserves.simpReserve + simpAmount,
+    };
+  }
 
-  const gasCost = actualGasCost;
+  /**
+   * Update balances and pool reserves after swapping ETH for SIMP
+   * Uses contract's exact integer arithmetic with 0.3% fee: amountInWithFee = amountIn * 997 / 1000
+   * @param ethSwapAmount ETH amount being swapped
+   * @param actualGasCost Actual gas cost in ETH (required)
+   */
+  updateBalancesAfterSwapEthForSimp(
+    ethSwapAmount: number,
+    actualGasCost: number
+  ): void {
+    // Convert to BigInt for integer arithmetic
+    const amountIn = this.toBigInt(ethSwapAmount);
+    const reserveSimplest = this.toBigInt(this.reserves.simpReserve);
+    const reserveETH = this.toBigInt(this.reserves.ethReserve);
 
-  currentBalances = {
-    ethBalance: currentBalances.ethBalance - ethSwapAmount - gasCost,
-    simpBalance: currentBalances.simpBalance + simpOutput,
-  };
-  currentReserves = {
-    ethReserve: currentReserves.ethReserve + ethSwapAmount,
-    simpReserve: currentReserves.simpReserve - simpOutput,
-  };
-}
+    // Apply 0.3% fee exactly as contract does: (amountIn * 997) / 1000
+    const amountInWithFee = (amountIn * 997n) / 1000n;
 
-/**
- * Update balances and pool reserves after swapping SIMP for ETH
- * Uses contract's exact integer arithmetic with 0.3% fee: amountInWithFee = amountIn * 997 / 1000
- * @param simpSwapAmount SIMP amount being swapped
- * @param actualGasCost Actual gas cost in ETH (required)
- */
-export function updateBalancesAfterSwapSimpForEth(
-  simpSwapAmount: number,
-  actualGasCost: number
-): void {
-  // Convert to BigInt for integer arithmetic
-  const amountIn = toBigInt(simpSwapAmount);
-  const reserveETH = toBigInt(currentReserves.ethReserve);
-  const reserveSimplest = toBigInt(currentReserves.simpReserve);
+    // Calculate SIMP output using contract's exact formula
+    // amountOut = (reserveSimplest * amountInWithFee) / (reserveETH + amountInWithFee)
+    const simpOutputBigInt =
+      (reserveSimplest * amountInWithFee) / (reserveETH + amountInWithFee);
+    const simpOutput = this.toNumber(simpOutputBigInt);
 
-  // Apply 0.3% fee exactly as contract does: (amountIn * 997) / 1000
-  const amountInWithFee = (amountIn * 997n) / 1000n;
+    this.balances = {
+      ethBalance: this.balances.ethBalance - ethSwapAmount - actualGasCost,
+      simpBalance: this.balances.simpBalance + simpOutput,
+    };
+    this.reserves = {
+      ethReserve: this.reserves.ethReserve + ethSwapAmount,
+      simpReserve: this.reserves.simpReserve - simpOutput,
+    };
+  }
 
-  // Calculate ETH output using contract's exact formula
-  // amountOut = (reserveETH * amountInWithFee) / (reserveSimplest + amountInWithFee)
-  const ethOutputBigInt =
-    (reserveETH * amountInWithFee) / (reserveSimplest + amountInWithFee);
-  const ethOutput = toNumber(ethOutputBigInt);
+  /**
+   * Update balances and pool reserves after swapping SIMP for ETH
+   * Uses contract's exact integer arithmetic with 0.3% fee: amountInWithFee = amountIn * 997 / 1000
+   * @param simpSwapAmount SIMP amount being swapped
+   * @param actualGasCost Actual gas cost in ETH (required)
+   */
+  updateBalancesAfterSwapSimpForEth(
+    simpSwapAmount: number,
+    actualGasCost: number
+  ): void {
+    // Convert to BigInt for integer arithmetic
+    const amountIn = this.toBigInt(simpSwapAmount);
+    const reserveETH = this.toBigInt(this.reserves.ethReserve);
+    const reserveSimplest = this.toBigInt(this.reserves.simpReserve);
 
-  const gasCost = actualGasCost;
+    // Apply 0.3% fee exactly as contract does: (amountIn * 997) / 1000
+    const amountInWithFee = (amountIn * 997n) / 1000n;
 
-  currentBalances = {
-    ethBalance: currentBalances.ethBalance + ethOutput - gasCost,
-    simpBalance: currentBalances.simpBalance - simpSwapAmount,
-  };
-  currentReserves = {
-    ethReserve: currentReserves.ethReserve - ethOutput,
-    simpReserve: currentReserves.simpReserve + simpSwapAmount,
-  };
+    // Calculate ETH output using contract's exact formula
+    // amountOut = (reserveETH * amountInWithFee) / (reserveSimplest + amountInWithFee)
+    const ethOutputBigInt =
+      (reserveETH * amountInWithFee) / (reserveSimplest + amountInWithFee);
+    const ethOutput = this.toNumber(ethOutputBigInt);
+
+    this.balances = {
+      ethBalance: this.balances.ethBalance + ethOutput - actualGasCost,
+      simpBalance: this.balances.simpBalance - simpSwapAmount,
+    };
+    this.reserves = {
+      ethReserve: this.reserves.ethReserve - ethOutput,
+      simpReserve: this.reserves.simpReserve + simpSwapAmount,
+    };
+  }
 }
