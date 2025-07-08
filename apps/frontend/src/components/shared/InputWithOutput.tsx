@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { ethers } from 'ethers';
 import styles from './InputWithOutput.module.scss';
 
@@ -17,18 +17,24 @@ export const InputWithOutput = ({
   generateExpectedOutput,
   disabled = false,
 }: InputWithOutputProps) => {
-  const [currentValue, setCurrentValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Clear input when amountWei is zero
+  useEffect(() => {
+    if (amountWei === 0n && inputRef.current) {
+      inputRef.current.value = '';
+    }
+  }, [amountWei]);
 
   return (
     <div className={styles.inputRow}>
       <input
+        ref={inputRef}
         type="number"
         step="0.01"
-        defaultValue={amountWei === 0n ? '' : ethers.formatUnits(amountWei, 18)}
         onChange={(e) => {
           if (disabled) return;
           const value = e.target.value;
-          setCurrentValue(value);
 
           if (value === '') {
             onChange(0n);
@@ -46,7 +52,9 @@ export const InputWithOutput = ({
         disabled={disabled}
       />
       <div className={styles.expectedOutput}>
-        {generateExpectedOutput(currentValue)}
+        {generateExpectedOutput(
+          amountWei === 0n ? '' : ethers.formatUnits(amountWei, 18)
+        )}
       </div>
     </div>
   );

@@ -62,11 +62,11 @@ describe('SwapInput Component', () => {
       expect(mockOnChange).toHaveBeenCalledWith(BigInt(2.5e18));
     });
 
-    it('should display the provided value', () => {
+    it('should start with empty input value', () => {
       render(<SwapInput {...defaultProps} amountWei={BigInt(1.5e18)} />);
 
       const input = screen.getByPlaceholderText('SIMP → ETH');
-      expect(input).toHaveValue(1.5);
+      expect(input).toHaveValue(null);
     });
   });
 

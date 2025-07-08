@@ -184,8 +184,8 @@ describe('AddLiquidity', () => {
       expect(mockOnLiquidityComplete).toHaveBeenCalled();
     });
 
-    // Form should be reset (uncontrolled inputs preserve display values)
-    expect(ethInput).toHaveDisplayValue('5');
+    // Form should be reset (inputs clear when amountWei becomes 0n)
+    expect(ethInput).toHaveDisplayValue('');
   });
 
   it('should cancel liquidity addition when dialog is cancelled', async () => {
@@ -225,8 +225,8 @@ describe('AddLiquidity', () => {
     expect(mockAmmContract.addLiquidity).not.toHaveBeenCalled();
     expect(mockOnLiquidityComplete).not.toHaveBeenCalled();
 
-    // Form should still have values
-    expect(ethInput).toHaveDisplayValue('5');
+    // Form should still have values (formatted to 4 decimal places)
+    expect(ethInput).toHaveDisplayValue('5.0000');
   });
 
   it('should show loading state during dialog confirmation', async () => {
