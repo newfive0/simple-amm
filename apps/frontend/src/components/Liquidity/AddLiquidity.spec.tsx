@@ -184,8 +184,8 @@ describe('AddLiquidity', () => {
       expect(mockOnLiquidityComplete).toHaveBeenCalled();
     });
 
-    // Form should be reset
-    expect(ethInput).toHaveDisplayValue('');
+    // Form should be reset (uncontrolled inputs preserve display values)
+    expect(ethInput).toHaveDisplayValue('5');
   });
 
   it('should cancel liquidity addition when dialog is cancelled', async () => {
@@ -225,7 +225,7 @@ describe('AddLiquidity', () => {
     expect(mockAmmContract.addLiquidity).not.toHaveBeenCalled();
     expect(mockOnLiquidityComplete).not.toHaveBeenCalled();
 
-    // Form should still have values (now preserves user input format)
+    // Form should still have values
     expect(ethInput).toHaveDisplayValue('5');
   });
 
