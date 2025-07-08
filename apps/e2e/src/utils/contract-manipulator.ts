@@ -15,6 +15,7 @@ export class ContractManipulator {
   private wallet: ethers.Wallet;
   private ammContract: AMMPool;
   private tokenContract: Token;
+  private currentNonce: number | null = null;
 
   constructor() {
     // Connect to local Hardhat network
@@ -39,6 +40,28 @@ export class ContractManipulator {
   }
 
   /**
+   * Get the next available nonce for this wallet
+   */
+  private async getNextNonce(): Promise<number> {
+    if (this.currentNonce === null) {
+      this.currentNonce = await this.provider.getTransactionCount(
+        this.wallet.address,
+        'pending'
+      );
+    }
+    const nonce = this.currentNonce;
+    this.currentNonce++;
+    return nonce;
+  }
+
+  /**
+   * Reset the nonce cache - useful between test runs
+   */
+  async resetNonce(): Promise<void> {
+    this.currentNonce = null;
+  }
+
+  /**
    * Add liquidity to the AMM pool
    */
   async addLiquidity(ethAmount: bigint, tokenAmount: bigint): Promise<void> {
@@ -46,27 +69,25 @@ export class ContractManipulator {
       `[ContractManipulator] Adding liquidity: ${ethers.formatEther(ethAmount)} ETH + ${ethers.formatEther(tokenAmount)} SIMP`
     );
 
-    try {
-      // Approve token spending
-      const approveTx = await this.tokenContract.approve(
-        await this.ammContract.getAddress(),
-        tokenAmount
-      );
-      await approveTx.wait();
+    // Approve token spending with explicit nonce
+    const approveNonce = await this.getNextNonce();
+    const approveTx = await this.tokenContract.approve(
+      await this.ammContract.getAddress(),
+      tokenAmount,
+      { nonce: approveNonce }
+    );
+    await approveTx.wait();
 
-      // Add liquidity to pool (no slippage protection for simplicity)
-      const addLiquidityTx = await this.ammContract.addLiquidity(
-        tokenAmount,
-        0, // minLPTokens = 0 for simplicity
-        { value: ethAmount }
-      );
-      await addLiquidityTx.wait();
+    // Add liquidity to pool with explicit nonce
+    const addLiquidityNonce = await this.getNextNonce();
+    const addLiquidityTx = await this.ammContract.addLiquidity(
+      tokenAmount,
+      0, // minLPTokens = 0 for simplicity
+      { value: ethAmount, nonce: addLiquidityNonce }
+    );
+    await addLiquidityTx.wait();
 
-      console.log(`[ContractManipulator] Liquidity added successfully`);
-    } catch (error) {
-      console.error(`[ContractManipulator] Failed to add liquidity:`, error);
-      throw error;
-    }
+    console.log(`[ContractManipulator] Liquidity added successfully`);
   }
 
   /**
@@ -77,20 +98,17 @@ export class ContractManipulator {
       `[ContractManipulator] Removing ${ethers.formatEther(lpTokenAmount)} LP tokens`
     );
 
-    try {
-      // Remove liquidity (no slippage protection for simplicity)
-      const removeLiquidityTx = await this.ammContract.removeLiquidity(
-        lpTokenAmount,
-        0, // minAmountSimplest = 0 for simplicity
-        0 // minAmountETH = 0 for simplicity
-      );
-      await removeLiquidityTx.wait();
+    // Remove liquidity with explicit nonce
+    const removeNonce = await this.getNextNonce();
+    const removeLiquidityTx = await this.ammContract.removeLiquidity(
+      lpTokenAmount,
+      0, // minAmountSimplest = 0 for simplicity
+      0, // minAmountETH = 0 for simplicity
+      { nonce: removeNonce }
+    );
+    await removeLiquidityTx.wait();
 
-      console.log(`[ContractManipulator] Liquidity removed successfully`);
-    } catch (error) {
-      console.error(`[ContractManipulator] Failed to remove liquidity:`, error);
-      throw error;
-    }
+    console.log(`[ContractManipulator] Liquidity removed successfully`);
   }
 
   /**
@@ -101,24 +119,18 @@ export class ContractManipulator {
       `[ContractManipulator] Swapping ${ethers.formatEther(ethAmount)} ETH for SIMP tokens`
     );
 
-    try {
-      // For ETH → SIMP swap: tokenIn = address(0), amountIn = 0 (uses msg.value), minAmountOut = 0
-      const ethAddress = '0x0000000000000000000000000000000000000000';
-      const swapTx = await this.ammContract.swap(
-        ethAddress, // tokenIn = address(0) for ETH
-        0, // amountIn = 0 since we use msg.value for ETH amount
-        0, // minAmountOut = 0 for simplicity
-        { value: ethAmount }
-      );
-      await swapTx.wait();
+    // For ETH → SIMP swap with explicit nonce
+    const swapNonce = await this.getNextNonce();
+    const ethAddress = '0x0000000000000000000000000000000000000000';
+    const swapTx = await this.ammContract.swap(
+      ethAddress, // tokenIn = address(0) for ETH
+      0, // amountIn = 0 since we use msg.value for ETH amount
+      0, // minAmountOut = 0 for simplicity
+      { value: ethAmount, nonce: swapNonce }
+    );
+    await swapTx.wait();
 
-      console.log(
-        `[ContractManipulator] ETH → SIMP swap completed successfully`
-      );
-    } catch (error) {
-      console.error(`[ContractManipulator] ETH → SIMP swap failed:`, error);
-      throw error;
-    }
+    console.log(`[ContractManipulator] ETH → SIMP swap completed successfully`);
   }
 
   /**
@@ -129,30 +141,27 @@ export class ContractManipulator {
       `[ContractManipulator] Swapping ${ethers.formatEther(tokenAmount)} SIMP tokens for ETH`
     );
 
-    try {
-      // Approve token spending first
-      const approveTx = await this.tokenContract.approve(
-        await this.ammContract.getAddress(),
-        tokenAmount
-      );
-      await approveTx.wait();
+    // Approve token spending first with explicit nonce
+    const approveNonce = await this.getNextNonce();
+    const approveTx = await this.tokenContract.approve(
+      await this.ammContract.getAddress(),
+      tokenAmount,
+      { nonce: approveNonce }
+    );
+    await approveTx.wait();
 
-      // For SIMP → ETH swap: tokenIn = tokenAddress, amountIn = tokenAmount, minAmountOut = 0
-      const tokenAddress = await this.tokenContract.getAddress();
-      const swapTx = await this.ammContract.swap(
-        tokenAddress, // tokenIn = token address for SIMP
-        tokenAmount, // amountIn = token amount to swap
-        0 // minAmountOut = 0 for simplicity
-      );
-      await swapTx.wait();
+    // For SIMP → ETH swap with explicit nonce
+    const swapNonce = await this.getNextNonce();
+    const tokenAddress = await this.tokenContract.getAddress();
+    const swapTx = await this.ammContract.swap(
+      tokenAddress, // tokenIn = token address for SIMP
+      tokenAmount, // amountIn = token amount to swap
+      0, // minAmountOut = 0 for simplicity
+      { nonce: swapNonce }
+    );
+    await swapTx.wait();
 
-      console.log(
-        `[ContractManipulator] SIMP → ETH swap completed successfully`
-      );
-    } catch (error) {
-      console.error(`[ContractManipulator] SIMP → ETH swap failed:`, error);
-      throw error;
-    }
+    console.log(`[ContractManipulator] SIMP → ETH swap completed successfully`);
   }
 
   /**
