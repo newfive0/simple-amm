@@ -119,6 +119,11 @@ jobs:
           cd apps/e2e
           npx synpress
 
+      - name: Start frontend and wait for readiness
+        run: |
+          pnpm exec nx serve frontend &
+          wait-on http://localhost:4200
+
       - name: Run e2e tests
         run: |
           cd apps/e2e

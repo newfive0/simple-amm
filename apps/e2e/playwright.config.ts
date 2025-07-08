@@ -10,7 +10,7 @@ export default defineConfig({
   reporter: [['html', { open: 'never' }]],
 
   use: {
-    baseURL: 'http://localhost:4300',
+    baseURL: 'http://localhost:4200',
     actionTimeout: 30000,
     // Run headless in CI environment, but MetaMask tests need headed mode
     headless: !!process.env.CI,
@@ -22,12 +22,7 @@ export default defineConfig({
   snapshotPathTemplate:
     '{testDir}/{testFileDir}/{testFileName}-snapshots/{arg}{ext}',
 
-  webServer: {
-    command: 'pnpm exec nx preview @simple-amm/frontend',
-    url: 'http://localhost:4300',
-    reuseExistingServer: !process.env.CI,
-    cwd: '../..',
-  },
+  // No webServer - expect frontend to be running on port 4200
 
   projects: [
     {
