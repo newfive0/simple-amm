@@ -10,7 +10,11 @@ import {
   updateBalancesAfterSwapSimpForEth,
 } from './utils/balance-calculator';
 import { getGasCostsFromRecentTransactions } from './utils/gas-tracker';
-import { createMetaMask, connectWallet } from './utils/test-helpers';
+import {
+  createMetaMask,
+  connectWallet,
+  verifyErrorDisplay,
+} from './utils/test-helpers';
 
 const test = testWithSynpress(metaMaskFixtures(basicSetup));
 const { expect } = test;
@@ -18,53 +22,54 @@ const { expect } = test;
 test('should display AMM page with disabled elements before connection', async ({
   page,
 }) => {
+  // Navigate to the AMM application homepage
   await page.goto('/');
 
-  // Wait for the main heading to be visible
+  // Verify the main heading is visible
   await expect(
     page.locator('h1').filter({ hasText: 'Very Simple AMM' })
   ).toBeVisible();
 
-  // Wait for the connect wallet button in header to be visible
+  // Verify the Connect Wallet button is present and visible
   await expect(
     page.getByRole('button', { name: 'Connect Wallet', exact: true })
   ).toBeVisible({
     timeout: 5000,
   });
 
+  // Verify the account status shows as not connected
   await expect(page.getByText('Your Account: Not Connected')).toBeVisible({
     timeout: 10000,
   });
 
-  // Check for "Please connect wallet" button - try different approaches
-  // First check if the swap section exists
+  // Locate the swap section and verify it's visible
   const swapSection = page
     .locator('h2')
     .filter({ hasText: 'Swap' })
     .locator('../..');
   await expect(swapSection).toBeVisible();
 
-  // Try to find the button within the swap section
+  // Verify swap button shows "Please connect wallet" message
   await expect(
     swapSection.getByRole('button', { name: 'Please connect wallet' })
   ).toBeVisible();
 
-  // Check that swap direction tabs (Receive ETH/SIMP) are disabled
+  // Verify token selection buttons (ETH/SIMP) are disabled without wallet connection
   await expect(swapSection.getByRole('button', { name: 'ETH' })).toBeDisabled();
   await expect(
     swapSection.getByRole('button', { name: 'SIMP' })
   ).toBeDisabled();
 
-  // Check that Add/Remove tabs are disabled
+  // Verify liquidity section buttons (Add/Remove) are disabled without wallet connection
   await expect(page.getByRole('button', { name: 'Add' })).toBeDisabled();
   await expect(page.getByRole('button', { name: 'Remove' })).toBeDisabled();
 
-  // Check that there's a disabled action button in liquidity section
+  // Verify the second "Please connect wallet" button in liquidity section
   await expect(
     page.getByRole('button', { name: 'Please connect wallet' }).nth(1)
   ).toBeVisible();
 
-  // Take screenshot of the initial AMM state before connection
+  // Take a screenshot for visual regression testing
   await argosScreenshot(page, 'amm-before-connection');
 });
 
@@ -77,8 +82,6 @@ test.describe('AMM Functionality', () => {
   }) => {
     const metamask = createMetaMask(context, metamaskPage, extensionId);
 
-    // Note: No longer need global dialog handler since we use React ConfirmationDialog
-
     // Helper function to handle MetaMask transactions with 3 confirmations and return gas cost
     const handleTripleConfirmation = async (): Promise<number> => {
       await page.waitForTimeout(3000);
@@ -90,7 +93,6 @@ test.describe('AMM Functionality', () => {
       await page.waitForTimeout(3000);
       await metamask.confirmTransaction();
 
-      // Wait a bit for transactions to be mined
       await page.waitForTimeout(5000);
 
       // Get gas costs from the 2 actual blockchain transactions (approve + addLiquidity)
@@ -98,20 +100,18 @@ test.describe('AMM Functionality', () => {
       return await getGasCostsFromRecentTransactions(2);
     };
 
-    // Helper function to handle single MetaMask transaction and return gas cost
     const handleSingleConfirmation = async (): Promise<number> => {
       await page.waitForTimeout(3000);
       await metamask.confirmTransaction();
 
-      // Get gas cost from the transaction we just made
       return await getGasCostsFromRecentTransactions(1);
     };
 
-    // STEP 1: Setup and connect wallet
     const setupAndConnect = async () => {
+      // Connect MetaMask wallet to the dApp
       await connectWallet(page, metamask);
 
-      // Wait for AMM interface to load
+      // Wait for the main AMM sections to become visible after wallet connection
       await expect(page.locator('text=Swap').first()).toBeVisible({
         timeout: 10000,
       });
@@ -119,12 +119,12 @@ test.describe('AMM Functionality', () => {
         timeout: 10000,
       });
 
-      // Wait for balance data to load
+      // Wait for the balance display to appear with both SIMP and ETH balances
       await expect(page.locator('text=/^Balance:.*SIMP.*ETH/')).toBeVisible({
         timeout: 15000,
       });
 
-      // Wait for specific initial balances
+      // Verify the displayed balances match our expected initial balances
       const currentBalances = getCurrentBalances();
       const expectedBalanceText = `Balance: ${currentBalances.simpBalance.toFixed(4)} SIMP | ${currentBalances.ethBalance.toFixed(4)} ETH`;
       const balanceElement = page.getByText('Balance:').locator('..');
@@ -132,74 +132,73 @@ test.describe('AMM Functionality', () => {
         timeout: 10000,
       });
 
-      // Take screenshot after successful connection with initial balances
+      // Take a screenshot of the connected state with initial balances
       await argosScreenshot(page, 'wallet-connected-initial-balances');
     };
 
-    // STEP 2: Add liquidity (10 ETH + 20 SIMP)
     const addLiquidity = async () => {
-      // Wait for Liquidity section to be visible
+      // Navigate to the liquidity section and verify it's visible
       await expect(
         page.getByRole('heading', { name: 'Liquidity' })
       ).toBeVisible();
 
-      // Ensure we're on the Add tab (should be default)
+      // Click on the "Add" tab to access liquidity addition functionality
       const addTab = page.getByRole('button', { name: 'Add', exact: true });
       await expect(addTab).toBeVisible();
-      await addTab.click(); // Click to ensure it's active
+      await addTab.click();
 
-      // Get the liquidity section - go up from the h2 to the main container
+      // Locate the liquidity section container
       const liquiditySection = page
         .getByRole('heading', { name: 'Liquidity' })
         .locator('../..');
 
-      // Wait for the input fields to appear after clicking Add tab
+      // Wait for the input fields to become visible
       await expect(
         liquiditySection.getByPlaceholder('Enter ETH amount')
       ).toBeVisible({ timeout: 10000 });
 
-      // Fill in ETH amount (10 ETH)
+      // Fill in the liquidity amounts: 100 ETH and 2000 SIMP tokens
+      // This establishes the initial pool ratio of 1 ETH : 20 SIMP
       const ethInput = liquiditySection.getByPlaceholder('Enter ETH amount');
-      await ethInput.fill('10');
+      await ethInput.fill('100');
 
-      // Fill in SIMP amount (20 SIMP)
       const simpInput = liquiditySection.getByPlaceholder('Enter SIMP amount');
-      await simpInput.fill('20');
+      await simpInput.fill('2000');
 
-      // Verify inputs are filled correctly
-      await expect(ethInput).toHaveValue('10.0');
-      await expect(simpInput).toHaveValue('20.0');
+      // Verify the input values are correctly set
+      await expect(ethInput).toHaveValue('100.0');
+      await expect(simpInput).toHaveValue('2000.0');
 
-      // Click Add Liquidity button and track gas usage
+      // Click the "Add Liquidity" button to initiate the transaction
       const addLiquidityButton = page.getByRole('button', {
         name: 'Add Liquidity',
       });
       await expect(addLiquidityButton).toBeEnabled();
-
-      // Perform add liquidity operation
       await addLiquidityButton.click();
 
-      // Wait for confirmation dialog to appear and click Proceed
-      await page.waitForTimeout(2000); // Wait for dialog to show
+      // Wait for the confirmation dialog and click proceed
+      await page.waitForTimeout(2000);
       const proceedButton = page.getByRole('button', { name: 'Proceed' });
       await expect(proceedButton).toBeVisible({ timeout: 5000 });
       await proceedButton.click();
 
+      // Handle the 3-step MetaMask confirmation process:
+      // 1. Spending cap approval UI
+      // 2. Token approval transaction
+      // 3. Add liquidity transaction
       const gasUsed = await handleTripleConfirmation();
 
-      // Wait for transaction to complete
+      // Wait for the transaction to complete (waiting indicator disappears)
       await expect(page.getByRole('button', { name: 'Waiting...' })).toBeHidden(
         { timeout: 60000 }
       );
 
-      // Verify inputs are cleared after successful transaction
+      // Verify the input fields are cleared after successful transaction
       await expect(ethInput).toHaveValue('');
       await expect(simpInput).toHaveValue('');
 
-      // Update balance calculations after adding liquidity with actual gas cost
-      updateBalancesAfterAddLiquidity(10, 20, gasUsed);
-
-      // Wait for balances to update to expected values
+      // Update our balance tracker and verify the UI reflects the new balances
+      updateBalancesAfterAddLiquidity(100, 2000, gasUsed);
       const updatedBalances = getCurrentBalances();
       const expectedBalanceText = `Balance: ${updatedBalances.simpBalance.toFixed(4)} SIMP | ${updatedBalances.ethBalance.toFixed(4)} ETH`;
       const balanceElement = page.getByText('Balance:').locator('..');
@@ -207,19 +206,18 @@ test.describe('AMM Functionality', () => {
         timeout: 10000,
       });
 
-      // Take screenshot after liquidity addition
+      // Take a screenshot of the successful liquidity addition
       await argosScreenshot(page, 'add-liquidity-success');
     };
-
-    // STEP 3: Swap 1 ETH for SIMP
     const swapEthForSimp = async () => {
+      // Locate the swap section and verify it's visible
       const swapSection = page
         .locator('h2')
         .filter({ hasText: 'Swap' })
         .locator('../..');
       await expect(swapSection.locator('h2')).toBeVisible();
 
-      // Select ETH to SIMP direction by clicking the SIMP tab (to receive SIMP)
+      // Click the SIMP tab to set up ETH → SIMP swap direction
       const simpTab = swapSection.getByRole('button', {
         name: 'SIMP',
         exact: true,
@@ -227,41 +225,42 @@ test.describe('AMM Functionality', () => {
       await expect(simpTab).toBeEnabled();
       await simpTab.click();
 
-      // Fill in ETH amount to swap (1 ETH) - use placeholder "ETH → SIMP"
+      // Fill in the ETH amount to swap (1 ETH)
       const ethSwapInput = swapSection.getByPlaceholder('ETH → SIMP');
       await expect(ethSwapInput).toBeVisible({ timeout: 5000 });
       await ethSwapInput.fill('1');
 
-      // Verify the input is filled
+      // Verify the input value is correctly set
       await expect(ethSwapInput).toHaveValue('1.0');
 
-      // Wait for SIMP output calculation to appear
+      // Wait for the estimated SIMP output to be displayed
+      // The "≈" symbol indicates this is an estimate based on current pool ratios
       await expect(swapSection.locator('text=/≈.*SIMP/i')).toBeVisible({
         timeout: 5000,
       });
 
-      // Click Swap ETH for SIMP button
+      // Click the swap button to initiate the ETH → SIMP transaction
       const swapEthButton = swapSection
         .locator('button')
         .filter({ hasText: 'Swap ETH for SIMP' });
       await expect(swapEthButton).toBeEnabled();
       await swapEthButton.click();
 
-      // Handle single confirmation and get gas cost
+      // Handle single MetaMask confirmation (ETH swaps don't require token approval)
       const ethSwapGasUsed = await handleSingleConfirmation();
 
-      // Wait for transaction to complete
+      // Wait for the swap transaction to complete
       await expect(
         swapSection.locator('button').filter({ hasText: 'Waiting...' })
       ).toBeHidden({ timeout: 60000 });
 
-      // Verify input is cleared after successful swap
+      // Verify the input field is cleared after successful swap
       await expect(ethSwapInput).toHaveValue('');
 
-      // Update balance calculations after ETH to SIMP swap
+      // Update our balance tracker with the swap results and gas costs
       updateBalancesAfterSwapEthForSimp(1, ethSwapGasUsed);
 
-      // Wait for balances to update to expected values
+      // Verify the UI displays the updated balances
       const swapUpdatedBalances = getCurrentBalances();
       const expectedBalanceText = `Balance: ${swapUpdatedBalances.simpBalance.toFixed(4)} SIMP | ${swapUpdatedBalances.ethBalance.toFixed(4)} ETH`;
       const balanceElement = page.getByText('Balance:').locator('..');
@@ -269,18 +268,17 @@ test.describe('AMM Functionality', () => {
         timeout: 10000,
       });
 
-      // Take screenshot after ETH to SIMP swap
+      // Take a screenshot of the successful ETH → SIMP swap
       await argosScreenshot(page, 'swap-eth-to-simp-success');
     };
-
-    // STEP 4: Swap 1 SIMP for ETH
     const swapSimpForEth = async () => {
+      // Locate the swap section for the reverse swap (SIMP → ETH)
       const swapSection = page
         .locator('h2')
         .filter({ hasText: 'Swap' })
         .locator('../..');
 
-      // Switch swap direction to SIMP → ETH by clicking the ETH tab (to receive ETH)
+      // Click the ETH tab to set up SIMP → ETH swap direction
       const ethTab = swapSection.getByRole('button', {
         name: 'ETH',
         exact: true,
@@ -288,41 +286,45 @@ test.describe('AMM Functionality', () => {
       await expect(ethTab).toBeEnabled();
       await ethTab.click();
 
-      // Fill in SIMP amount to swap (1 SIMP) - use placeholder "SIMP → ETH"
+      // Fill in the SIMP amount to swap (1 SIMP token)
       const simpSwapInput = swapSection.getByPlaceholder('SIMP → ETH');
       await expect(simpSwapInput).toBeVisible({ timeout: 5000 });
       await simpSwapInput.fill('1');
 
-      // Verify the input is filled
+      // Verify the input value is correctly set
       await expect(simpSwapInput).toHaveValue('1.0');
 
-      // Wait for ETH output calculation to appear
+      // Wait for the estimated ETH output to be displayed
+      // The pool ratios have changed from previous swaps, affecting the exchange rate
       await expect(swapSection.locator('text=/≈.*ETH/i')).toBeVisible({
         timeout: 5000,
       });
 
-      // Click Swap SIMP for ETH button
+      // Click the swap button to initiate the SIMP → ETH transaction
       const swapSimpButton = swapSection
         .locator('button')
         .filter({ hasText: 'Swap SIMP for ETH' });
       await expect(swapSimpButton).toBeEnabled();
       await swapSimpButton.click();
 
-      // Handle SIMP->ETH swap (3 confirmations for approve + swap)
+      // Handle 3-step MetaMask confirmation for SIMP → ETH swap:
+      // 1. Spending cap approval UI
+      // 2. Token approval transaction (to allow AMM to spend SIMP)
+      // 3. Actual swap transaction
       const simpToEthGasUsed = await handleTripleConfirmation();
 
-      // Wait for transaction to complete
+      // Wait for the swap transaction to complete
       await expect(
         swapSection.locator('button').filter({ hasText: 'Waiting...' })
       ).toBeHidden({ timeout: 60000 });
 
-      // Verify input is cleared after successful swap
+      // Verify the input field is cleared after successful swap
       await expect(simpSwapInput).toHaveValue('', { timeout: 10000 });
 
-      // Update balance calculations after SIMP to ETH swap with actual gas cost
+      // Update our balance tracker with the swap results and gas costs
       updateBalancesAfterSwapSimpForEth(1, simpToEthGasUsed);
 
-      // Wait for balances to update to expected values
+      // Verify the UI displays the final balances after all transactions
       const finalBalances = getCurrentBalances();
       const expectedBalanceText = `Balance: ${finalBalances.simpBalance.toFixed(4)} SIMP | ${finalBalances.ethBalance.toFixed(4)} ETH`;
       const balanceElement = page.getByText('Balance:').locator('..');
@@ -330,17 +332,114 @@ test.describe('AMM Functionality', () => {
         timeout: 10000,
       });
 
-      // Take final screenshot after SIMP to ETH swap
+      // Take a screenshot of the successful SIMP → ETH swap
       await argosScreenshot(page, 'swap-simp-to-eth-success');
     };
 
-    // Initialize the calculator with starting balances and reserves
+    const testSlippageProtection = async () => {
+      const { ContractManipulator } = await import(
+        './utils/contract-manipulator'
+      );
+
+      const manipulator = new ContractManipulator();
+
+      console.log('[Step 5] Starting slippage protection test...');
+
+      // Step 1: Set up liquidity addition via normal UI operation
+      await expect(
+        page.getByRole('heading', { name: 'Liquidity' })
+      ).toBeVisible();
+
+      const addTab = page.getByRole('button', { name: 'Add', exact: true });
+      await expect(addTab).toBeVisible();
+      await addTab.click();
+
+      const liquiditySection = page
+        .getByRole('heading', { name: 'Liquidity' })
+        .locator('../..');
+
+      await expect(
+        liquiditySection.getByPlaceholder('Enter ETH amount')
+      ).toBeVisible({ timeout: 10000 });
+
+      const ethInput = liquiditySection.getByPlaceholder('Enter ETH amount');
+      await ethInput.clear();
+      await ethInput.fill('10');
+
+      await page.waitForTimeout(1000);
+
+      const addLiquidityButton = page.getByRole('button', {
+        name: 'Add Liquidity',
+      });
+      await expect(addLiquidityButton).toBeEnabled();
+
+      await addLiquidityButton.click();
+
+      // Step 2: Wait for confirmation dialog to appear (but don't confirm yet)
+      await page.waitForTimeout(2000);
+      const proceedButton = page.getByRole('button', { name: 'Proceed' });
+      await expect(proceedButton).toBeVisible({ timeout: 5000 });
+
+      console.log(
+        '[Step 5] Dialog appeared, now creating slippage with manipulator...'
+      );
+
+      // Step 3: Create slippage conditions using ContractManipulator
+      // This simulates another user making a large trade that changes pool ratios
+      console.log('[Step 5] Current pool state before slippage:');
+      const beforeState = await manipulator.getPoolState();
+      console.log('[Step 5] Before slippage:', {
+        ethReserve: beforeState.ethReserve.toString(),
+        tokenReserve: beforeState.tokenReserve.toString(),
+      });
+
+      // Large swap to significantly change pool ratios and create slippage
+      await manipulator.swapEthForTokens(BigInt(50e18));
+
+      console.log('[Step 5] Pool state after creating slippage:');
+      const afterState = await manipulator.getPoolState();
+      console.log('[Step 5] After slippage:', {
+        ethReserve: afterState.ethReserve.toString(),
+        tokenReserve: afterState.tokenReserve.toString(),
+      });
+
+      // Step 4: Now confirm the UI transaction (should fail due to slippage)
+      await proceedButton.click();
+
+      // Two-step confirmation process:
+      // 1. Spending cap approval for token allowance
+      await page.waitForTimeout(3000);
+      await metamask.confirmTransaction();
+
+      // 2. Actual add liquidity transaction (this should fail due to slippage)
+      await page.waitForTimeout(3000);
+      await metamask.confirmTransaction();
+
+      // Step 5: Verify slippage error is displayed in the UI
+      await expect(page.getByRole('button', { name: 'Waiting...' })).toBeHidden(
+        { timeout: 60000 }
+      );
+
+      // Verify the specific slippage protection error is displayed
+      // The error should be about execution reverting due to custom error (slippage protection)
+      await verifyErrorDisplay(
+        page,
+        'Add liquidity failed: execution reverted (unknown custom error)'
+      );
+
+      console.log('[Step 5] Slippage protection test completed successfully');
+
+      await argosScreenshot(page, 'slippage-protection-test');
+    };
+
+    // Initialize the balance calculator to track token and ETH balances
     await initializeCalculator();
 
-    // Execute all steps
+    // Execute the complete AMM functionality test sequence:
     await setupAndConnect();
     await addLiquidity();
     await swapEthForSimp();
     await swapSimpForEth();
+    await testSlippageProtection();
   });
 });
