@@ -225,8 +225,8 @@ describe('AddLiquidity', () => {
     expect(mockAmmContract.addLiquidity).not.toHaveBeenCalled();
     expect(mockOnLiquidityComplete).not.toHaveBeenCalled();
 
-    // Form should still have values
-    expect(ethInput).toHaveDisplayValue('5.0');
+    // Form should still have values (now preserves user input format)
+    expect(ethInput).toHaveDisplayValue('5');
   });
 
   it('should show loading state during dialog confirmation', async () => {
