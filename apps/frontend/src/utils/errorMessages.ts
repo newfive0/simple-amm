@@ -1,5 +1,6 @@
 // Utility for handling error messages with user-friendly formatting
 import { isError } from 'ethers';
+import { AMMPool__factory } from '@typechain-types';
 
 // Error message constants
 export const WALLET_REQUIRED_ERROR =
@@ -17,39 +18,105 @@ export type ErrorOperation =
   (typeof ERROR_OPERATIONS)[keyof typeof ERROR_OPERATIONS];
 
 /**
- * Formats error messages with user-friendly text and operation context
- * @param operation - The operation that failed (required)
- * @param error - The error object or message
- * @returns Formatted error message with operation prepended
+ * Common ethers error codes we want to handle
  */
-export const getFriendlyMessage = (
-  operation: ErrorOperation,
-  error: unknown
-): string => {
-  let baseMessage = extractErrorMessage(error);
+const ETHERS_ERROR_CODES = [
+  'ACTION_REJECTED',
+  'CALL_EXCEPTION',
+  'TRANSACTION_REPLACED',
+  'INSUFFICIENT_FUNDS',
+] as const;
 
-  // Handle specific error cases for pending requests
-  // Check for "already pending" messages (can come as Error objects or RPC errors)
-  if (baseMessage && typeof baseMessage === 'string') {
-    const lowerMessage = baseMessage.toLowerCase();
-    if (
-      lowerMessage.includes('already pending') ||
-      lowerMessage.includes('request already pending') ||
-      lowerMessage.includes('permissions request already pending')
-    ) {
-      baseMessage = 'Please check your wallet and approve the pending request.';
+/**
+ * Gets a user-friendly message for contract custom errors
+ * @param errorName - The name of the custom error
+ * @returns User-friendly error message
+ */
+const getCustomErrorMessage = (errorName: string): string => {
+  switch (errorName) {
+    case 'InsufficientOutput':
+      return 'Slippage protection triggered (0.5% tolerance). Try again or reduce trade size.';
+    case 'InsufficientLiquidity':
+      return 'Not enough liquidity in the pool for this trade.';
+    case 'InvalidAmount':
+      return 'Invalid amount provided.';
+    case 'UnsupportedToken':
+      return 'Unsupported token.';
+    case 'InsufficientETHReserve':
+      return 'Insufficient ETH reserves in the pool.';
+    case 'InsufficientTokenReserve':
+      return 'Insufficient token reserves in the pool.';
+    default:
+      return `Contract error: ${errorName}`;
+  }
+};
+
+/**
+ * Checks if an error is a contract custom error by attempting to decode it
+ * @param error - The error object to check
+ * @returns The decoded error name if it's a custom contract error, empty string otherwise
+ */
+const getContractCustomError = (error: unknown): string => {
+  // Helper function to try decoding error data
+  const tryParseError = (data: string): string => {
+    if (typeof data === 'string' && data.length >= 10) {
+      try {
+        const ammInterface = AMMPool__factory.createInterface();
+        const decodedError = ammInterface.parseError(data);
+        return decodedError?.name || '';
+      } catch {
+        return '';
+      }
+    }
+    return '';
+  };
+
+  if (typeof error === 'object' && error !== null) {
+    const errorObj = error as { data?: string };
+
+    // Check direct error.data (most common location for ethers v6 CALL_EXCEPTION)
+    if (errorObj.data) {
+      const result = tryParseError(errorObj.data);
+      if (result) return result;
     }
   }
 
-  // Always prepend operation with "failed:"
-  return `${operation} failed: ${baseMessage}`;
+  return '';
+};
+
+/**
+ * Helper function to extract message from ethers errors
+ */
+const getEthersErrorMessage = (error: unknown): string => {
+  // First check if this ethers error contains custom contract error data
+  const customErrorName = getContractCustomError(error);
+  if (customErrorName) {
+    return getCustomErrorMessage(customErrorName);
+  }
+
+  if (error && typeof error === 'object') {
+    const errorObj = error as { shortMessage?: string; message?: string };
+    if (errorObj.shortMessage) {
+      return errorObj.shortMessage;
+    }
+    if (errorObj.message) {
+      return errorObj.message;
+    }
+  }
+  return 'Unknown error';
 };
 
 /**
  * Extracts error message from various error formats
  */
 const extractErrorMessage = (error: unknown): string => {
-  // Handle ethers errors
+  // First check for contract custom errors
+  const customErrorName = getContractCustomError(error);
+  if (customErrorName) {
+    return getCustomErrorMessage(customErrorName);
+  }
+
+  // Handle ethers errors - but also check for custom errors within them
   for (const code of ETHERS_ERROR_CODES) {
     if (isError(error, code)) {
       return getEthersErrorMessage(error);
@@ -66,24 +133,28 @@ const extractErrorMessage = (error: unknown): string => {
 };
 
 /**
- * Common ethers error codes we want to handle
+ * Formats error messages with user-friendly text and operation context
+ * @param operation - The operation that failed (required)
+ * @param error - The error object or message
+ * @returns Formatted error message with operation prepended
  */
-const ETHERS_ERROR_CODES = [
-  'ACTION_REJECTED',
-  'CALL_EXCEPTION',
-  'TRANSACTION_REPLACED',
-  'INSUFFICIENT_FUNDS',
-] as const;
+export const getFriendlyMessage = (
+  operation: ErrorOperation,
+  error: unknown
+): string => {
+  let baseMessage = extractErrorMessage(error);
 
-/**
- * Helper function to extract message from ethers errors
- */
-const getEthersErrorMessage = (error: {
-  shortMessage?: string;
-  message: string;
-}): string => {
-  if (error.shortMessage) {
-    return error.shortMessage;
+  // Handle specific error cases for pending requests
+  if (baseMessage && typeof baseMessage === 'string') {
+    const lowerMessage = baseMessage.toLowerCase();
+    if (
+      lowerMessage.includes('already pending') ||
+      lowerMessage.includes('request already pending') ||
+      lowerMessage.includes('permissions request already pending')
+    ) {
+      baseMessage = 'Please check your wallet and approve the pending request.';
+    }
   }
-  return error.message;
+
+  return `${operation} failed: ${baseMessage}`;
 };

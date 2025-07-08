@@ -416,10 +416,10 @@ test.describe('AMM Functionality', () => {
       );
 
       // Verify the specific slippage protection error is displayed
-      // The error should be about execution reverting due to custom error (slippage protection)
+      // The error should show our user-friendly custom error message
       await verifyErrorDisplay(
         page,
-        'Add liquidity failed: execution reverted (unknown custom error)'
+        'Add liquidity failed: Slippage protection triggered (0.5% tolerance). Try again or reduce trade size.'
       );
 
       console.log('[Step 5] Slippage protection test completed successfully');

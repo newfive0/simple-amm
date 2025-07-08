@@ -43,12 +43,13 @@ SYNPRESS_PID=$!
 # Wait for development environment to be ready
 echo "Waiting for development environment to be ready..."
 for i in {1..60}; do
-    if grep -q "Ready!" /tmp/simple-amm-e2e-start-dev.log 2>/dev/null; then
+    # Check if both hardhat (8545) and frontend (4200) are ready
+    if curl -s http://localhost:8545 >/dev/null 2>&1 && curl -s http://localhost:4200 >/dev/null 2>&1; then
         echo "Development environment is ready!"
         break
     fi
     if [ $i -eq 60 ]; then
-        echo "Development environment failed to start"
+        echo "Development environment failed to start - ensure frontend is running on port 4200"
         exit 1
     fi
     sleep 2

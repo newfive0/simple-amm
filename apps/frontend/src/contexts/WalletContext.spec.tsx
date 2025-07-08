@@ -40,12 +40,16 @@ const mockSigner = {
   getAddress: vi.fn(),
 };
 
-vi.mock('ethers', () => ({
-  ethers: {
-    BrowserProvider: vi.fn(() => mockBrowserProvider),
-  },
-  isError: vi.fn(() => false), // Mock isError to always return false for tests
-}));
+vi.mock('ethers', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('ethers')>();
+  return {
+    ...actual,
+    ethers: {
+      BrowserProvider: vi.fn(() => mockBrowserProvider),
+    },
+    isError: vi.fn(() => false), // Mock isError to always return false for tests
+  };
+});
 
 // Mock window.ethereum
 const mockEthereum = {
