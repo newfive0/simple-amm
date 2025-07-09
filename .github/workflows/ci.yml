@@ -59,7 +59,7 @@ jobs:
 
 
   e2e-tests:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
