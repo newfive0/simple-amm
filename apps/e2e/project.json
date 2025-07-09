@@ -8,7 +8,7 @@
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/dist/.playwright"],
       "options": {
-        "command": "./run-e2e.sh {args.file} {args.grep}",
+        "command": "./scripts/run-e2e.sh",
         "parallel": false,
         "cwd": "apps/e2e"
       }
