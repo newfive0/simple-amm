@@ -223,7 +223,7 @@ describe('Swap Component', () => {
         expect(mockAmmContract.swap).toHaveBeenCalledWith(
           ethers.ZeroAddress,
           0,
-          BigInt('1990000000000000000'), // 0.5% slippage protection applied (2 ETH * 0.995)
+          BigInt(1.99e18), // 0.5% slippage protection applied (2 ETH * 0.995)
           { value: BigInt(1.5e18) } // 1.5 ETH in wei
         );
       });
