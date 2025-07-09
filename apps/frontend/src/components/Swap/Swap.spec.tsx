@@ -114,6 +114,7 @@ describe('Swap Component', () => {
       const { promise, resolve } = createDeferredTransactionPromise();
       mockTokenContract.approve.mockResolvedValue(promise);
       mockAmmContract.swap.mockResolvedValue(promise);
+      mockAmmContract.getSwapOutput.mockResolvedValue(BigInt(1e18));
 
       render(<Swap {...defaultProps} />);
 
@@ -122,6 +123,15 @@ describe('Swap Component', () => {
 
       const swapButton = screen.getByText('Swap SIMP for ETH');
       fireEvent.click(swapButton);
+
+      // Wait for confirmation dialog to appear
+      await waitFor(() => {
+        expect(screen.getByText('Swap Confirmation')).toBeInTheDocument();
+      });
+
+      // Click the proceed button in the confirmation dialog
+      const proceedButton = screen.getByText('Proceed');
+      fireEvent.click(proceedButton);
 
       expect(swapButton).toHaveTextContent('Waiting...');
       expect(swapButton).toBeDisabled();
@@ -147,6 +157,7 @@ describe('Swap Component', () => {
       mockTokenContract.approve.mockRejectedValue(
         new Error('Transaction failed')
       );
+      mockAmmContract.getSwapOutput.mockResolvedValue(BigInt(1e18));
 
       render(<Swap {...defaultProps} />);
 
@@ -155,6 +166,15 @@ describe('Swap Component', () => {
 
       const swapButton = screen.getByText('Swap SIMP for ETH');
       fireEvent.click(swapButton);
+
+      // Wait for confirmation dialog to appear
+      await waitFor(() => {
+        expect(screen.getByText('Swap Confirmation')).toBeInTheDocument();
+      });
+
+      // Click the proceed button in the confirmation dialog
+      const proceedButton = screen.getByText('Proceed');
+      fireEvent.click(proceedButton);
 
       await waitFor(() => {
         expect(mockSetErrorMessage).toHaveBeenCalledWith(
@@ -170,6 +190,7 @@ describe('Swap Component', () => {
     it('should execute ETH to Token swap successfully', async () => {
       const { promise, resolve } = createDeferredTransactionPromise();
       mockAmmContract.swap.mockResolvedValue(promise);
+      mockAmmContract.getSwapOutput.mockResolvedValue(BigInt(2e18));
 
       render(<Swap {...defaultProps} />);
 
@@ -185,6 +206,15 @@ describe('Swap Component', () => {
       const swapButton = screen.getByText('Swap ETH for SIMP');
       fireEvent.click(swapButton);
 
+      // Wait for confirmation dialog to appear
+      await waitFor(() => {
+        expect(screen.getByText('Swap Confirmation')).toBeInTheDocument();
+      });
+
+      // Click the proceed button in the confirmation dialog
+      const proceedButton = screen.getByText('Proceed');
+      fireEvent.click(proceedButton);
+
       expect(swapButton).toHaveTextContent('Waiting...');
       expect(swapButton).toBeDisabled();
 
@@ -193,7 +223,7 @@ describe('Swap Component', () => {
         expect(mockAmmContract.swap).toHaveBeenCalledWith(
           ethers.ZeroAddress,
           0,
-          BigInt('995000000000000000'), // 0.5% slippage protection applied
+          BigInt(1.99e18), // 0.5% slippage protection applied (2 ETH * 0.995)
           { value: BigInt(1.5e18) } // 1.5 ETH in wei
         );
       });
@@ -207,6 +237,7 @@ describe('Swap Component', () => {
 
     it('should handle ETH to Token swap failure', async () => {
       mockAmmContract.swap.mockRejectedValue(new Error('Transaction failed'));
+      mockAmmContract.getSwapOutput.mockResolvedValue(BigInt(1e18));
 
       render(<Swap {...defaultProps} />);
 
@@ -221,6 +252,15 @@ describe('Swap Component', () => {
 
       const swapButton = screen.getByText('Swap ETH for SIMP');
       fireEvent.click(swapButton);
+
+      // Wait for confirmation dialog to appear
+      await waitFor(() => {
+        expect(screen.getByText('Swap Confirmation')).toBeInTheDocument();
+      });
+
+      // Click the proceed button in the confirmation dialog
+      const proceedButton = screen.getByText('Proceed');
+      fireEvent.click(proceedButton);
 
       await waitFor(() => {
         expect(mockSetErrorMessage).toHaveBeenCalledWith(
@@ -237,6 +277,7 @@ describe('Swap Component', () => {
       const { promise, resolve } = createDeferredTransactionPromise();
       mockTokenContract.approve.mockResolvedValue(promise);
       mockAmmContract.swap.mockResolvedValue(promise);
+      mockAmmContract.getSwapOutput.mockResolvedValue(BigInt(1e18));
 
       render(<Swap {...defaultProps} />);
 
@@ -248,6 +289,13 @@ describe('Swap Component', () => {
       const swapButton = screen.getByText('Swap SIMP for ETH');
       fireEvent.click(swapButton);
 
+      // Wait for confirmation dialog to appear and click proceed
+      await waitFor(() => {
+        expect(screen.getByText('Swap Confirmation')).toBeInTheDocument();
+      });
+      const proceedButton = screen.getByText('Proceed');
+      fireEvent.click(proceedButton);
+
       resolve();
       await waitFor(() => {
         expect(input).toHaveDisplayValue('');
@@ -256,6 +304,7 @@ describe('Swap Component', () => {
 
     it('should not reset form after failed swap', async () => {
       mockTokenContract.approve.mockRejectedValue(new Error('Failed'));
+      mockAmmContract.getSwapOutput.mockResolvedValue(BigInt(1e18));
 
       render(<Swap {...defaultProps} />);
 
@@ -265,6 +314,13 @@ describe('Swap Component', () => {
       const swapButton = screen.getByText('Swap SIMP for ETH');
       fireEvent.click(swapButton);
 
+      // Wait for confirmation dialog to appear and click proceed
+      await waitFor(() => {
+        expect(screen.getByText('Swap Confirmation')).toBeInTheDocument();
+      });
+      const proceedButton = screen.getByText('Proceed');
+      fireEvent.click(proceedButton);
+
       await waitFor(() => {
         expect(mockSetErrorMessage).toHaveBeenCalled();
         expect(input).toHaveDisplayValue('1.5'); // Should retain value
@@ -272,9 +328,58 @@ describe('Swap Component', () => {
     });
   });
 
+  describe('Confirmation Dialog Integration', () => {
+    it('should show confirmation dialog before executing swap', async () => {
+      mockAmmContract.getSwapOutput.mockResolvedValue(BigInt(1e18));
+
+      render(<Swap {...defaultProps} />);
+
+      const input = screen.getByPlaceholderText('SIMP → ETH');
+      fireEvent.change(input, { target: { value: '1.0' } });
+
+      const swapButton = screen.getByText('Swap SIMP for ETH');
+      fireEvent.click(swapButton);
+
+      // Confirmation dialog should appear
+      await waitFor(() => {
+        expect(screen.getByText('Swap Confirmation')).toBeInTheDocument();
+      });
+
+      // Swap should not execute until confirmed
+      expect(mockAmmContract.swap).not.toHaveBeenCalled();
+    });
+
+    it('should not execute swap when confirmation is cancelled', async () => {
+      mockAmmContract.getSwapOutput.mockResolvedValue(BigInt(1e18));
+
+      render(<Swap {...defaultProps} />);
+
+      const input = screen.getByPlaceholderText('SIMP → ETH');
+      fireEvent.change(input, { target: { value: '1.0' } });
+
+      const swapButton = screen.getByText('Swap SIMP for ETH');
+      fireEvent.click(swapButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Swap Confirmation')).toBeInTheDocument();
+      });
+
+      const cancelButton = screen.getByText('Cancel');
+      fireEvent.click(cancelButton);
+
+      await waitFor(() => {
+        expect(screen.queryByText('Swap Confirmation')).not.toBeInTheDocument();
+      });
+
+      // Swap should not have been called
+      expect(mockAmmContract.swap).not.toHaveBeenCalled();
+    });
+  });
+
   describe('Edge Cases', () => {
     it('should handle unknown error types', async () => {
       mockTokenContract.approve.mockRejectedValue('string error');
+      mockAmmContract.getSwapOutput.mockResolvedValue(BigInt(1e18));
 
       render(<Swap {...defaultProps} />);
 
@@ -283,6 +388,13 @@ describe('Swap Component', () => {
 
       const swapButton = screen.getByText('Swap SIMP for ETH');
       fireEvent.click(swapButton);
+
+      // Wait for confirmation dialog to appear and click proceed
+      await waitFor(() => {
+        expect(screen.getByText('Swap Confirmation')).toBeInTheDocument();
+      });
+      const proceedButton = screen.getByText('Proceed');
+      fireEvent.click(proceedButton);
 
       await waitFor(() => {
         expect(mockSetErrorMessage).toHaveBeenCalledWith(

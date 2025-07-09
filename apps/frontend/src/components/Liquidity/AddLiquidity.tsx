@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ethers } from 'ethers';
 import { Token, AMMPool } from '@typechain-types';
 import { LiquidityInput } from './LiquidityInput';
 import { ConfirmationDialog } from '../shared/ConfirmationDialog';
@@ -172,10 +173,16 @@ export const AddLiquidity = ({
           <p>
             <strong>Expected Output:</strong>
           </p>
-          <p>ETH: {(Number(liquidityEthAmount) / 1e18).toFixed(4)}</p>
-          <p>SIMP: {(Number(liquidityTokenAmount) / 1e18).toFixed(4)}</p>
           <p>
-            Expected LP Tokens: {(Number(expectedLPTokens) / 1e18).toFixed(4)}
+            ETH: {parseFloat(ethers.formatEther(liquidityEthAmount)).toFixed(4)}
+          </p>
+          <p>
+            SIMP:{' '}
+            {parseFloat(ethers.formatEther(liquidityTokenAmount)).toFixed(4)}
+          </p>
+          <p>
+            Expected LP Tokens:{' '}
+            {parseFloat(ethers.formatEther(expectedLPTokens)).toFixed(4)}
           </p>
         </div>
       </ConfirmationDialog>
