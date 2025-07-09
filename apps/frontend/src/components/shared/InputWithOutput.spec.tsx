@@ -47,7 +47,7 @@ describe('InputWithOutput', () => {
     expect(mockOnChange).toHaveBeenCalledWith(BigInt(25e18));
   });
 
-  it('should display value in input', () => {
+  it('should start with empty input value', () => {
     mockGenerateExpectedOutput.mockReturnValue('Result: 84');
 
     const { getByPlaceholderText } = render(
@@ -60,7 +60,7 @@ describe('InputWithOutput', () => {
     );
 
     const input = getByPlaceholderText('Enter amount') as HTMLInputElement;
-    expect(input.value).toBe('42.0');
+    expect(input.value).toBe('');
   });
 
   it('should be disabled when disabled prop is true', () => {
@@ -114,7 +114,7 @@ describe('InputWithOutput', () => {
     );
 
     const input = getByPlaceholderText('Enter amount') as HTMLInputElement;
-    expect(input.value).toBe('3.14');
+    expect(input.value).toBe(''); // Uncontrolled input starts empty
     expect(input.step).toBe('0.01');
   });
 
