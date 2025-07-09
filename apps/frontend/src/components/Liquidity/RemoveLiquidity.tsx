@@ -134,8 +134,16 @@ export const RemoveLiquidity = ({
         </p>
         <p>You will receive:</p>
         <ul>
-          <li>{ethers.formatUnits(expectedOutput.simplest, 18)} SIMP</li>
-          <li>{ethers.formatUnits(expectedOutput.eth, 18)} ETH</li>
+          <li>
+            {parseFloat(
+              ethers.formatUnits(expectedOutput.simplest, 18)
+            ).toFixed(4)}{' '}
+            SIMP
+          </li>
+          <li>
+            {parseFloat(ethers.formatUnits(expectedOutput.eth, 18)).toFixed(4)}{' '}
+            ETH
+          </li>
         </ul>
       </ConfirmationDialog>
     </>

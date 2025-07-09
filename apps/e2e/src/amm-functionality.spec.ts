@@ -199,7 +199,7 @@ test.describe('AMM Functionality', () => {
       await expect(simpInput).toHaveValue('');
 
       // Update our balance tracker and verify the UI reflects the new balances
-      balanceCalculator.updateBalancesAfterAddLiquidity(100, 2000, gasUsed);
+      balanceCalculator.addLiquidity(100, 2000, gasUsed);
       const updatedBalances = balanceCalculator.getCurrentBalances();
       const expectedBalanceText = `Balance: ${updatedBalances.simpBalance.toFixed(4)} SIMP | ${updatedBalances.ethBalance.toFixed(4)} ETH`;
       const balanceElement = page.getByText('Balance:').locator('..');
@@ -294,10 +294,7 @@ test.describe('AMM Functionality', () => {
       await expect(lpInput).toHaveValue('');
 
       // Update our balance tracker with the removal results and gas costs
-      balanceCalculator.updateBalancesAfterRemoveLiquidity(
-        50,
-        removeLiquidityGasUsed
-      );
+      balanceCalculator.removeLiquidity(50, removeLiquidityGasUsed);
 
       // Verify the UI displays the updated balances after liquidity removal
       const removedBalances = balanceCalculator.getCurrentBalances();
@@ -319,32 +316,27 @@ test.describe('AMM Functionality', () => {
         .locator('../..');
       await expect(swapSection.locator('h2')).toBeVisible();
 
-      // Click the Switch Direction button to set up ETH → SIMP swap direction
-      const switchButton = swapSection.getByRole('button', {
-        name: 'Switch Direction',
-        exact: true,
-      });
-      await expect(switchButton).toBeEnabled();
-      await switchButton.click();
+      // For ETH → SIMP swap, we input the desired SIMP amount (reverse calculation)
+      // Default direction is already eth-to-token (Get SIMP), so no switch needed
 
-      // Fill in the ETH amount to swap (1 ETH)
-      const ethSwapInput = swapSection.getByPlaceholder('ETH → SIMP');
+      // Fill in the desired SIMP amount to get (using reverse calculation)
+      const ethSwapInput = swapSection.getByPlaceholder('Get SIMP');
       await expect(ethSwapInput).toBeVisible({ timeout: 5000 });
-      await ethSwapInput.fill('1');
+      await ethSwapInput.fill('20');
 
       // Verify the input value is correctly set
-      await expect(ethSwapInput).toHaveValue('1');
+      await expect(ethSwapInput).toHaveValue('20');
 
-      // Wait for the estimated SIMP output to be displayed
+      // Wait for the estimated ETH input to be displayed (reverse calculation)
       // The "≈" symbol indicates this is an estimate based on current pool ratios
-      await expect(swapSection.locator('text=/≈.*SIMP/i')).toBeVisible({
+      await expect(swapSection.locator('text=/≈.*ETH/i')).toBeVisible({
         timeout: 5000,
       });
 
       // Click the swap button to initiate the ETH → SIMP transaction
       const swapEthButton = swapSection
         .locator('button')
-        .filter({ hasText: 'Swap ETH for SIMP' });
+        .filter({ hasText: 'Buy SIMP with ETH' });
       await expect(swapEthButton).toBeEnabled();
       await swapEthButton.click();
 
@@ -369,7 +361,8 @@ test.describe('AMM Functionality', () => {
       await expect(ethSwapInput).toHaveValue('');
 
       // Update our balance tracker with the swap results and gas costs
-      balanceCalculator.updateBalancesAfterSwapEthForSimp(1, ethSwapGasUsed);
+      // Using reverse calculation: we want 20 SIMP output
+      balanceCalculator.buySimpWithEth(20, ethSwapGasUsed);
 
       // Verify the UI displays the updated balances
       const swapUpdatedBalances = balanceCalculator.getCurrentBalances();
@@ -389,7 +382,7 @@ test.describe('AMM Functionality', () => {
         .filter({ hasText: 'Swap' })
         .locator('../..');
 
-      // Click the Switch Direction button to set up SIMP → ETH swap direction
+      // For SIMP → ETH swap, we need to switch direction to 'Get ETH'
       const switchButton = swapSection.getByRole('button', {
         name: 'Switch Direction',
         exact: true,
@@ -397,24 +390,24 @@ test.describe('AMM Functionality', () => {
       await expect(switchButton).toBeEnabled();
       await switchButton.click();
 
-      // Fill in the SIMP amount to swap (1 SIMP token)
-      const simpSwapInput = swapSection.getByPlaceholder('SIMP → ETH');
+      // Fill in the desired ETH amount to get (using reverse calculation)
+      const simpSwapInput = swapSection.getByPlaceholder('Get ETH');
       await expect(simpSwapInput).toBeVisible({ timeout: 5000 });
-      await simpSwapInput.fill('1');
+      await simpSwapInput.fill('0.5');
 
       // Verify the input value is correctly set
-      await expect(simpSwapInput).toHaveValue('1');
+      await expect(simpSwapInput).toHaveValue('0.5');
 
-      // Wait for the estimated ETH output to be displayed
+      // Wait for the estimated SIMP input to be displayed (reverse calculation)
       // The pool ratios have changed from previous swaps, affecting the exchange rate
-      await expect(swapSection.locator('text=/≈.*ETH/i')).toBeVisible({
+      await expect(swapSection.locator('text=/≈.*SIMP/i')).toBeVisible({
         timeout: 5000,
       });
 
       // Click the swap button to initiate the SIMP → ETH transaction
       const swapSimpButton = swapSection
         .locator('button')
-        .filter({ hasText: 'Swap SIMP for ETH' });
+        .filter({ hasText: 'Buy ETH with SIMP' });
       await expect(swapSimpButton).toBeEnabled();
       await swapSimpButton.click();
 
@@ -442,7 +435,8 @@ test.describe('AMM Functionality', () => {
       await expect(simpSwapInput).toHaveValue('', { timeout: 10000 });
 
       // Update our balance tracker with the swap results and gas costs
-      balanceCalculator.updateBalancesAfterSwapSimpForEth(1, simpToEthGasUsed);
+      // Using reverse calculation: we want 0.5 ETH output
+      balanceCalculator.buyEthWithSimp(0.5, simpToEthGasUsed);
 
       // Verify the UI displays the final balances after all transactions
       const finalBalances = balanceCalculator.getCurrentBalances();
@@ -469,12 +463,12 @@ test.describe('AMM Functionality', () => {
       });
       await switchButton.click();
 
-      const ethInput = swapSection.getByPlaceholder('ETH → SIMP');
+      const ethInput = swapSection.getByPlaceholder('Get SIMP');
       await ethInput.fill('0.1');
 
       const swapButton = swapSection
         .locator('button')
-        .filter({ hasText: 'Swap ETH for SIMP' });
+        .filter({ hasText: 'Buy SIMP with ETH' });
       await swapButton.click();
 
       // Wait for the confirmation dialog and click proceed
@@ -498,12 +492,12 @@ test.describe('AMM Functionality', () => {
         .filter({ hasText: 'Swap' })
         .locator('../..');
 
-      const newSwapInput = swapSection.getByPlaceholder('ETH → SIMP');
-      await newSwapInput.fill('0.05');
+      const newSwapInput = swapSection.getByPlaceholder('Get SIMP');
+      await newSwapInput.fill('1');
 
       const newSwapButton = swapSection
         .locator('button')
-        .filter({ hasText: 'Swap ETH for SIMP' });
+        .filter({ hasText: 'Buy SIMP with ETH' });
       await newSwapButton.click();
 
       // Wait for the confirmation dialog and click proceed
@@ -514,8 +508,9 @@ test.describe('AMM Functionality', () => {
       // Confirm the transaction and get gas costs
       const ethSwapGasUsed = await handleSingleConfirmation();
 
-      // Update balance calculator with the 0.05 ETH swap
-      balanceCalculator.updateBalancesAfterSwapEthForSimp(0.05, ethSwapGasUsed);
+      // Update balance calculator with the swap using reverse logic
+      // We want 1 SIMP output
+      balanceCalculator.buySimpWithEth(1, ethSwapGasUsed);
 
       // Verify error is cleared
       await verifyNoError(page);
@@ -559,8 +554,8 @@ test.describe('AMM Functionality', () => {
       const actualValue = await simpInput.inputValue();
       const actualAmount = parseFloat(actualValue);
 
-      // The balance calculator may be slightly out of sync with contract reserves
-      // due to gas costs and precision differences, so we use a reasonable tolerance
+      // The balance calculator should now match the contract calculation closely
+
       expect(actualAmount).toBeCloseTo(expectedSimpAmount, 4);
 
       const addLiquidityButton = page.getByRole('button', {

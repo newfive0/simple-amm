@@ -1,6 +1,6 @@
 import { SwitchDirectionButton } from './SwitchDirectionButton';
 import { SwapInput } from './SwapInput';
-import { createSwapOutputCalculator } from '../../utils/outputDisplayFormatters';
+import { createReverseSwapCalculator } from '../../utils/outputDisplayFormatters';
 import styles from './Swap.module.scss';
 
 interface DisabledSwapProps {
@@ -19,18 +19,18 @@ export const DisabledSwap = ({
         <SwitchDirectionButton onClick={() => {}} disabled={true} />
       </div>
       <SwapInput
-        key="token-to-eth"
+        key="eth-to-token"
         amountWei={0n}
         onChange={() => {}}
-        placeholder="SIMP → ETH"
+        placeholder="Get SIMP"
         onClick={() => {}}
         buttonText="Please connect wallet"
         isLoading={false}
-        generateExpectedOutput={createSwapOutputCalculator(
+        generateExpectedOutput={createReverseSwapCalculator(
           poolEthReserve,
           poolTokenReserve,
-          'SIMP',
-          'ETH'
+          'ETH',
+          'SIMP'
         )}
         disabled={true}
       />

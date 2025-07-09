@@ -133,8 +133,8 @@ describe('RemoveLiquidity', () => {
 
       // Find the dialog and check for the specific amounts within it
       const dialog = document.querySelector('[class*="dialog"]');
-      expect(dialog?.textContent).toContain('5.0 SIMP');
-      expect(dialog?.textContent).toContain('2.5 ETH');
+      expect(dialog?.textContent).toContain('5.0000 SIMP');
+      expect(dialog?.textContent).toContain('2.5000 ETH');
     });
   });
 

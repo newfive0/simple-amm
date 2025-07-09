@@ -2,7 +2,7 @@
 import { parseUnits, formatUnits } from 'ethers';
 import {
   calculateRemoveLiquidityOutput,
-  calculateSwapOutput,
+  calculateSwapInput,
   calculateExchangeRate,
 } from './ammCalculations';
 
@@ -35,9 +35,9 @@ export const createRemoveLiquidityOutputCalculator = (
 };
 
 /**
- * Calculates expected output for swap operations
+ * Calculates required input amount for desired output (reverse swap calculation)
  */
-export const createSwapOutputCalculator = (
+export const createReverseSwapCalculator = (
   poolEthReserve: bigint,
   poolTokenReserve: bigint,
   inputToken: string,
@@ -49,47 +49,47 @@ export const createSwapOutputCalculator = (
     if (poolEthReserve === 0n || poolTokenReserve === 0n) return '';
 
     if (isEthToToken) {
-      // Show 1 ETH = x SIMP
-      const rate = calculateExchangeRate(poolEthReserve, poolTokenReserve);
-      return `1 ${inputToken} ≈ ${rate.toFixed(4)} ${outputToken}`;
-    } else {
       // Show 1 SIMP = x ETH
       const rate = calculateExchangeRate(poolTokenReserve, poolEthReserve);
-      return `1 ${inputToken} ≈ ${rate.toFixed(4)} ${outputToken}`;
+      return `1 ${outputToken} ≈ ${rate.toFixed(4)} ${inputToken}`;
+    } else {
+      // Show 1 ETH = x SIMP
+      const rate = calculateExchangeRate(poolEthReserve, poolTokenReserve);
+      return `1 ${outputToken} ≈ ${rate.toFixed(4)} ${inputToken}`;
     }
   };
 
-  return (inputAmountString: string): string => {
-    if (!inputAmountString || inputAmountString === '0') {
-      return getExchangeRate() || `≈ 0 ${outputToken}`;
+  return (outputAmountString: string): string => {
+    if (!outputAmountString || outputAmountString === '0') {
+      return getExchangeRate() || `≈ 0 ${inputToken}`;
     }
 
     if (poolEthReserve === 0n || poolTokenReserve === 0n) {
-      return getExchangeRate() || `≈ 0 ${outputToken}`;
+      return getExchangeRate() || `≈ 0 ${inputToken}`;
     }
 
-    // Convert input to wei for calculation
-    const inputAmountWei = parseUnits(inputAmountString, 18);
-    let outputAmountWei: bigint;
+    // Convert desired output to wei for calculation
+    const outputAmountWei = parseUnits(outputAmountString, 18);
+    let inputAmountWei: bigint;
 
     if (isEthToToken) {
-      // ETH input -> Token output
-      outputAmountWei = calculateSwapOutput(
-        inputAmountWei,
+      // Want SIMP output -> need ETH input
+      inputAmountWei = calculateSwapInput(
+        outputAmountWei,
         poolEthReserve,
         poolTokenReserve
       );
     } else {
-      // Token input -> ETH output
-      outputAmountWei = calculateSwapOutput(
-        inputAmountWei,
+      // Want ETH output -> need SIMP input
+      inputAmountWei = calculateSwapInput(
+        outputAmountWei,
         poolTokenReserve,
         poolEthReserve
       );
     }
 
     // Convert back to display format
-    const outputAmount = parseFloat(formatUnits(outputAmountWei, 18));
-    return `≈ ${outputAmount.toFixed(4)} ${outputToken}`;
+    const inputAmount = parseFloat(formatUnits(inputAmountWei, 18));
+    return `≈ ${inputAmount.toFixed(4)} ${inputToken}`;
   };
 };

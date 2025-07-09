@@ -1,9 +1,3 @@
-import {
-  calculateSwapOutput,
-  calculateAddLiquidityOutput,
-  calculateRemoveLiquidityOutput,
-} from './ammCalculations';
-
 /**
  * Default slippage tolerance percentage (0.5%)
  */
@@ -24,58 +18,4 @@ export const calculateMinAmountWithSlippage = (
     Math.floor((100 - slippageTolerancePercent) * 100)
   );
   return (expectedAmount * slippageBasisPoints) / 10000n;
-};
-
-/**
- * Calculates expected LP tokens for adding liquidity
- * Uses the same logic as the smart contract
- */
-export const calculateExpectedLPTokens = (
-  amountSimplest: bigint,
-  amountETH: bigint,
-  reserveSimplest: bigint,
-  reserveETH: bigint,
-  totalLPTokens: bigint
-): bigint => {
-  return calculateAddLiquidityOutput(
-    amountSimplest,
-    amountETH,
-    reserveETH,
-    reserveSimplest,
-    totalLPTokens
-  );
-};
-
-/**
- * Calculates expected token amounts for removing liquidity
- */
-export const calculateExpectedRemovalAmounts = (
-  lpTokenAmount: bigint,
-  reserveSimplest: bigint,
-  reserveETH: bigint,
-  totalLPTokens: bigint
-): { expectedSimplest: bigint; expectedETH: bigint } => {
-  const { tokenAmount, ethAmount } = calculateRemoveLiquidityOutput(
-    lpTokenAmount,
-    reserveETH,
-    reserveSimplest,
-    totalLPTokens
-  );
-
-  return {
-    expectedSimplest: tokenAmount,
-    expectedETH: ethAmount,
-  };
-};
-
-/**
- * Calculates expected swap output with 0.3% fee
- * Uses centralized AMM calculation utility
- */
-export const calculateExpectedSwapOutput = (
-  amountIn: bigint,
-  reserveIn: bigint,
-  reserveOut: bigint
-): bigint => {
-  return calculateSwapOutput(amountIn, reserveIn, reserveOut);
 };
