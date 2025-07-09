@@ -59,7 +59,7 @@ jobs:
 
 
   e2e-tests:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
@@ -79,12 +79,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(npx playwright --version | cut -d' ' -f2)" >> $GITHUB_OUTPUT
+
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
@@ -117,7 +121,7 @@ jobs:
         if: steps.synpress-cache.outputs.cache-hit != 'true'
         run: |
           cd apps/e2e
-          npx synpress
+          xvfb-run --auto-servernum --server-args='-screen 0, 1920x1080x24' npx synpress
 
       - name: Start frontend and wait for readiness
         run: |
@@ -127,7 +131,7 @@ jobs:
       - name: Run e2e tests
         run: |
           cd apps/e2e
-          npx playwright test --config=playwright.config.ts
+          xvfb-run --auto-servernum --server-args='-screen 0, 1920x1080x24' npx playwright test --config=playwright.config.ts
 
       - name: Upload screenshots to Argos
         if: always()

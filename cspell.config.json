@@ -44,7 +44,9 @@
     "ignition",
     "synpress",
     "playwright",
-    "synthetixio"
+    "synthetixio",
+    "servernum",
+    "xvfb"
   ],
   "ignorePaths": [
     "node_modules/**",
