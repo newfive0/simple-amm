@@ -209,6 +209,108 @@ test.describe('AMM Functionality', () => {
       // Take a screenshot of the successful liquidity addition
       await argosScreenshot(page, 'add-liquidity-success');
     };
+
+    const removeLiquidity = async () => {
+      // Navigate to the liquidity section and verify it's visible
+      await expect(
+        page.getByRole('heading', { name: 'Liquidity' })
+      ).toBeVisible();
+
+      // Click on the "Remove" tab to access liquidity removal functionality
+      const removeTab = page.getByRole('button', {
+        name: 'Remove',
+        exact: true,
+      });
+      await expect(removeTab).toBeVisible();
+      await removeTab.click();
+
+      // Locate the liquidity section container
+      const liquiditySection = page
+        .getByRole('heading', { name: 'Liquidity' })
+        .locator('../..');
+
+      // Wait for the input field to become visible
+      await expect(
+        liquiditySection.getByPlaceholder('LP Tokens to Remove')
+      ).toBeVisible({ timeout: 10000 });
+
+      // Fill in the LP tokens to remove (smaller amount for testing)
+      const lpInput = liquiditySection.getByPlaceholder('LP Tokens to Remove');
+      await lpInput.fill('50');
+
+      // Trigger formatting by losing focus
+      await lpInput.blur();
+
+      // Verify the input value is correctly set with proper formatting
+      await expect(lpInput).toHaveValue('50.0000');
+
+      // Wait for the estimated output to be displayed
+      await expect(liquiditySection.locator('text=/≈.*ETH/i')).toBeVisible({
+        timeout: 5000,
+      });
+      await expect(liquiditySection.locator('text=/≈.*SIMP/i')).toBeVisible({
+        timeout: 5000,
+      });
+
+      // Click the "Remove Liquidity" button to initiate the transaction
+      const removeLiquidityButton = page.getByRole('button', {
+        name: 'Remove Liquidity',
+      });
+      await expect(removeLiquidityButton).toBeEnabled();
+      await removeLiquidityButton.click();
+
+      // Wait for the confirmation dialog and verify its content
+      const confirmDialog = page.locator('.dialog');
+      await expect(confirmDialog).toBeVisible({ timeout: 5000 });
+
+      // Verify the dialog title and content
+      await expect(page.getByText('Confirm Remove Liquidity')).toBeVisible();
+      await expect(
+        page.getByText('Are you sure you want to remove 50.0000 LP tokens?')
+      ).toBeVisible();
+      await expect(page.getByText('You will receive:')).toBeVisible();
+
+      // Verify the dialog shows expected token amounts
+      await expect(page.locator('text=/\\d+.*SIMP/i')).toBeVisible();
+      await expect(page.locator('text=/\\d+.*ETH/i')).toBeVisible();
+
+      // Take a snapshot of the remove liquidity confirmation dialog
+      await argosScreenshot(page, 'remove-liquidity-confirm-dialog');
+
+      // Click the "Remove" button to confirm
+      const removeButton = page.getByRole('button', { name: 'Remove' });
+      await expect(removeButton).toBeVisible();
+      await removeButton.click();
+
+      // Handle single MetaMask confirmation for remove liquidity
+      const removeLiquidityGasUsed = await handleSingleConfirmation();
+
+      // Wait for the transaction to complete (waiting indicator disappears)
+      await expect(page.getByRole('button', { name: 'Waiting...' })).toBeHidden(
+        { timeout: 60000 }
+      );
+
+      // Verify the input field is cleared after successful transaction
+      await expect(lpInput).toHaveValue('');
+
+      // Update our balance tracker with the removal results and gas costs
+      balanceCalculator.updateBalancesAfterRemoveLiquidity(
+        50,
+        removeLiquidityGasUsed
+      );
+
+      // Verify the UI displays the updated balances
+      const updatedBalances = balanceCalculator.getCurrentBalances();
+      const expectedBalanceText = `Balance: ${updatedBalances.simpBalance.toFixed(4)} SIMP | ${updatedBalances.ethBalance.toFixed(4)} ETH`;
+      const balanceElement = page.getByText('Balance:').locator('..');
+      await expect(balanceElement).toHaveText(expectedBalanceText, {
+        timeout: 10000,
+      });
+
+      // Take a screenshot of the successful liquidity removal
+      await argosScreenshot(page, 'remove-liquidity-success');
+    };
+
     const swapEthForSimp = async () => {
       // Locate the swap section and verify it's visible
       const swapSection = page
@@ -510,6 +612,7 @@ test.describe('AMM Functionality', () => {
     // Execute the complete AMM functionality test sequence:
     await setupAndConnect();
     await addLiquidity();
+    await removeLiquidity();
     await swapEthForSimp();
     await swapSimpForEth();
 

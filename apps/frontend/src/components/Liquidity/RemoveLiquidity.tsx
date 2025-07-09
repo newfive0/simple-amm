@@ -10,6 +10,7 @@ import {
   ERROR_OPERATIONS,
 } from '../../utils/errorMessages';
 import { calculateMinAmountWithSlippage } from '../../utils/slippageProtection';
+import { ConfirmationDialog } from '../shared/ConfirmationDialog';
 import styles from './RemoveLiquidity.module.scss';
 
 interface RemoveLiquidityProps {
@@ -29,21 +30,42 @@ export const RemoveLiquidity = ({
 }: RemoveLiquidityProps) => {
   const [removeLpAmountWei, setRemoveLpAmountWei] = useState<bigint>(0n);
   const [isLoading, setIsLoading] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [expectedOutput, setExpectedOutput] = useState<{
+    simplest: bigint;
+    eth: bigint;
+  }>({ simplest: 0n, eth: 0n });
   const { setErrorMessage } = useErrorMessage();
 
-  const removeLiquidity = async () => {
+  const showRemoveLiquidityConfirmation = async () => {
     if (removeLpAmountWei === 0n) {
       return;
     }
 
     setIsLoading(true);
     try {
-      // Get expected amounts from contract and apply slippage protection
       const [expectedSimplest, expectedETH] =
         await ammContract.getRemoveLiquidityOutput(removeLpAmountWei);
-      const minAmountSimplest =
-        calculateMinAmountWithSlippage(expectedSimplest);
-      const minAmountETH = calculateMinAmountWithSlippage(expectedETH);
+      setExpectedOutput({ simplest: expectedSimplest, eth: expectedETH });
+      setShowConfirmDialog(true);
+      setIsLoading(false);
+    } catch (error) {
+      setErrorMessage(
+        getFriendlyMessage(ERROR_OPERATIONS.REMOVE_LIQUIDITY, error)
+      );
+      setIsLoading(false);
+    }
+  };
+
+  const handleConfirmRemove = async () => {
+    setShowConfirmDialog(false);
+    setIsLoading(true);
+    try {
+      // Apply slippage protection
+      const minAmountSimplest = calculateMinAmountWithSlippage(
+        expectedOutput.simplest
+      );
+      const minAmountETH = calculateMinAmountWithSlippage(expectedOutput.eth);
 
       const removeLiquidityTx = await ammContract.removeLiquidity(
         removeLpAmountWei,
@@ -62,6 +84,10 @@ export const RemoveLiquidity = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleCancelRemove = () => {
+    setShowConfirmDialog(false);
   };
 
   const generateExpectedOutput = createRemoveLiquidityOutputCalculator(
@@ -84,7 +110,7 @@ export const RemoveLiquidity = ({
         generateExpectedOutput={generateExpectedOutput}
       />
       <button
-        onClick={removeLiquidity}
+        onClick={showRemoveLiquidityConfirmation}
         disabled={
           isLoading ||
           removeLpAmountWei === 0n ||
@@ -94,6 +120,24 @@ export const RemoveLiquidity = ({
       >
         {isLoading ? 'Waiting...' : 'Remove Liquidity'}
       </button>
+      <ConfirmationDialog
+        isOpen={showConfirmDialog}
+        title="Confirm Remove Liquidity"
+        onConfirm={handleConfirmRemove}
+        onCancel={handleCancelRemove}
+        confirmText="Remove"
+        cancelText="Cancel"
+      >
+        <p>
+          Are you sure you want to remove{' '}
+          {ethers.formatUnits(removeLpAmountWei, 18)} LP tokens?
+        </p>
+        <p>You will receive:</p>
+        <ul>
+          <li>{ethers.formatUnits(expectedOutput.simplest, 18)} SIMP</li>
+          <li>{ethers.formatUnits(expectedOutput.eth, 18)} ETH</li>
+        </ul>
+      </ConfirmationDialog>
     </>
   );
 };

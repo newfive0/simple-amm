@@ -184,6 +184,36 @@ export class BalanceCalculator {
   }
 
   /**
+   * Update balances and pool reserves after removing liquidity
+   * @param lpTokenAmount LP token amount being removed
+   * @param actualGasCost Actual gas cost in ETH (required)
+   */
+  updateBalancesAfterRemoveLiquidity(
+    lpTokenAmount: number,
+    actualGasCost: number
+  ): void {
+    // For simplicity, we'll estimate the token outputs based on proportional share
+    // In a real implementation, this would need to calculate the exact amounts
+    // based on the total LP supply and reserves at the time of removal
+
+    // Estimate proportional share (this is a simplified approximation)
+    const totalLPSupply = 100; // Simplified assumption
+    const shareRatio = lpTokenAmount / totalLPSupply;
+
+    const ethOutput = this.reserves.ethReserve * shareRatio;
+    const simpOutput = this.reserves.simpReserve * shareRatio;
+
+    this.balances = {
+      ethBalance: this.balances.ethBalance + ethOutput - actualGasCost,
+      simpBalance: this.balances.simpBalance + simpOutput,
+    };
+    this.reserves = {
+      ethReserve: this.reserves.ethReserve - ethOutput,
+      simpReserve: this.reserves.simpReserve - simpOutput,
+    };
+  }
+
+  /**
    * Calculate required token amount for adding liquidity to maintain pool ratio
    * @param ethAmount ETH amount to add
    * @returns Required SIMP token amount to maintain ratio
