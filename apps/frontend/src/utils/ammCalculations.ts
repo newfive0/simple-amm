@@ -133,6 +133,38 @@ export function calculateAddLiquidityOutput(
 }
 
 /**
+ * Calculates required input amount to get desired output amount
+ * This is the inverse of calculateSwapOutput
+ * Formula: amountIn = (reserveIn * amountOut) / ((reserveOut - amountOut) * 997) * 1000
+ *
+ * @param amountOut Desired output amount in wei
+ * @param reserveIn Reserve of input token in wei
+ * @param reserveOut Reserve of output token in wei
+ * @returns Required input amount in wei
+ */
+export function calculateSwapInput(
+  amountOut: bigint,
+  reserveIn: bigint,
+  reserveOut: bigint
+): bigint {
+  if (amountOut <= 0n || reserveIn <= 0n || reserveOut <= 0n) {
+    return 0n;
+  }
+
+  // Ensure we don't try to get more than available
+  if (amountOut >= reserveOut) {
+    return 0n;
+  }
+
+  // Inverse of the constant product formula with fee
+  // amountIn = (reserveIn * amountOut) / ((reserveOut - amountOut) * 997) * 1000
+  const numerator = reserveIn * amountOut * 1000n;
+  const denominator = (reserveOut - amountOut) * BigInt(AMM_FEE_BASIS_POINTS);
+
+  return numerator / denominator;
+}
+
+/**
  * Calculates simple exchange rate between two tokens
  *
  * @param reserveIn Reserve of input token in wei

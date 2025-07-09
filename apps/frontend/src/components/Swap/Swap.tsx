@@ -4,13 +4,14 @@ import { Token, AMMPool } from '@typechain-types';
 import { SwapHeader } from './SwapHeader';
 import { SwapInput } from './SwapInput';
 import { ConfirmationDialog } from '../shared/ConfirmationDialog';
-import { createSwapOutputCalculator } from '../../utils/outputDisplayFormatters';
+import { createReverseSwapCalculator } from '../../utils/outputDisplayFormatters';
 import { useErrorMessage } from '../../contexts/ErrorMessageContext';
 import {
   getFriendlyMessage,
   ERROR_OPERATIONS,
 } from '../../utils/errorMessages';
 import { calculateMinAmountWithSlippage } from '../../utils/slippageProtection';
+import { calculateSwapInput } from '../../utils/ammCalculations';
 import styles from './Swap.module.scss';
 
 export { DisabledSwap } from './DisabledSwap';
@@ -30,29 +31,27 @@ export const Swap = ({
   poolTokenReserve,
   onSwapComplete,
 }: SwapProps) => {
-  const [ethAmount, setEthAmount] = useState<bigint>(0n);
-  const [tokenAmount, setTokenAmount] = useState<bigint>(0n);
+  const [desiredOutputAmount, setDesiredOutputAmount] = useState<bigint>(0n);
   const [isLoading, setIsLoading] = useState(false);
   const [swapDirection, setSwapDirection] = useState<
     'eth-to-token' | 'token-to-eth'
-  >('token-to-eth');
+  >('eth-to-token');
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [expectedOutput, setExpectedOutput] = useState<bigint>(0n);
+  const [calculatedInputAmount, setCalculatedInputAmount] =
+    useState<bigint>(0n);
   const { setErrorMessage } = useErrorMessage();
 
   // Clear amounts when direction changes
   useEffect(() => {
-    setEthAmount(0n);
-    setTokenAmount(0n);
+    setDesiredOutputAmount(0n);
+    setCalculatedInputAmount(0n);
     setShowConfirmDialog(false);
-    setExpectedOutput(0n);
   }, [swapDirection]);
 
   const resetForm = () => {
-    setEthAmount(0n);
-    setTokenAmount(0n);
+    setDesiredOutputAmount(0n);
+    setCalculatedInputAmount(0n);
     setShowConfirmDialog(false);
-    setExpectedOutput(0n);
   };
 
   const executeSwapTransaction = async (callback: () => Promise<void>) => {
@@ -79,23 +78,29 @@ export const Swap = ({
   };
 
   const showSwapConfirmation = async () => {
-    if (
-      (swapDirection === 'eth-to-token' && ethAmount === 0n) ||
-      (swapDirection === 'token-to-eth' && tokenAmount === 0n)
-    ) {
+    if (desiredOutputAmount === 0n) {
       return;
     }
 
     setIsLoading(true);
     try {
-      let output: bigint;
+      let requiredInput: bigint;
       if (swapDirection === 'eth-to-token') {
-        output = await ammContract.getSwapOutput(ethers.ZeroAddress, ethAmount);
+        // Want SIMP output -> need ETH input
+        requiredInput = calculateSwapInput(
+          desiredOutputAmount,
+          poolEthReserve,
+          poolTokenReserve
+        );
       } else {
-        const tokenAddress = await tokenContract.getAddress();
-        output = await ammContract.getSwapOutput(tokenAddress, tokenAmount);
+        // Want ETH output -> need SIMP input
+        requiredInput = calculateSwapInput(
+          desiredOutputAmount,
+          poolTokenReserve,
+          poolEthReserve
+        );
       }
-      setExpectedOutput(output);
+      setCalculatedInputAmount(requiredInput);
       setShowConfirmDialog(true);
       setIsLoading(false);
     } catch (error) {
@@ -119,40 +124,32 @@ export const Swap = ({
   };
 
   const swapETHForTokens = async () => {
-    if (ethAmount === 0n) return;
+    if (calculatedInputAmount === 0n || desiredOutputAmount === 0n) return;
 
     await executeSwapTransaction(async () => {
-      // Get expected output from contract and apply slippage protection
-      const expectedOutput = await ammContract.getSwapOutput(
-        ethers.ZeroAddress,
-        ethAmount
-      );
-      const minAmountOut = calculateMinAmountWithSlippage(expectedOutput);
+      // Apply slippage protection to the desired output
+      const minAmountOut = calculateMinAmountWithSlippage(desiredOutputAmount);
 
       const tx = await ammContract.swap(ethers.ZeroAddress, 0, minAmountOut, {
-        value: ethAmount,
+        value: calculatedInputAmount,
       });
       await tx.wait();
     });
   };
 
   const swapTokensForETH = async () => {
-    if (tokenAmount === 0n) return;
+    if (calculatedInputAmount === 0n || desiredOutputAmount === 0n) return;
 
     await executeSwapTransaction(async () => {
-      await approveTokenSpending(ethers.formatUnits(tokenAmount, 18));
+      await approveTokenSpending(ethers.formatUnits(calculatedInputAmount, 18));
       const tokenAddress = await tokenContract.getAddress();
 
-      // Get expected output from contract and apply slippage protection
-      const expectedOutput = await ammContract.getSwapOutput(
-        tokenAddress,
-        tokenAmount
-      );
-      const minAmountOut = calculateMinAmountWithSlippage(expectedOutput);
+      // Apply slippage protection to the desired output
+      const minAmountOut = calculateMinAmountWithSlippage(desiredOutputAmount);
 
       const tx = await ammContract.swap(
         tokenAddress,
-        tokenAmount,
+        calculatedInputAmount,
         minAmountOut
       );
       await tx.wait();
@@ -166,36 +163,36 @@ export const Swap = ({
           swapDirection={swapDirection}
           onDirectionChange={setSwapDirection}
         />
-        {swapDirection === 'token-to-eth' ? (
-          <SwapInput
-            key="token-to-eth"
-            amountWei={tokenAmount}
-            onChange={setTokenAmount}
-            placeholder="SIMP → ETH"
-            onClick={showSwapConfirmation}
-            buttonText="Swap SIMP for ETH"
-            isLoading={isLoading}
-            generateExpectedOutput={createSwapOutputCalculator(
-              poolEthReserve,
-              poolTokenReserve,
-              'SIMP',
-              'ETH'
-            )}
-          />
-        ) : (
+        {swapDirection === 'eth-to-token' ? (
           <SwapInput
             key="eth-to-token"
-            amountWei={ethAmount}
-            onChange={setEthAmount}
-            placeholder="ETH → SIMP"
+            amountWei={desiredOutputAmount}
+            onChange={setDesiredOutputAmount}
+            placeholder="Get SIMP"
             onClick={showSwapConfirmation}
-            buttonText="Swap ETH for SIMP"
+            buttonText="Buy SIMP with ETH"
             isLoading={isLoading}
-            generateExpectedOutput={createSwapOutputCalculator(
+            generateExpectedOutput={createReverseSwapCalculator(
               poolEthReserve,
               poolTokenReserve,
               'ETH',
               'SIMP'
+            )}
+          />
+        ) : (
+          <SwapInput
+            key="token-to-eth"
+            amountWei={desiredOutputAmount}
+            onChange={setDesiredOutputAmount}
+            placeholder="Get ETH"
+            onClick={showSwapConfirmation}
+            buttonText="Buy ETH with SIMP"
+            isLoading={isLoading}
+            generateExpectedOutput={createReverseSwapCalculator(
+              poolEthReserve,
+              poolTokenReserve,
+              'SIMP',
+              'ETH'
             )}
           />
         )}
@@ -213,26 +210,34 @@ export const Swap = ({
           <p>
             <strong>Swap Details:</strong>
           </p>
-          {swapDirection === 'token-to-eth' ? (
+          {swapDirection === 'eth-to-token' ? (
             <>
               <p>
-                Input: {parseFloat(ethers.formatEther(tokenAmount)).toFixed(4)}{' '}
-                SIMP
+                Required Input:{' '}
+                {parseFloat(ethers.formatEther(calculatedInputAmount)).toFixed(
+                  4
+                )}{' '}
+                ETH
               </p>
               <p>
                 Expected Output:{' '}
-                {parseFloat(ethers.formatEther(expectedOutput)).toFixed(4)} ETH
+                {parseFloat(ethers.formatEther(desiredOutputAmount)).toFixed(4)}{' '}
+                SIMP
               </p>
             </>
           ) : (
             <>
               <p>
-                Input: {parseFloat(ethers.formatEther(ethAmount)).toFixed(4)}{' '}
-                ETH
+                Required Input:{' '}
+                {parseFloat(ethers.formatEther(calculatedInputAmount)).toFixed(
+                  4
+                )}{' '}
+                SIMP
               </p>
               <p>
                 Expected Output:{' '}
-                {parseFloat(ethers.formatEther(expectedOutput)).toFixed(4)} SIMP
+                {parseFloat(ethers.formatEther(desiredOutputAmount)).toFixed(4)}{' '}
+                ETH
               </p>
             </>
           )}

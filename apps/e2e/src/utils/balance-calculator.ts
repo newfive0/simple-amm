@@ -103,7 +103,7 @@ export class BalanceCalculator {
    * @param simpAmount SIMP amount added to liquidity
    * @param actualGasCost Actual gas cost in ETH (required)
    */
-  updateBalancesAfterAddLiquidity(
+  addLiquidity(
     ethAmount: number,
     simpAmount: number,
     actualGasCost: number
@@ -132,84 +132,11 @@ export class BalanceCalculator {
   }
 
   /**
-   * Update balances and pool reserves after swapping ETH for SIMP
-   * Uses contract's exact integer arithmetic with 0.3% fee: amountInWithFee = amountIn * 997 / 1000
-   * @param ethSwapAmount ETH amount being swapped
-   * @param actualGasCost Actual gas cost in ETH (required)
-   */
-  updateBalancesAfterSwapEthForSimp(
-    ethSwapAmount: number,
-    actualGasCost: number
-  ): void {
-    // Convert to BigInt for integer arithmetic
-    const amountIn = this.toBigInt(ethSwapAmount);
-    const reserveSimplest = this.toBigInt(this.reserves.simpReserve);
-    const reserveETH = this.toBigInt(this.reserves.ethReserve);
-
-    // Apply 0.3% fee exactly as contract does: (amountIn * 997) / 1000
-    const amountInWithFee = (amountIn * 997n) / 1000n;
-
-    // Calculate SIMP output using contract's exact formula
-    // amountOut = (reserveSimplest * amountInWithFee) / (reserveETH + amountInWithFee)
-    const simpOutputBigInt =
-      (reserveSimplest * amountInWithFee) / (reserveETH + amountInWithFee);
-    const simpOutput = this.toNumber(simpOutputBigInt);
-
-    this.balances = {
-      ethBalance: this.balances.ethBalance - ethSwapAmount - actualGasCost,
-      simpBalance: this.balances.simpBalance + simpOutput,
-    };
-    this.reserves = {
-      ethReserve: this.reserves.ethReserve + ethSwapAmount,
-      simpReserve: this.reserves.simpReserve - simpOutput,
-      totalLPTokens: this.reserves.totalLPTokens,
-    };
-  }
-
-  /**
-   * Update balances and pool reserves after swapping SIMP for ETH
-   * Uses contract's exact integer arithmetic with 0.3% fee: amountInWithFee = amountIn * 997 / 1000
-   * @param simpSwapAmount SIMP amount being swapped
-   * @param actualGasCost Actual gas cost in ETH (required)
-   */
-  updateBalancesAfterSwapSimpForEth(
-    simpSwapAmount: number,
-    actualGasCost: number
-  ): void {
-    // Convert to BigInt for integer arithmetic
-    const amountIn = this.toBigInt(simpSwapAmount);
-    const reserveETH = this.toBigInt(this.reserves.ethReserve);
-    const reserveSimplest = this.toBigInt(this.reserves.simpReserve);
-
-    // Apply 0.3% fee exactly as contract does: (amountIn * 997) / 1000
-    const amountInWithFee = (amountIn * 997n) / 1000n;
-
-    // Calculate ETH output using contract's exact formula
-    // amountOut = (reserveETH * amountInWithFee) / (reserveSimplest + amountInWithFee)
-    const ethOutputBigInt =
-      (reserveETH * amountInWithFee) / (reserveSimplest + amountInWithFee);
-    const ethOutput = this.toNumber(ethOutputBigInt);
-
-    this.balances = {
-      ethBalance: this.balances.ethBalance + ethOutput - actualGasCost,
-      simpBalance: this.balances.simpBalance - simpSwapAmount,
-    };
-    this.reserves = {
-      ethReserve: this.reserves.ethReserve - ethOutput,
-      simpReserve: this.reserves.simpReserve + simpSwapAmount,
-      totalLPTokens: this.reserves.totalLPTokens,
-    };
-  }
-
-  /**
    * Update balances and pool reserves after removing liquidity
    * @param lpTokenAmount LP token amount being removed
    * @param actualGasCost Actual gas cost in ETH (required)
    */
-  updateBalancesAfterRemoveLiquidity(
-    lpTokenAmount: number,
-    actualGasCost: number
-  ): void {
+  removeLiquidity(lpTokenAmount: number, actualGasCost: number): void {
     const totalLPTokens = this.reserves.totalLPTokens;
     const simpOutput =
       (lpTokenAmount * this.reserves.simpReserve) / totalLPTokens;
@@ -225,6 +152,82 @@ export class BalanceCalculator {
       ethReserve: this.reserves.ethReserve - ethOutput,
       simpReserve: this.reserves.simpReserve - simpOutput,
       totalLPTokens: this.reserves.totalLPTokens - lpTokenAmount,
+    };
+  }
+
+  /**
+   * Calculate required ETH input for desired SIMP output (reverse calculation)
+   * Uses AMM formula: ethInput = (ethReserve * simpOutput * 1000) / ((simpReserve - simpOutput) * 997)
+   * @param simpOutput Desired SIMP output amount
+   * @returns Required ETH input amount
+   */
+  calculateEthNeededToBuySimp(simpOutput: number): number {
+    const simpOutputBigInt = this.toBigInt(simpOutput);
+    const ethReserveBigInt = this.toBigInt(this.reserves.ethReserve);
+    const simpReserveBigInt = this.toBigInt(this.reserves.simpReserve);
+
+    // ethInput = (ethReserve * simpOutput * 1000) / ((simpReserve - simpOutput) * 997)
+    const ethInputBigInt =
+      (ethReserveBigInt * simpOutputBigInt * 1000n) /
+      ((simpReserveBigInt - simpOutputBigInt) * 997n);
+
+    return this.toNumber(ethInputBigInt);
+  }
+
+  /**
+   * Calculate required SIMP input for desired ETH output (reverse calculation)
+   * Uses AMM formula: simpInput = (simpReserve * ethOutput * 1000) / ((ethReserve - ethOutput) * 997)
+   * @param ethOutput Desired ETH output amount
+   * @returns Required SIMP input amount
+   */
+  calculateSimpNeededToBuyEth(ethOutput: number): number {
+    const ethOutputBigInt = this.toBigInt(ethOutput);
+    const ethReserveBigInt = this.toBigInt(this.reserves.ethReserve);
+    const simpReserveBigInt = this.toBigInt(this.reserves.simpReserve);
+
+    // simpInput = (simpReserve * ethOutput * 1000) / ((ethReserve - ethOutput) * 997)
+    const simpInputBigInt =
+      (simpReserveBigInt * ethOutputBigInt * 1000n) /
+      ((ethReserveBigInt - ethOutputBigInt) * 997n);
+
+    return this.toNumber(simpInputBigInt);
+  }
+
+  /**
+   * Update balances after buying SIMP with ETH (reverse calculation)
+   * @param simpOutput Desired SIMP output amount
+   * @param actualGasCost Actual gas cost in ETH
+   */
+  buySimpWithEth(simpOutput: number, actualGasCost: number): void {
+    const ethInput = this.calculateEthNeededToBuySimp(simpOutput);
+
+    this.balances = {
+      ethBalance: this.balances.ethBalance - ethInput - actualGasCost,
+      simpBalance: this.balances.simpBalance + simpOutput,
+    };
+    this.reserves = {
+      ethReserve: this.reserves.ethReserve + ethInput,
+      simpReserve: this.reserves.simpReserve - simpOutput,
+      totalLPTokens: this.reserves.totalLPTokens,
+    };
+  }
+
+  /**
+   * Update balances after buying ETH with SIMP (reverse calculation)
+   * @param ethOutput Desired ETH output amount
+   * @param actualGasCost Actual gas cost in ETH
+   */
+  buyEthWithSimp(ethOutput: number, actualGasCost: number): void {
+    const simpInput = this.calculateSimpNeededToBuyEth(ethOutput);
+
+    this.balances = {
+      ethBalance: this.balances.ethBalance + ethOutput - actualGasCost,
+      simpBalance: this.balances.simpBalance - simpInput,
+    };
+    this.reserves = {
+      ethReserve: this.reserves.ethReserve - ethOutput,
+      simpReserve: this.reserves.simpReserve + simpInput,
+      totalLPTokens: this.reserves.totalLPTokens,
     };
   }
 
@@ -249,6 +252,7 @@ export class BalanceCalculator {
 
     const requiredTokenAmountBigInt =
       (ethAmountBigInt * simpReserveBigInt) / ethReserveBigInt;
+
     return this.toNumber(requiredTokenAmountBigInt);
   }
 }

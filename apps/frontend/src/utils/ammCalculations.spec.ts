@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { parseUnits, formatUnits } from 'ethers';
 import {
   calculateSwapOutput,
+  calculateSwapInput,
   calculateRequiredTokenAmount,
   calculateRequiredEthAmount,
   calculateRemoveLiquidityOutput,
@@ -66,6 +67,64 @@ describe('ammCalculations', () => {
 
       const result = calculateSwapOutput(amountIn, reserveIn, reserveOut);
       expect(result).toBeGreaterThan(0n);
+    });
+  });
+
+  describe('calculateSwapInput', () => {
+    it('should calculate required input for desired output', () => {
+      const amountOut = parseUnits('1', 18); // Want 1 token out
+      const reserveIn = parseUnits('10', 18); // 10 ETH
+      const reserveOut = parseUnits('20', 18); // 20 tokens
+
+      const result = calculateSwapInput(amountOut, reserveIn, reserveOut);
+      const resultEth = parseFloat(formatUnits(result, 18));
+
+      // Expected: (10 * 1 * 1000) / ((20 - 1) * 997) ≈ 0.5279
+      expect(resultEth).toBeCloseTo(0.5279, 3);
+    });
+
+    it('should be inverse of calculateSwapOutput', () => {
+      const reserveIn = parseUnits('10', 18);
+      const reserveOut = parseUnits('20', 18);
+      const originalInput = parseUnits('1', 18);
+
+      // Calculate output from input
+      const output = calculateSwapOutput(originalInput, reserveIn, reserveOut);
+
+      // Calculate input required for that output
+      const calculatedInput = calculateSwapInput(output, reserveIn, reserveOut);
+
+      // Should be approximately equal (allowing for precision loss)
+      const originalInputEth = parseFloat(formatUnits(originalInput, 18));
+      const calculatedInputEth = parseFloat(formatUnits(calculatedInput, 18));
+
+      expect(calculatedInputEth).toBeCloseTo(originalInputEth, 4);
+    });
+
+    it('should return 0 for invalid inputs', () => {
+      expect(
+        calculateSwapInput(0n, parseUnits('10', 18), parseUnits('20', 18))
+      ).toBe(0n);
+      expect(
+        calculateSwapInput(parseUnits('1', 18), 0n, parseUnits('20', 18))
+      ).toBe(0n);
+      expect(
+        calculateSwapInput(parseUnits('1', 18), parseUnits('10', 18), 0n)
+      ).toBe(0n);
+    });
+
+    it('should return 0 when output equals or exceeds reserves', () => {
+      const reserveOut = parseUnits('20', 18);
+      expect(
+        calculateSwapInput(reserveOut, parseUnits('10', 18), reserveOut)
+      ).toBe(0n);
+      expect(
+        calculateSwapInput(
+          parseUnits('21', 18),
+          parseUnits('10', 18),
+          reserveOut
+        )
+      ).toBe(0n);
     });
   });
 
