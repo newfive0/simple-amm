@@ -89,6 +89,13 @@ jobs:
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps
+        
+      - name: Setup virtual display for Linux
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 1024x768x24 > /dev/null 2>&1 &
 
       - name: Install wait-on
         run: npm install -g wait-on
@@ -115,6 +122,8 @@ jobs:
 
       - name: Build Synpress cache
         if: steps.synpress-cache.outputs.cache-hit != 'true'
+        env:
+          DISPLAY: :99
         run: |
           cd apps/e2e
           npx synpress
@@ -125,6 +134,8 @@ jobs:
           wait-on http://localhost:4200
 
       - name: Run e2e tests
+        env:
+          DISPLAY: :99
         run: |
           cd apps/e2e
           npx playwright test --config=playwright.config.ts
