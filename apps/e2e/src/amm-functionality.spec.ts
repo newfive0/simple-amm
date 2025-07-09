@@ -79,14 +79,15 @@ test.describe('AMM Functionality', () => {
 
     // Helper function to handle MetaMask transactions with 3 confirmations and return gas cost
     const handleTripleConfirmation = async (): Promise<number> => {
+      await page.waitForTimeout(1000);
       await metamask.confirmTransaction();
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(1000);
 
       await metamask.confirmTransaction();
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(1000);
 
       await metamask.confirmTransaction();
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(1000);
 
       // Get gas costs from the 2 actual blockchain transactions (approve + addLiquidity)
       // Note: First confirmation is just MetaMask's spending cap UI, not a transaction
@@ -95,7 +96,7 @@ test.describe('AMM Functionality', () => {
 
     const handleSingleConfirmation = async (): Promise<number> => {
       await metamask.confirmTransaction();
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(1000);
 
       return await getGasCostsFromRecentTransactions(1);
     };
@@ -209,6 +210,107 @@ test.describe('AMM Functionality', () => {
       // Take a screenshot of the successful liquidity addition
       await argosScreenshot(page, 'add-liquidity-success');
     };
+
+    const removeLiquidity = async () => {
+      // Navigate to the liquidity section and verify it's visible
+      await expect(
+        page.getByRole('heading', { name: 'Liquidity' })
+      ).toBeVisible();
+
+      // Click on the "Remove" tab to access liquidity removal functionality
+      const removeTab = page.getByRole('button', {
+        name: 'Remove',
+        exact: true,
+      });
+      await expect(removeTab).toBeVisible();
+      await removeTab.click();
+
+      // Locate the liquidity section container
+      const liquiditySection = page
+        .getByRole('heading', { name: 'Liquidity' })
+        .locator('../..');
+
+      // Wait for the input field to become visible
+      await expect(
+        liquiditySection.getByPlaceholder('LP Tokens to Remove')
+      ).toBeVisible({ timeout: 10000 });
+
+      // Fill in the LP tokens to remove (smaller amount for testing)
+      const lpInput = liquiditySection.getByPlaceholder('LP Tokens to Remove');
+      await lpInput.fill('50');
+
+      // Wait for the expected output to be displayed (format: "X.XXXX SIMP + X.XXXX ETH")
+      await expect(
+        liquiditySection.locator('div[class*="expectedOutput"]')
+      ).toBeVisible({
+        timeout: 5000,
+      });
+
+      // Click the "Remove Liquidity" button to initiate the transaction
+      const removeLiquidityButton = page.getByRole('button', {
+        name: 'Remove Liquidity',
+      });
+      await expect(removeLiquidityButton).toBeEnabled();
+      await removeLiquidityButton.click();
+
+      // Wait for the confirmation dialog and verify its content
+      const confirmDialog = page.locator('[class*="dialog"]');
+      await expect(confirmDialog).toBeVisible({ timeout: 5000 });
+
+      // Verify the dialog title and content
+      await expect(
+        confirmDialog.getByText('Confirm Remove Liquidity')
+      ).toBeVisible();
+      await expect(
+        confirmDialog.getByText(
+          /Are you sure you want to remove.*50.*LP tokens/
+        )
+      ).toBeVisible();
+      await expect(confirmDialog.getByText('You will receive:')).toBeVisible();
+
+      // Verify the dialog shows expected token amounts
+      await expect(confirmDialog.locator('text=/\\d+.*SIMP/i')).toBeVisible();
+      await expect(confirmDialog.locator('text=/\\d+.*ETH/i')).toBeVisible();
+
+      // Take a snapshot of the remove liquidity confirmation dialog
+      await argosScreenshot(page, 'remove-liquidity-confirm-dialog');
+
+      // Click the "Remove" button to confirm
+      const removeButton = confirmDialog.getByRole('button', {
+        name: 'Remove',
+      });
+      await expect(removeButton).toBeVisible();
+      await removeButton.click();
+
+      // Handle single MetaMask confirmation for remove liquidity
+      const removeLiquidityGasUsed = await handleSingleConfirmation();
+
+      // Wait for the transaction to complete (waiting indicator disappears)
+      await expect(page.getByRole('button', { name: 'Waiting...' })).toBeHidden(
+        { timeout: 60000 }
+      );
+
+      // Verify the input field is cleared after successful transaction
+      await expect(lpInput).toHaveValue('');
+
+      // Update our balance tracker with the removal results and gas costs
+      balanceCalculator.updateBalancesAfterRemoveLiquidity(
+        50,
+        removeLiquidityGasUsed
+      );
+
+      // Verify the UI displays the updated balances after liquidity removal
+      const removedBalances = balanceCalculator.getCurrentBalances();
+      const expectedBalanceText = `Balance: ${removedBalances.simpBalance.toFixed(4)} SIMP | ${removedBalances.ethBalance.toFixed(4)} ETH`;
+      const balanceElement = page.getByText('Balance:').locator('..');
+      await expect(balanceElement).toHaveText(expectedBalanceText, {
+        timeout: 10000,
+      });
+
+      // Take a screenshot of the successful liquidity removal
+      await argosScreenshot(page, 'remove-liquidity-success');
+    };
+
     const swapEthForSimp = async () => {
       // Locate the swap section and verify it's visible
       const swapSection = page
@@ -382,7 +484,7 @@ test.describe('AMM Functionality', () => {
 
       // Reject the transaction
       await metamask.rejectTransaction();
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(1000);
 
       // Verify error is displayed
       await verifyErrorDisplay(page, 'Swap failed: user rejected action');
@@ -479,11 +581,12 @@ test.describe('AMM Functionality', () => {
 
       // Step 4: Now confirm the UI transaction (should fail due to slippage)
       await proceedButton.click();
+      await page.waitForTimeout(1000);
 
       // Two-step confirmation process:
       // 1. Spending cap approval for token allowance
       await metamask.confirmTransaction();
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(1000);
 
       // 2. Actual add liquidity transaction (this should fail due to slippage)
       await metamask.confirmTransaction();
@@ -510,6 +613,7 @@ test.describe('AMM Functionality', () => {
     // Execute the complete AMM functionality test sequence:
     await setupAndConnect();
     await addLiquidity();
+    await removeLiquidity();
     await swapEthForSimp();
     await swapSimpForEth();
 

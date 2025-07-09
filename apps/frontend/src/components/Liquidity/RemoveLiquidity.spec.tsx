@@ -1,7 +1,11 @@
 import { render, fireEvent, waitFor, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import { RemoveLiquidity } from './RemoveLiquidity';
-import { createMockContracts } from '../../test-mocks';
+import {
+  createMockContracts,
+  createDeferredPromise,
+  createDeferredTransactionPromise,
+} from '../../test-mocks';
 
 const mockSetErrorMessage = vi.fn();
 vi.mock('../../contexts/ErrorMessageContext', () => ({
@@ -33,6 +37,10 @@ describe('RemoveLiquidity', () => {
     mockAmmContract.removeLiquidity.mockResolvedValue({
       wait: vi.fn().mockResolvedValue({}),
     });
+    mockAmmContract.getRemoveLiquidityOutput.mockResolvedValue([
+      BigInt(0), // Default 0 SIMP
+      BigInt(0), // Default 0 ETH
+    ]);
   });
 
   it('should render LP token input with placeholder', () => {
@@ -95,8 +103,13 @@ describe('RemoveLiquidity', () => {
     expect(getByText('3.0000 SIMP + 1.5000 ETH')).toBeTruthy();
   });
 
-  it('should execute remove liquidity successfully', async () => {
-    const { getByRole, getByPlaceholderText } = render(
+  it('should show confirmation dialog when remove liquidity is clicked', async () => {
+    mockAmmContract.getRemoveLiquidityOutput.mockResolvedValue([
+      BigInt(5e18), // 5 SIMP
+      BigInt(2.5e18), // 2.5 ETH
+    ]);
+
+    const { getByRole, getByPlaceholderText, getByText } = render(
       <RemoveLiquidity {...defaultProps} />
     );
 
@@ -109,10 +122,52 @@ describe('RemoveLiquidity', () => {
     });
 
     await waitFor(() => {
+      expect(mockAmmContract.getRemoveLiquidityOutput).toHaveBeenCalledWith(
+        BigInt(2.5e18)
+      );
+      expect(getByText('Confirm Remove Liquidity')).toBeTruthy();
+      expect(
+        getByText(/Are you sure you want to remove.*2.5.*LP tokens/)
+      ).toBeTruthy();
+      expect(getByText('You will receive:')).toBeTruthy();
+
+      // Find the dialog and check for the specific amounts within it
+      const dialog = document.querySelector('[class*="dialog"]');
+      expect(dialog?.textContent).toContain('5.0 SIMP');
+      expect(dialog?.textContent).toContain('2.5 ETH');
+    });
+  });
+
+  it('should execute remove liquidity when confirmation dialog is confirmed', async () => {
+    mockAmmContract.getRemoveLiquidityOutput.mockResolvedValue([
+      BigInt(5e18), // 5 SIMP
+      BigInt(2.5e18), // 2.5 ETH
+    ]);
+
+    const { getByRole, getByPlaceholderText } = render(
+      <RemoveLiquidity {...defaultProps} />
+    );
+
+    const lpInput = getByPlaceholderText('LP Tokens to Remove');
+    const removeButton = getByRole('button', { name: 'Remove Liquidity' });
+
+    // Click remove liquidity button
+    act(() => {
+      fireEvent.change(lpInput, { target: { value: '2.5' } });
+      fireEvent.click(removeButton);
+    });
+
+    // Wait for confirmation dialog and click confirm
+    await waitFor(() => {
+      const confirmButton = getByRole('button', { name: 'Remove' });
+      fireEvent.click(confirmButton);
+    });
+
+    await waitFor(() => {
       expect(mockAmmContract.removeLiquidity).toHaveBeenCalledWith(
         BigInt(2.5e18),
-        BigInt(0.995e18), // 0.5% slippage protection applied
-        BigInt(0.995e18) // 0.5% slippage protection applied
+        BigInt(4.975e18), // 5 SIMP with 0.5% slippage protection
+        BigInt(2.4875e18) // 2.5 ETH with 0.5% slippage protection
       );
       expect(mockOnLiquidityComplete).toHaveBeenCalled();
     });
@@ -121,7 +176,95 @@ describe('RemoveLiquidity', () => {
     expect(lpInput).toHaveDisplayValue('');
   });
 
-  it('should show loading state during transaction', async () => {
+  it('should cancel transaction when confirmation dialog is cancelled', async () => {
+    mockAmmContract.getRemoveLiquidityOutput.mockResolvedValue([
+      BigInt(5e18), // 5 SIMP
+      BigInt(2.5e18), // 2.5 ETH
+    ]);
+
+    const { getByRole, getByPlaceholderText, queryByText } = render(
+      <RemoveLiquidity {...defaultProps} />
+    );
+
+    const lpInput = getByPlaceholderText('LP Tokens to Remove');
+    const removeButton = getByRole('button', { name: 'Remove Liquidity' });
+
+    // Click remove liquidity button
+    act(() => {
+      fireEvent.change(lpInput, { target: { value: '2.5' } });
+      fireEvent.click(removeButton);
+    });
+
+    // Wait for confirmation dialog and click cancel
+    await waitFor(() => {
+      const cancelButton = getByRole('button', { name: 'Cancel' });
+      fireEvent.click(cancelButton);
+    });
+
+    // Dialog should be closed
+    expect(queryByText('Confirm Remove Liquidity')).toBeFalsy();
+
+    // Transaction should not be executed
+    expect(mockAmmContract.removeLiquidity).not.toHaveBeenCalled();
+    expect(mockOnLiquidityComplete).not.toHaveBeenCalled();
+  });
+
+  it('should show loading state during operations', async () => {
+    // Test loading state during dialog fetch
+    const { promise: dialogPromise, resolve: resolveDialog } =
+      createDeferredPromise<[bigint, bigint]>();
+    mockAmmContract.getRemoveLiquidityOutput.mockReturnValue(dialogPromise);
+
+    const { getByRole, getByPlaceholderText } = render(
+      <RemoveLiquidity {...defaultProps} />
+    );
+
+    const lpInput = getByPlaceholderText('LP Tokens to Remove');
+    const removeButton = getByRole('button', { name: 'Remove Liquidity' });
+
+    // Click remove liquidity button to trigger dialog fetch
+    act(() => {
+      fireEvent.change(lpInput, { target: { value: '2.5' } });
+      fireEvent.click(removeButton);
+    });
+
+    // Should show loading state while fetching dialog data
+    await waitFor(() => {
+      expect(getByRole('button', { name: 'Waiting...' })).toBeTruthy();
+    });
+
+    // Resolve dialog fetch and set up transaction loading test
+    act(() => {
+      resolveDialog([BigInt(5e18), BigInt(2.5e18)]);
+    });
+
+    // Now test loading state during transaction execution
+    const { promise: txPromise, resolve: resolveTx } =
+      createDeferredTransactionPromise();
+    mockAmmContract.removeLiquidity.mockReturnValue(txPromise);
+
+    // Wait for dialog and click confirm
+    await waitFor(() => {
+      const confirmButton = getByRole('button', { name: 'Remove' });
+      fireEvent.click(confirmButton);
+    });
+
+    // Should show loading state during transaction
+    await waitFor(() => {
+      expect(getByRole('button', { name: 'Waiting...' })).toBeTruthy();
+    });
+
+    // Clean up
+    act(() => {
+      resolveTx();
+    });
+  });
+
+  it('should handle dialog fetch errors', async () => {
+    mockAmmContract.getRemoveLiquidityOutput.mockRejectedValue(
+      new Error('Failed to fetch output')
+    );
+
     const { getByRole, getByPlaceholderText } = render(
       <RemoveLiquidity {...defaultProps} />
     );
@@ -135,11 +278,17 @@ describe('RemoveLiquidity', () => {
     });
 
     await waitFor(() => {
-      expect(getByRole('button', { name: 'Waiting...' })).toBeTruthy();
+      expect(mockSetErrorMessage).toHaveBeenCalledWith(
+        'Remove liquidity failed: Failed to fetch output'
+      );
     });
   });
 
   it('should handle transaction errors', async () => {
+    mockAmmContract.getRemoveLiquidityOutput.mockResolvedValue([
+      BigInt(5e18), // 5 SIMP
+      BigInt(2.5e18), // 2.5 ETH
+    ]);
     mockAmmContract.removeLiquidity.mockRejectedValue(
       new Error('Transaction failed')
     );
@@ -151,9 +300,16 @@ describe('RemoveLiquidity', () => {
     const lpInput = getByPlaceholderText('LP Tokens to Remove');
     const removeButton = getByRole('button', { name: 'Remove Liquidity' });
 
+    // Click remove liquidity button
     act(() => {
       fireEvent.change(lpInput, { target: { value: '2.5' } });
       fireEvent.click(removeButton);
+    });
+
+    // Wait for confirmation dialog and click confirm
+    await waitFor(() => {
+      const confirmButton = getByRole('button', { name: 'Remove' });
+      fireEvent.click(confirmButton);
     });
 
     await waitFor(() => {

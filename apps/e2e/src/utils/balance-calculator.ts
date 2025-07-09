@@ -13,6 +13,7 @@ export interface BalanceState {
 export interface PoolReserves {
   ethReserve: number;
   simpReserve: number;
+  totalLPTokens: number;
 }
 
 /**
@@ -37,6 +38,7 @@ export class BalanceCalculator {
     this.reserves = {
       ethReserve: 0,
       simpReserve: 0,
+      totalLPTokens: 0,
     };
   }
 
@@ -77,6 +79,7 @@ export class BalanceCalculator {
     this.reserves = {
       ethReserve: 0,
       simpReserve: 0,
+      totalLPTokens: 0,
     };
   }
 
@@ -109,9 +112,22 @@ export class BalanceCalculator {
       ethBalance: this.balances.ethBalance - ethAmount - actualGasCost,
       simpBalance: this.balances.simpBalance - simpAmount,
     };
+
+    let lpTokenAmount: number;
+    if (this.reserves.totalLPTokens === 0) {
+      lpTokenAmount = Math.sqrt(simpAmount * ethAmount);
+    } else {
+      const lpFromSimp =
+        (simpAmount * this.reserves.totalLPTokens) / this.reserves.simpReserve;
+      const lpFromEth =
+        (ethAmount * this.reserves.totalLPTokens) / this.reserves.ethReserve;
+      lpTokenAmount = Math.min(lpFromSimp, lpFromEth);
+    }
+
     this.reserves = {
       ethReserve: this.reserves.ethReserve + ethAmount,
       simpReserve: this.reserves.simpReserve + simpAmount,
+      totalLPTokens: this.reserves.totalLPTokens + lpTokenAmount,
     };
   }
 
@@ -146,6 +162,7 @@ export class BalanceCalculator {
     this.reserves = {
       ethReserve: this.reserves.ethReserve + ethSwapAmount,
       simpReserve: this.reserves.simpReserve - simpOutput,
+      totalLPTokens: this.reserves.totalLPTokens,
     };
   }
 
@@ -180,6 +197,34 @@ export class BalanceCalculator {
     this.reserves = {
       ethReserve: this.reserves.ethReserve - ethOutput,
       simpReserve: this.reserves.simpReserve + simpSwapAmount,
+      totalLPTokens: this.reserves.totalLPTokens,
+    };
+  }
+
+  /**
+   * Update balances and pool reserves after removing liquidity
+   * @param lpTokenAmount LP token amount being removed
+   * @param actualGasCost Actual gas cost in ETH (required)
+   */
+  updateBalancesAfterRemoveLiquidity(
+    lpTokenAmount: number,
+    actualGasCost: number
+  ): void {
+    const totalLPTokens = this.reserves.totalLPTokens;
+    const simpOutput =
+      (lpTokenAmount * this.reserves.simpReserve) / totalLPTokens;
+    const ethOutput =
+      (lpTokenAmount * this.reserves.ethReserve) / totalLPTokens;
+
+    this.balances = {
+      ethBalance: this.balances.ethBalance + ethOutput - actualGasCost,
+      simpBalance: this.balances.simpBalance + simpOutput,
+    };
+
+    this.reserves = {
+      ethReserve: this.reserves.ethReserve - ethOutput,
+      simpReserve: this.reserves.simpReserve - simpOutput,
+      totalLPTokens: this.reserves.totalLPTokens - lpTokenAmount,
     };
   }
 

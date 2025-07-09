@@ -7,11 +7,14 @@ cd ../..
 DEV_PID=$!
 cd apps/e2e
 
+# Variable to track test exit code
+TEST_EXIT_CODE=0
+
 # Cleanup function
 cleanup() {
     echo "Stopping development environment..."
     kill $DEV_PID 2>/dev/null
-    exit 0
+    exit $TEST_EXIT_CODE
 }
 trap cleanup EXIT
 
@@ -42,5 +45,6 @@ wait $SYNPRESS_PID
 # Run tests
 echo "Running e2e tests..."
 npx playwright test --config=playwright.config.ts "$@"
+TEST_EXIT_CODE=$?
 
 echo "Tests completed"
