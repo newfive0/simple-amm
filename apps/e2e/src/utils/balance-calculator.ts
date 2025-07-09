@@ -182,4 +182,28 @@ export class BalanceCalculator {
       simpReserve: this.reserves.simpReserve + simpSwapAmount,
     };
   }
+
+  /**
+   * Calculate required token amount for adding liquidity to maintain pool ratio
+   * @param ethAmount ETH amount to add
+   * @returns Required SIMP token amount to maintain ratio
+   */
+  calculateRequiredTokenAmount(ethAmount: number): number {
+    if (
+      ethAmount <= 0 ||
+      this.reserves.ethReserve <= 0 ||
+      this.reserves.simpReserve <= 0
+    ) {
+      return 0;
+    }
+
+    // Use BigInt arithmetic for precision: tokenAmount = (ethAmount * poolTokenReserve) / poolEthReserve
+    const ethAmountBigInt = this.toBigInt(ethAmount);
+    const ethReserveBigInt = this.toBigInt(this.reserves.ethReserve);
+    const simpReserveBigInt = this.toBigInt(this.reserves.simpReserve);
+
+    const requiredTokenAmountBigInt =
+      (ethAmountBigInt * simpReserveBigInt) / ethReserveBigInt;
+    return this.toNumber(requiredTokenAmountBigInt);
+  }
 }
