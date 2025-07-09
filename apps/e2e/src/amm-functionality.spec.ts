@@ -80,16 +80,14 @@ test.describe('AMM Functionality', () => {
 
     // Helper function to handle MetaMask transactions with 3 confirmations and return gas cost
     const handleTripleConfirmation = async (): Promise<number> => {
-      await page.waitForTimeout(3000);
       await metamask.confirmTransaction();
-
       await page.waitForTimeout(3000);
-      await metamask.confirmTransaction();
 
+      await metamask.confirmTransaction();
       await page.waitForTimeout(3000);
-      await metamask.confirmTransaction();
 
-      await page.waitForTimeout(5000);
+      await metamask.confirmTransaction();
+      await page.waitForTimeout(3000);
 
       // Get gas costs from the 2 actual blockchain transactions (approve + addLiquidity)
       // Note: First confirmation is just MetaMask's spending cap UI, not a transaction
@@ -97,8 +95,8 @@ test.describe('AMM Functionality', () => {
     };
 
     const handleSingleConfirmation = async (): Promise<number> => {
-      await page.waitForTimeout(3000);
       await metamask.confirmTransaction();
+      await page.waitForTimeout(3000);
 
       return await getGasCostsFromRecentTransactions(1);
     };
@@ -153,7 +151,7 @@ test.describe('AMM Functionality', () => {
         liquiditySection.getByPlaceholder('Enter ETH amount')
       ).toBeVisible({ timeout: 10000 });
 
-      // Fill in the liquidity amounts: 100 ETH and 2000 SIMP tokens
+      // Fill in both amounts for initial liquidity (pool is empty, so no auto-calculation)
       // This establishes the initial pool ratio of 1 ETH : 20 SIMP
       const ethInput = liquiditySection.getByPlaceholder('Enter ETH amount');
       await ethInput.fill('100');
@@ -161,9 +159,13 @@ test.describe('AMM Functionality', () => {
       const simpInput = liquiditySection.getByPlaceholder('Enter SIMP amount');
       await simpInput.fill('2000');
 
-      // Verify the input values are correctly set
-      await expect(ethInput).toHaveValue('100.0');
-      await expect(simpInput).toHaveValue('2000.0');
+      // Trigger formatting by losing focus
+      await ethInput.blur();
+      await simpInput.blur();
+
+      // Verify both input values are correctly set with proper formatting
+      await expect(ethInput).toHaveValue('100.0000');
+      await expect(simpInput).toHaveValue('2000.0000');
 
       // Click the "Add Liquidity" button to initiate the transaction
       const addLiquidityButton = page.getByRole('button', {
@@ -173,7 +175,6 @@ test.describe('AMM Functionality', () => {
       await addLiquidityButton.click();
 
       // Wait for the confirmation dialog and click proceed
-      await page.waitForTimeout(2000);
       const proceedButton = page.getByRole('button', { name: 'Proceed' });
       await expect(proceedButton).toBeVisible({ timeout: 5000 });
       await proceedButton.click();
@@ -227,7 +228,7 @@ test.describe('AMM Functionality', () => {
       await ethSwapInput.fill('1');
 
       // Verify the input value is correctly set
-      await expect(ethSwapInput).toHaveValue('1.0');
+      await expect(ethSwapInput).toHaveValue('1');
 
       // Wait for the estimated SIMP output to be displayed
       // The "≈" symbol indicates this is an estimate based on current pool ratios
@@ -288,7 +289,7 @@ test.describe('AMM Functionality', () => {
       await simpSwapInput.fill('1');
 
       // Verify the input value is correctly set
-      await expect(simpSwapInput).toHaveValue('1.0');
+      await expect(simpSwapInput).toHaveValue('1');
 
       // Wait for the estimated ETH output to be displayed
       // The pool ratios have changed from previous swaps, affecting the exchange rate
@@ -333,10 +334,6 @@ test.describe('AMM Functionality', () => {
     };
 
     const testTransactionRejection = async () => {
-      console.log(
-        '[Error Handling] Testing transaction rejection scenarios...'
-      );
-
       // Test swap rejection
       const swapSection = page
         .locator('h2')
@@ -358,20 +355,14 @@ test.describe('AMM Functionality', () => {
       await swapButton.click();
 
       // Reject the transaction
-      await page.waitForTimeout(3000);
       await metamask.rejectTransaction();
+      await page.waitForTimeout(3000);
 
       // Verify error is displayed
       await verifyErrorDisplay(page, 'Swap failed: user rejected action');
-
-      console.log('[Error Handling] Transaction rejection test completed');
     };
 
     const testErrorClearing = async () => {
-      console.log(
-        '[Error Handling] Testing error clearing after successful operation...'
-      );
-
       // The error from previous test should still be displayed
       // Now perform a successful swap to clear it
       const swapSection = page
@@ -387,19 +378,14 @@ test.describe('AMM Functionality', () => {
         .filter({ hasText: 'Swap ETH for SIMP' });
       await newSwapButton.click();
 
-      // Confirm the transaction
-      await page.waitForTimeout(3000);
-      await metamask.confirmTransaction();
+      // Confirm the transaction and get gas costs
+      const ethSwapGasUsed = await handleSingleConfirmation();
 
-      // Wait for transaction to complete
-      await expect(
-        swapSection.locator('button').filter({ hasText: 'Waiting...' })
-      ).toBeHidden({ timeout: 60000 });
+      // Update balance calculator with the 0.05 ETH swap
+      balanceCalculator.updateBalancesAfterSwapEthForSimp(0.05, ethSwapGasUsed);
 
       // Verify error is cleared
       await verifyNoError(page);
-
-      console.log('[Error Handling] Error clearing test completed');
     };
 
     const testSlippageProtection = async () => {
@@ -408,8 +394,6 @@ test.describe('AMM Functionality', () => {
       );
 
       const manipulator = new ContractManipulator();
-
-      console.log('[Step 5] Starting slippage protection test...');
 
       // Step 1: Set up liquidity addition via normal UI operation
       await expect(
@@ -432,7 +416,19 @@ test.describe('AMM Functionality', () => {
       await ethInput.clear();
       await ethInput.fill('10');
 
-      await page.waitForTimeout(1000);
+      // Calculate expected SIMP amount based on current pool ratio
+      const expectedSimpAmount =
+        balanceCalculator.calculateRequiredTokenAmount(10);
+
+      const simpInput = liquiditySection.getByPlaceholder('Enter SIMP amount');
+
+      // Verify the SIMP amount was auto-calculated correctly
+      const actualValue = await simpInput.inputValue();
+      const actualAmount = parseFloat(actualValue);
+
+      // The balance calculator may be slightly out of sync with contract reserves
+      // due to gas costs and precision differences, so we use a reasonable tolerance
+      expect(actualAmount).toBeCloseTo(expectedSimpAmount, 4);
 
       const addLiquidityButton = page.getByRole('button', {
         name: 'Add Liquidity',
@@ -442,46 +438,27 @@ test.describe('AMM Functionality', () => {
       await addLiquidityButton.click();
 
       // Step 2: Wait for confirmation dialog to appear (but don't confirm yet)
-      await page.waitForTimeout(2000);
       const proceedButton = page.getByRole('button', { name: 'Proceed' });
       await expect(proceedButton).toBeVisible({ timeout: 5000 });
 
-      console.log(
-        '[Step 5] Dialog appeared, now creating slippage with manipulator...'
-      );
-
       // Step 3: Create slippage conditions using ContractManipulator
       // This simulates another user making a large trade that changes pool ratios
-      console.log('[Step 5] Current pool state before slippage:');
-      const beforeState = await manipulator.getPoolState();
-      console.log('[Step 5] Before slippage:', {
-        ethReserve: beforeState.ethReserve.toString(),
-        tokenReserve: beforeState.tokenReserve.toString(),
-      });
-
       // Large swap to significantly change pool ratios and create slippage
       await manipulator.swapEthForTokens(BigInt(50e18));
-
-      console.log('[Step 5] Pool state after creating slippage:');
-      const afterState = await manipulator.getPoolState();
-      console.log('[Step 5] After slippage:', {
-        ethReserve: afterState.ethReserve.toString(),
-        tokenReserve: afterState.tokenReserve.toString(),
-      });
 
       // Step 4: Now confirm the UI transaction (should fail due to slippage)
       await proceedButton.click();
 
       // Two-step confirmation process:
       // 1. Spending cap approval for token allowance
-      await page.waitForTimeout(3000);
       await metamask.confirmTransaction();
+      await page.waitForTimeout(3000);
 
       // 2. Actual add liquidity transaction (this should fail due to slippage)
-      await page.waitForTimeout(3000);
       await metamask.confirmTransaction();
 
       // Step 5: Verify slippage error is displayed in the UI
+      // Wait for transaction to complete (waiting indicator disappears)
       await expect(page.getByRole('button', { name: 'Waiting...' })).toBeHidden(
         { timeout: 60000 }
       );
@@ -492,8 +469,6 @@ test.describe('AMM Functionality', () => {
         page,
         'Add liquidity failed: Slippage protection triggered (0.5% tolerance). Try again or reduce trade size.'
       );
-
-      console.log('[Step 5] Slippage protection test completed successfully');
 
       await argosScreenshot(page, 'slippage-protection-test');
     };

@@ -1,4 +1,4 @@
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, waitFor } from '@testing-library/react';
 import { vi } from 'vitest';
 import { ethers } from 'ethers';
 import { LiquidityInput } from './LiquidityInput';
@@ -31,15 +31,22 @@ describe('LiquidityInput', () => {
     expect(getByPlaceholderText('Test placeholder')).toBeTruthy();
   });
 
-  it('should display value when provided', () => {
-    const { getByDisplayValue } = render(
+  it('should display value when amountWei changes', async () => {
+    const { getByDisplayValue, rerender } = render(
+      <LiquidityInput {...defaultProps} amountWei={0n} />
+    );
+
+    // Re-render with a value to trigger useEffect
+    rerender(
       <LiquidityInput
         {...defaultProps}
         amountWei={ethers.parseUnits('10.5', 18)}
       />
     );
 
-    expect(getByDisplayValue('10.5')).toBeTruthy();
+    await waitFor(() => {
+      expect(getByDisplayValue('10.5000')).toBeTruthy();
+    });
   });
 
   it('should show empty string when value is 0', () => {
