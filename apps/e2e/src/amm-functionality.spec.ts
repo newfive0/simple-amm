@@ -79,14 +79,15 @@ test.describe('AMM Functionality', () => {
 
     // Helper function to handle MetaMask transactions with 3 confirmations and return gas cost
     const handleTripleConfirmation = async (): Promise<number> => {
+      await page.waitForTimeout(1000);
       await metamask.confirmTransaction();
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(1000);
 
       await metamask.confirmTransaction();
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(1000);
 
       await metamask.confirmTransaction();
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(1000);
 
       // Get gas costs from the 2 actual blockchain transactions (approve + addLiquidity)
       // Note: First confirmation is just MetaMask's spending cap UI, not a transaction
@@ -95,7 +96,7 @@ test.describe('AMM Functionality', () => {
 
     const handleSingleConfirmation = async (): Promise<number> => {
       await metamask.confirmTransaction();
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(1000);
 
       return await getGasCostsFromRecentTransactions(1);
     };
@@ -484,7 +485,7 @@ test.describe('AMM Functionality', () => {
 
       // Reject the transaction
       await metamask.rejectTransaction();
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(1000);
 
       // Verify error is displayed
       await verifyErrorDisplay(page, 'Swap failed: user rejected action');
@@ -581,11 +582,12 @@ test.describe('AMM Functionality', () => {
 
       // Step 4: Now confirm the UI transaction (should fail due to slippage)
       await proceedButton.click();
+      await page.waitForTimeout(1000);
 
       // Two-step confirmation process:
       // 1. Spending cap approval for token allowance
       await metamask.confirmTransaction();
-      await page.waitForTimeout(3000);
+      await page.waitForTimeout(1000);
 
       // 2. Actual add liquidity transaction (this should fail due to slippage)
       await metamask.confirmTransaction();
