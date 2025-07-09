@@ -1,4 +1,4 @@
-import styles from './Swap.module.scss';
+import styles from './SwitchDirectionButton.module.scss';
 
 interface SwitchDirectionButtonProps {
   onClick: () => void;
