@@ -176,6 +176,10 @@ test.describe('AMM Functionality', () => {
       // Wait for the confirmation dialog and click proceed
       const proceedButton = page.getByRole('button', { name: 'Proceed' });
       await expect(proceedButton).toBeVisible({ timeout: 5000 });
+
+      // Take a snapshot of the add liquidity confirmation dialog
+      await argosScreenshot(page, 'add-liquidity-confirm-dialog');
+
       await proceedButton.click();
 
       // Handle the 3-step MetaMask confirmation process:
