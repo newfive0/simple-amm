@@ -126,6 +126,27 @@
   box-sizing: border-box;
 }
 
+.switchButton {
+  padding: 8px 16px;
+  background-color: #28a745;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  color: white;
+
+  &:hover:not(:disabled) {
+    background-color: #218838;
+  }
+
+  &:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+  }
+}
+
 .swapButton {
   width: 100%;
   padding: 12px;

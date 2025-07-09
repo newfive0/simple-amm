@@ -23,16 +23,16 @@ describe('DisabledSwap Component', () => {
     expect(screen.getByText('Please connect wallet')).toBeInTheDocument();
   });
 
-  it('should have disabled tabs that switch direction visually', () => {
+  it('should have disabled switch direction button', () => {
     render(<DisabledSwap />);
 
-    const ethTab = screen.getByRole('button', { name: 'ETH' });
-    const tokenTab = screen.getByRole('button', { name: 'SIMP' });
+    const switchButton = screen.getByRole('button', {
+      name: 'Switch Direction',
+    });
 
-    expect(ethTab).toBeDisabled();
-    expect(tokenTab).toBeDisabled();
+    expect(switchButton).toBeDisabled();
 
-    // Tabs are disabled but component should handle internal state for visual consistency
+    // Switch button is disabled but component should show default direction
     expect(screen.getByPlaceholderText('SIMP → ETH')).toBeInTheDocument();
   });
 

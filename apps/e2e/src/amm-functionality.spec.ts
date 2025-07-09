@@ -49,10 +49,9 @@ test('should display AMM page with disabled elements before connection', async (
     swapSection.getByRole('button', { name: 'Please connect wallet' })
   ).toBeVisible();
 
-  // Verify token selection buttons (ETH/SIMP) are disabled without wallet connection
-  await expect(swapSection.getByRole('button', { name: 'ETH' })).toBeDisabled();
+  // Verify switch direction button is disabled without wallet connection
   await expect(
-    swapSection.getByRole('button', { name: 'SIMP' })
+    swapSection.getByRole('button', { name: 'Switch Direction' })
   ).toBeDisabled();
 
   // Verify liquidity section buttons (Add/Remove) are disabled without wallet connection
@@ -214,13 +213,13 @@ test.describe('AMM Functionality', () => {
         .locator('../..');
       await expect(swapSection.locator('h2')).toBeVisible();
 
-      // Click the SIMP tab to set up ETH → SIMP swap direction
-      const simpTab = swapSection.getByRole('button', {
-        name: 'SIMP',
+      // Click the Switch Direction button to set up ETH → SIMP swap direction
+      const switchButton = swapSection.getByRole('button', {
+        name: 'Switch Direction',
         exact: true,
       });
-      await expect(simpTab).toBeEnabled();
-      await simpTab.click();
+      await expect(switchButton).toBeEnabled();
+      await switchButton.click();
 
       // Fill in the ETH amount to swap (1 ETH)
       const ethSwapInput = swapSection.getByPlaceholder('ETH → SIMP');
@@ -275,13 +274,13 @@ test.describe('AMM Functionality', () => {
         .filter({ hasText: 'Swap' })
         .locator('../..');
 
-      // Click the ETH tab to set up SIMP → ETH swap direction
-      const ethTab = swapSection.getByRole('button', {
-        name: 'ETH',
+      // Click the Switch Direction button to set up SIMP → ETH swap direction
+      const switchButton = swapSection.getByRole('button', {
+        name: 'Switch Direction',
         exact: true,
       });
-      await expect(ethTab).toBeEnabled();
-      await ethTab.click();
+      await expect(switchButton).toBeEnabled();
+      await switchButton.click();
 
       // Fill in the SIMP amount to swap (1 SIMP token)
       const simpSwapInput = swapSection.getByPlaceholder('SIMP → ETH');
@@ -340,11 +339,11 @@ test.describe('AMM Functionality', () => {
         .filter({ hasText: 'Swap' })
         .locator('../..');
 
-      const simpTab = swapSection.getByRole('button', {
-        name: 'SIMP',
+      const switchButton = swapSection.getByRole('button', {
+        name: 'Switch Direction',
         exact: true,
       });
-      await simpTab.click();
+      await switchButton.click();
 
       const ethInput = swapSection.getByPlaceholder('ETH → SIMP');
       await ethInput.fill('0.1');

@@ -109,12 +109,6 @@ describe('TabGroup Component', () => {
     expect(mockOnTabChange).not.toHaveBeenCalled();
   });
 
-  it('should show tab label when tabLabel is provided', () => {
-    render(<TabGroup {...defaultProps} tabLabel="Receive:" />);
-
-    expect(screen.getByText('Receive:')).toBeInTheDocument();
-  });
-
   it('should apply custom className', () => {
     const { container } = render(
       <TabGroup {...defaultProps} className="custom-class" />
