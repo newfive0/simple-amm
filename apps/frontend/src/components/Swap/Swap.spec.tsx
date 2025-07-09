@@ -40,17 +40,20 @@ describe('Swap Component', () => {
       render(<Swap {...defaultProps} />);
 
       expect(screen.getByText('Swap')).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'ETH' })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'SIMP' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Switch Direction' })
+      ).toBeInTheDocument();
       expect(screen.getByPlaceholderText('SIMP → ETH')).toBeInTheDocument();
       expect(screen.getByText('Swap SIMP for ETH')).toBeInTheDocument();
     });
 
-    it('should render ETH to Token direction when SIMP tab selected', () => {
+    it('should render ETH to Token direction when switch direction button clicked', () => {
       render(<Swap {...defaultProps} />);
 
-      const simpTab = screen.getByRole('button', { name: 'SIMP' });
-      fireEvent.click(simpTab);
+      const switchButton = screen.getByRole('button', {
+        name: 'Switch Direction',
+      });
+      fireEvent.click(switchButton);
 
       expect(screen.getByPlaceholderText('ETH → SIMP')).toBeInTheDocument();
       expect(screen.getByText('Swap ETH for SIMP')).toBeInTheDocument();
@@ -72,8 +75,10 @@ describe('Swap Component', () => {
     it('should calculate ETH to Token swap correctly', () => {
       render(<Swap {...defaultProps} />);
 
-      const simpTab = screen.getByRole('button', { name: 'SIMP' });
-      fireEvent.click(simpTab);
+      const switchButton = screen.getByRole('button', {
+        name: 'Switch Direction',
+      });
+      fireEvent.click(switchButton);
 
       const input = screen.getByPlaceholderText('ETH → SIMP');
       fireEvent.change(input, { target: { value: '2' } });
@@ -169,8 +174,10 @@ describe('Swap Component', () => {
       render(<Swap {...defaultProps} />);
 
       // Switch to ETH to Token
-      const simpTab = screen.getByRole('button', { name: 'SIMP' });
-      fireEvent.click(simpTab);
+      const switchButton = screen.getByRole('button', {
+        name: 'Switch Direction',
+      });
+      fireEvent.click(switchButton);
 
       const input = screen.getByPlaceholderText('ETH → SIMP');
       fireEvent.change(input, { target: { value: '1.5' } });
@@ -204,8 +211,10 @@ describe('Swap Component', () => {
       render(<Swap {...defaultProps} />);
 
       // Switch to ETH to Token
-      const simpTab = screen.getByRole('button', { name: 'SIMP' });
-      fireEvent.click(simpTab);
+      const switchButton = screen.getByRole('button', {
+        name: 'Switch Direction',
+      });
+      fireEvent.click(switchButton);
 
       const input = screen.getByPlaceholderText('ETH → SIMP');
       fireEvent.change(input, { target: { value: '1' } });
@@ -291,8 +300,10 @@ describe('Swap Component', () => {
       expect(screen.getByText(/≈ 1\.9952 ETH/)).toBeInTheDocument();
 
       // Switch to ETH to Token
-      const simpTab = screen.getByRole('button', { name: 'SIMP' });
-      fireEvent.click(simpTab);
+      const switchButton = screen.getByRole('button', {
+        name: 'Switch Direction',
+      });
+      fireEvent.click(switchButton);
 
       const ethInput = screen.getByPlaceholderText('ETH → SIMP');
       fireEvent.change(ethInput, { target: { value: '1' } });

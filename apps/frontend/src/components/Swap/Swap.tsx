@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { Token, AMMPool } from '@typechain-types';
-import { TabGroup } from '../shared/TabGroup';
+import { SwapHeader } from './SwapHeader';
 import { SwapInput } from './SwapInput';
 import { createSwapOutputCalculator } from '../../utils/outputDisplayFormatters';
 import { useErrorMessage } from '../../contexts/ErrorMessageContext';
@@ -112,23 +112,12 @@ export const Swap = ({
     });
   };
 
-  const tabOptions = [
-    { id: 'token-to-eth', label: 'ETH' },
-    { id: 'eth-to-token', label: 'SIMP' },
-  ];
-
   return (
     <div className={styles.swap}>
-      <div className={styles.header}>
-        <h2 className={styles.title}>Swap</h2>
-        <TabGroup
-          options={tabOptions}
-          activeTab={swapDirection}
-          onTabChange={setSwapDirection as (tabId: string) => void}
-          disabled={false}
-          tabLabel="Receive"
-        />
-      </div>
+      <SwapHeader
+        swapDirection={swapDirection}
+        onDirectionChange={setSwapDirection}
+      />
       {swapDirection === 'token-to-eth' ? (
         <SwapInput
           key="token-to-eth"

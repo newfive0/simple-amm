@@ -1,4 +1,4 @@
-import { TabGroup } from '../shared/TabGroup';
+import { SwitchDirectionButton } from './SwitchDirectionButton';
 import { SwapInput } from './SwapInput';
 import { createSwapOutputCalculator } from '../../utils/outputDisplayFormatters';
 import styles from './Swap.module.scss';
@@ -16,16 +16,7 @@ export const DisabledSwap = ({
     <div className={styles.swap}>
       <div className={styles.header}>
         <h2 className={styles.title}>Swap</h2>
-        <TabGroup
-          options={[
-            { id: 'token-to-eth', label: 'ETH' },
-            { id: 'eth-to-token', label: 'SIMP' },
-          ]}
-          activeTab="token-to-eth"
-          onTabChange={() => {}}
-          disabled={true}
-          tabLabel="Receive"
-        />
+        <SwitchDirectionButton onClick={() => {}} disabled={true} />
       </div>
       <SwapInput
         key="token-to-eth"

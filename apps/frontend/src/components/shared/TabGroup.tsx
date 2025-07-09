@@ -10,7 +10,6 @@ interface TabGroupProps {
   onTabChange: (tabId: string) => void;
   disabled?: boolean;
   className?: string;
-  tabLabel?: string;
 }
 
 import styles from './TabGroup.module.scss';
@@ -21,10 +20,8 @@ export const TabGroup = ({
   onTabChange,
   disabled = false,
   className = '',
-  tabLabel = '',
 }: TabGroupProps) => (
   <div className={`${styles.tabGroup} ${className}`}>
-    {tabLabel && <span className={styles.tabLabel}>{tabLabel}</span>}
     <div className={styles.tabs}>
       {options.map((option) => (
         <button
