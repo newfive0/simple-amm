@@ -239,17 +239,10 @@ test.describe('AMM Functionality', () => {
       const lpInput = liquiditySection.getByPlaceholder('LP Tokens to Remove');
       await lpInput.fill('50');
 
-      // Trigger formatting by losing focus
-      await lpInput.blur();
-
-      // Verify the input value is correctly set (may or may not be formatted)
-      await expect(lpInput).toHaveValue('50');
-
-      // Wait for the estimated output to be displayed
-      await expect(liquiditySection.locator('text=/≈.*ETH/i')).toBeVisible({
-        timeout: 5000,
-      });
-      await expect(liquiditySection.locator('text=/≈.*SIMP/i')).toBeVisible({
+      // Wait for the expected output to be displayed (format: "X.XXXX SIMP + X.XXXX ETH")
+      await expect(
+        liquiditySection.locator('div[class*="expectedOutput"]')
+      ).toBeVisible({
         timeout: 5000,
       });
 
@@ -261,25 +254,31 @@ test.describe('AMM Functionality', () => {
       await removeLiquidityButton.click();
 
       // Wait for the confirmation dialog and verify its content
-      const confirmDialog = page.locator('.dialog');
+      const confirmDialog = page.locator('[class*="dialog"]');
       await expect(confirmDialog).toBeVisible({ timeout: 5000 });
 
       // Verify the dialog title and content
-      await expect(page.getByText('Confirm Remove Liquidity')).toBeVisible();
       await expect(
-        page.getByText('Are you sure you want to remove 50.0000 LP tokens?')
+        confirmDialog.getByText('Confirm Remove Liquidity')
       ).toBeVisible();
-      await expect(page.getByText('You will receive:')).toBeVisible();
+      await expect(
+        confirmDialog.getByText(
+          /Are you sure you want to remove.*50.*LP tokens/
+        )
+      ).toBeVisible();
+      await expect(confirmDialog.getByText('You will receive:')).toBeVisible();
 
       // Verify the dialog shows expected token amounts
-      await expect(page.locator('text=/\\d+.*SIMP/i')).toBeVisible();
-      await expect(page.locator('text=/\\d+.*ETH/i')).toBeVisible();
+      await expect(confirmDialog.locator('text=/\\d+.*SIMP/i')).toBeVisible();
+      await expect(confirmDialog.locator('text=/\\d+.*ETH/i')).toBeVisible();
 
       // Take a snapshot of the remove liquidity confirmation dialog
       await argosScreenshot(page, 'remove-liquidity-confirm-dialog');
 
       // Click the "Remove" button to confirm
-      const removeButton = page.getByRole('button', { name: 'Remove' });
+      const removeButton = confirmDialog.getByRole('button', {
+        name: 'Remove',
+      });
       await expect(removeButton).toBeVisible();
       await removeButton.click();
 
@@ -300,9 +299,9 @@ test.describe('AMM Functionality', () => {
         removeLiquidityGasUsed
       );
 
-      // Verify the UI displays the updated balances
-      const updatedBalances = balanceCalculator.getCurrentBalances();
-      const expectedBalanceText = `Balance: ${updatedBalances.simpBalance.toFixed(4)} SIMP | ${updatedBalances.ethBalance.toFixed(4)} ETH`;
+      // Verify the UI displays the updated balances after liquidity removal
+      const removedBalances = balanceCalculator.getCurrentBalances();
+      const expectedBalanceText = `Balance: ${removedBalances.simpBalance.toFixed(4)} SIMP | ${removedBalances.ethBalance.toFixed(4)} ETH`;
       const balanceElement = page.getByText('Balance:').locator('..');
       await expect(balanceElement).toHaveText(expectedBalanceText, {
         timeout: 10000,

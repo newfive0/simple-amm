@@ -13,6 +13,7 @@ export interface BalanceState {
 export interface PoolReserves {
   ethReserve: number;
   simpReserve: number;
+  totalLPTokens: number;
 }
 
 /**
@@ -37,6 +38,7 @@ export class BalanceCalculator {
     this.reserves = {
       ethReserve: 0,
       simpReserve: 0,
+      totalLPTokens: 0,
     };
   }
 
@@ -77,6 +79,7 @@ export class BalanceCalculator {
     this.reserves = {
       ethReserve: 0,
       simpReserve: 0,
+      totalLPTokens: 0,
     };
   }
 
@@ -109,9 +112,22 @@ export class BalanceCalculator {
       ethBalance: this.balances.ethBalance - ethAmount - actualGasCost,
       simpBalance: this.balances.simpBalance - simpAmount,
     };
+
+    let lpTokenAmount: number;
+    if (this.reserves.totalLPTokens === 0) {
+      lpTokenAmount = Math.sqrt(simpAmount * ethAmount);
+    } else {
+      const lpFromSimp =
+        (simpAmount * this.reserves.totalLPTokens) / this.reserves.simpReserve;
+      const lpFromEth =
+        (ethAmount * this.reserves.totalLPTokens) / this.reserves.ethReserve;
+      lpTokenAmount = Math.min(lpFromSimp, lpFromEth);
+    }
+
     this.reserves = {
       ethReserve: this.reserves.ethReserve + ethAmount,
       simpReserve: this.reserves.simpReserve + simpAmount,
+      totalLPTokens: this.reserves.totalLPTokens + lpTokenAmount,
     };
   }
 
@@ -146,6 +162,7 @@ export class BalanceCalculator {
     this.reserves = {
       ethReserve: this.reserves.ethReserve + ethSwapAmount,
       simpReserve: this.reserves.simpReserve - simpOutput,
+      totalLPTokens: this.reserves.totalLPTokens,
     };
   }
 
@@ -180,6 +197,7 @@ export class BalanceCalculator {
     this.reserves = {
       ethReserve: this.reserves.ethReserve - ethOutput,
       simpReserve: this.reserves.simpReserve + simpSwapAmount,
+      totalLPTokens: this.reserves.totalLPTokens,
     };
   }
 
@@ -192,24 +210,21 @@ export class BalanceCalculator {
     lpTokenAmount: number,
     actualGasCost: number
   ): void {
-    // For simplicity, we'll estimate the token outputs based on proportional share
-    // In a real implementation, this would need to calculate the exact amounts
-    // based on the total LP supply and reserves at the time of removal
-
-    // Estimate proportional share (this is a simplified approximation)
-    const totalLPSupply = 100; // Simplified assumption
-    const shareRatio = lpTokenAmount / totalLPSupply;
-
-    const ethOutput = this.reserves.ethReserve * shareRatio;
-    const simpOutput = this.reserves.simpReserve * shareRatio;
+    const totalLPTokens = this.reserves.totalLPTokens;
+    const simpOutput =
+      (lpTokenAmount * this.reserves.simpReserve) / totalLPTokens;
+    const ethOutput =
+      (lpTokenAmount * this.reserves.ethReserve) / totalLPTokens;
 
     this.balances = {
       ethBalance: this.balances.ethBalance + ethOutput - actualGasCost,
       simpBalance: this.balances.simpBalance + simpOutput,
     };
+
     this.reserves = {
       ethReserve: this.reserves.ethReserve - ethOutput,
       simpReserve: this.reserves.simpReserve - simpOutput,
+      totalLPTokens: this.reserves.totalLPTokens - lpTokenAmount,
     };
   }
 
