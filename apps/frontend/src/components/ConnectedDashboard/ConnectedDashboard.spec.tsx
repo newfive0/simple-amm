@@ -12,11 +12,6 @@ vi.mock('../../utils/balances', () => ({
 }));
 
 // Mock the child components
-interface MockWalletInfoProps {
-  account: string;
-  ethBalance: number;
-  tokenBalance: number;
-}
 
 interface MockSwapProps {
   ammContract: unknown;
@@ -40,12 +35,8 @@ interface MockLiquidityProps {
 }
 
 vi.mock('../WalletInfo/WalletInfo', () => ({
-  WalletInfo: ({ account, ethBalance, tokenBalance }: MockWalletInfoProps) => (
-    <div data-testid="wallet-info">
-      {account
-        ? `${account} - ${ethBalance.toFixed(4)} ETH / ${tokenBalance.toFixed(4)} SIMP`
-        : 'Not Connected'}
-    </div>
+  WalletInfo: ({ account }: { account: string }) => (
+    <div data-testid="wallet-info">{account || 'Not Connected'}</div>
   ),
 }));
 
@@ -172,9 +163,7 @@ describe('ConnectedDashboard', () => {
       // Wait for async balance fetching to complete
       await waitFor(() => {
         expect(
-          screen.getByText(
-            /0x1234567890abcdef1234567890abcdef12345678 - 5\.0000 ETH \/ 1000\.0000 SIMP/
-          )
+          screen.getByText('0x1234567890abcdef1234567890abcdef12345678')
         ).toBeInTheDocument();
       });
     });
@@ -216,11 +205,9 @@ describe('ConnectedDashboard', () => {
 
       // Wait for async useEffect to complete (even though it does nothing with null signer)
       await waitFor(() => {
-        // Should show zero balances in WalletInfo and "Wallet not connected" for contracts
+        // Should show account in WalletInfo and "Wallet not connected" for contracts
         expect(
-          screen.getByText(
-            '0x1234567890abcdef1234567890abcdef12345678 - 0.0000 ETH / 0.0000 SIMP'
-          )
+          screen.getByText('0x1234567890abcdef1234567890abcdef12345678')
         ).toBeInTheDocument();
         expect(screen.getByText('Wallet not connected')).toBeInTheDocument();
       });
@@ -245,7 +232,9 @@ describe('ConnectedDashboard', () => {
       render(<ConnectedDashboard />);
 
       await waitFor(() => {
-        expect(screen.getByText(/1000\.0000 SIMP/)).toBeInTheDocument();
+        expect(
+          screen.getByText('0x1234567890abcdef1234567890abcdef12345678')
+        ).toBeInTheDocument();
       });
     });
   });

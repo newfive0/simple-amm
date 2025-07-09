@@ -398,6 +398,29 @@ describe('Swap Component', () => {
       // Swap should not have been called
       expect(mockAmmContract.swap).not.toHaveBeenCalled();
     });
+
+    it('should display user-friendly confirmation dialog text', async () => {
+      mockAmmContract.getSwapOutput.mockResolvedValue(BigInt(1e18));
+
+      render(<Swap {...defaultProps} />);
+
+      // Test ETH to Token swap confirmation text
+      const input = screen.getByPlaceholderText('Get SIMP');
+      fireEvent.change(input, { target: { value: '1.0' } });
+
+      const swapButton = screen.getByText('Buy SIMP with ETH');
+      fireEvent.click(swapButton);
+
+      await waitFor(() => {
+        expect(screen.getByText('Swap Confirmation')).toBeInTheDocument();
+      });
+
+      // Check for user-friendly text instead of technical terms
+      expect(screen.getByText(/You'll pay:/)).toBeInTheDocument();
+      expect(screen.getByText(/You'll receive:/)).toBeInTheDocument();
+      expect(screen.queryByText(/Required Input:/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Expected Output:/)).not.toBeInTheDocument();
+    });
   });
 
   describe('Edge Cases', () => {

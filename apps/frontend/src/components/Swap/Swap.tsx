@@ -207,20 +207,17 @@ export const Swap = ({
         cancelText="Cancel"
       >
         <div>
-          <p>
-            <strong>Swap Details:</strong>
-          </p>
           {swapDirection === 'eth-to-token' ? (
             <>
               <p>
-                Required Input:{' '}
+                You'll pay:{' '}
                 {parseFloat(ethers.formatEther(calculatedInputAmount)).toFixed(
                   4
                 )}{' '}
                 ETH
               </p>
               <p>
-                Expected Output:{' '}
+                You'll receive:{' '}
                 {parseFloat(ethers.formatEther(desiredOutputAmount)).toFixed(4)}{' '}
                 SIMP
               </p>
@@ -228,14 +225,14 @@ export const Swap = ({
           ) : (
             <>
               <p>
-                Required Input:{' '}
+                You'll pay:{' '}
                 {parseFloat(ethers.formatEther(calculatedInputAmount)).toFixed(
                   4
                 )}{' '}
                 SIMP
               </p>
               <p>
-                Expected Output:{' '}
+                You'll receive:{' '}
                 {parseFloat(ethers.formatEther(desiredOutputAmount)).toFixed(4)}{' '}
                 ETH
               </p>
