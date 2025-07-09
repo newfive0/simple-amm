@@ -8,6 +8,7 @@ import {
   createMetaMask,
   connectWallet,
   verifyErrorDisplay,
+  verifyNoError,
 } from './utils/test-helpers';
 
 const test = testWithSynpress(metaMaskFixtures(basicSetup));
@@ -331,6 +332,76 @@ test.describe('AMM Functionality', () => {
       await argosScreenshot(page, 'swap-simp-to-eth-success');
     };
 
+    const testTransactionRejection = async () => {
+      console.log(
+        '[Error Handling] Testing transaction rejection scenarios...'
+      );
+
+      // Test swap rejection
+      const swapSection = page
+        .locator('h2')
+        .filter({ hasText: 'Swap' })
+        .locator('../..');
+
+      const simpTab = swapSection.getByRole('button', {
+        name: 'SIMP',
+        exact: true,
+      });
+      await simpTab.click();
+
+      const ethInput = swapSection.getByPlaceholder('ETH → SIMP');
+      await ethInput.fill('0.1');
+
+      const swapButton = swapSection
+        .locator('button')
+        .filter({ hasText: 'Swap ETH for SIMP' });
+      await swapButton.click();
+
+      // Reject the transaction
+      await page.waitForTimeout(3000);
+      await metamask.rejectTransaction();
+
+      // Verify error is displayed
+      await verifyErrorDisplay(page, 'Swap failed: user rejected action');
+
+      console.log('[Error Handling] Transaction rejection test completed');
+    };
+
+    const testErrorClearing = async () => {
+      console.log(
+        '[Error Handling] Testing error clearing after successful operation...'
+      );
+
+      // The error from previous test should still be displayed
+      // Now perform a successful swap to clear it
+      const swapSection = page
+        .locator('h2')
+        .filter({ hasText: 'Swap' })
+        .locator('../..');
+
+      const newSwapInput = swapSection.getByPlaceholder('ETH → SIMP');
+      await newSwapInput.fill('0.05');
+
+      const newSwapButton = swapSection
+        .locator('button')
+        .filter({ hasText: 'Swap ETH for SIMP' });
+      await newSwapButton.click();
+
+      // Confirm the transaction
+      await page.waitForTimeout(3000);
+      await metamask.confirmTransaction();
+
+      // Wait for transaction to complete
+      await expect(
+        swapSection.locator('button').filter({ hasText: 'Waiting...' })
+      ).toBeHidden({ timeout: 60000 });
+
+      // Verify error is cleared
+      await verifyNoError(page);
+
+      console.log('[Error Handling] Error clearing test completed');
+    };
+
     const testSlippageProtection = async () => {
       const { ContractManipulator } = await import(
         './utils/contract-manipulator'
@@ -435,6 +506,11 @@ test.describe('AMM Functionality', () => {
     await addLiquidity();
     await swapEthForSimp();
     await swapSimpForEth();
+
+    // Test error handling scenarios
+    await testTransactionRejection();
+    await testErrorClearing();
+
     await testSlippageProtection();
   });
 });
