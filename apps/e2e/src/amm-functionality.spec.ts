@@ -249,6 +249,10 @@ test.describe('AMM Functionality', () => {
       // Wait for the confirmation dialog and click proceed
       const proceedButton = page.getByRole('button', { name: 'Proceed' });
       await expect(proceedButton).toBeVisible({ timeout: 5000 });
+
+      // Take a snapshot of the ETH to SIMP swap confirmation dialog
+      await argosScreenshot(page, 'eth-to-simp-swap-confirm-dialog');
+
       await proceedButton.click();
 
       // Handle single MetaMask confirmation (ETH swaps don't require token approval)
@@ -315,6 +319,10 @@ test.describe('AMM Functionality', () => {
       // Wait for the confirmation dialog and click proceed
       const proceedButton = page.getByRole('button', { name: 'Proceed' });
       await expect(proceedButton).toBeVisible({ timeout: 5000 });
+
+      // Take a snapshot of the SIMP to ETH swap confirmation dialog
+      await argosScreenshot(page, 'simp-to-eth-swap-confirm-dialog');
+
       await proceedButton.click();
 
       // Handle 3-step MetaMask confirmation for SIMP → ETH swap:
