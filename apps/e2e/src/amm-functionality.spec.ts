@@ -192,7 +192,7 @@ test.describe('AMM Functionality', () => {
       await expect(simpInput).toHaveValue('');
 
       // Update our balance tracker (convert ETH/SIMP to WEI)
-      balanceCalculator.addLiquidity(
+      await balanceCalculator.addLiquidity(
         ethers.parseEther('100'),
         ethers.parseEther('2000'),
         gasUsed
@@ -302,7 +302,7 @@ test.describe('AMM Functionality', () => {
       await expect(lpInput).toHaveValue('');
 
       // Update our balance tracker with the removal results and gas costs (convert LP tokens to WEI)
-      balanceCalculator.removeLiquidity(
+      await balanceCalculator.removeLiquidity(
         ethers.parseEther('50'),
         removeLiquidityGasUsed
       );
@@ -390,7 +390,10 @@ test.describe('AMM Functionality', () => {
 
       // Update our balance tracker with the swap results and gas costs (convert SIMP to WEI)
       // Using reverse calculation: we want 20 SIMP output
-      balanceCalculator.buySimpWithEth(ethers.parseEther('20'), ethSwapGasUsed);
+      await balanceCalculator.buySimpWithEth(
+        ethers.parseEther('20'),
+        ethSwapGasUsed
+      );
 
       // Take a screenshot of the successful ETH → SIMP swap
       await argosScreenshot(page, 'swap-eth-to-simp-success');
@@ -481,7 +484,7 @@ test.describe('AMM Functionality', () => {
 
       // Update our balance tracker with the swap results and gas costs (convert ETH to WEI)
       // Using reverse calculation: we want 0.5 ETH output
-      balanceCalculator.buyEthWithSimp(
+      await balanceCalculator.buyEthWithSimp(
         ethers.parseEther('0.5'),
         simpToEthGasUsed
       );
@@ -550,7 +553,10 @@ test.describe('AMM Functionality', () => {
 
       // Update balance calculator with the swap using reverse logic (convert SIMP to WEI)
       // We want 1 SIMP output
-      balanceCalculator.buySimpWithEth(ethers.parseEther('1'), ethSwapGasUsed);
+      await balanceCalculator.buySimpWithEth(
+        ethers.parseEther('1'),
+        ethSwapGasUsed
+      );
 
       // Verify error is cleared
       await verifyNoError(page);
@@ -626,7 +632,7 @@ test.describe('AMM Functionality', () => {
         balanceCalculator.calculateSimpOutputFromEthInput(
           manipulatorEthInputWei
         );
-      balanceCalculator.updatePoolReservesAfterExternalSwap(
+      await balanceCalculator.updatePoolReservesAfterExternalSwap(
         manipulatorEthInputWei,
         manipulatorSimpOutputWei
       );
@@ -654,7 +660,7 @@ test.describe('AMM Functionality', () => {
 
       // Update balance calculator to account for gas cost of both transactions
       // Even though the addLiquidity transaction failed, gas was still consumed
-      balanceCalculator.trackFailedTransactionGasCost(totalGasCost);
+      await balanceCalculator.trackFailedTransactionGasCost(totalGasCost);
 
       // Verify the specific slippage protection error is displayed
       // The error should show our user-friendly custom error message
