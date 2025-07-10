@@ -12,7 +12,7 @@ export const NotConnectedDashboard = () => {
         gap: '0',
       }}
     >
-      <WalletInfo account={account} ethBalance={0} tokenBalance={0} />
+      <WalletInfo account={account} />
       <DisabledSwap />
       <DisabledLiquidity />
     </div>

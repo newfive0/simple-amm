@@ -33,7 +33,7 @@ test('should display AMM page with disabled elements before connection', async (
   });
 
   // Verify the account status shows as not connected
-  await expect(page.getByText('Your Account: Not Connected')).toBeVisible({
+  await expect(page.getByText('Connected Account: Not Connected')).toBeVisible({
     timeout: 10000,
   });
 
@@ -113,17 +113,9 @@ test.describe('AMM Functionality', () => {
         timeout: 10000,
       });
 
-      // Wait for the balance display to appear with both SIMP and ETH balances
-      await expect(page.locator('text=/^Balance:.*SIMP.*ETH/')).toBeVisible({
+      // Wait for the connected account to appear
+      await expect(page.getByText('Connected Account:')).toBeVisible({
         timeout: 15000,
-      });
-
-      // Verify the displayed balances match our expected initial balances
-      const currentBalances = balanceCalculator.getCurrentBalances();
-      const expectedBalanceText = `Balance: ${currentBalances.simpBalance.toFixed(4)} SIMP | ${currentBalances.ethBalance.toFixed(4)} ETH`;
-      const balanceElement = page.getByText('Balance:').locator('..');
-      await expect(balanceElement).toHaveText(expectedBalanceText, {
-        timeout: 10000,
       });
 
       // Take a screenshot of the connected state with initial balances
@@ -198,14 +190,8 @@ test.describe('AMM Functionality', () => {
       await expect(ethInput).toHaveValue('');
       await expect(simpInput).toHaveValue('');
 
-      // Update our balance tracker and verify the UI reflects the new balances
+      // Update our balance tracker
       balanceCalculator.addLiquidity(100, 2000, gasUsed);
-      const updatedBalances = balanceCalculator.getCurrentBalances();
-      const expectedBalanceText = `Balance: ${updatedBalances.simpBalance.toFixed(4)} SIMP | ${updatedBalances.ethBalance.toFixed(4)} ETH`;
-      const balanceElement = page.getByText('Balance:').locator('..');
-      await expect(balanceElement).toHaveText(expectedBalanceText, {
-        timeout: 10000,
-      });
 
       // Take a screenshot of the successful liquidity addition
       await argosScreenshot(page, 'add-liquidity-success');
@@ -296,14 +282,6 @@ test.describe('AMM Functionality', () => {
       // Update our balance tracker with the removal results and gas costs
       balanceCalculator.removeLiquidity(50, removeLiquidityGasUsed);
 
-      // Verify the UI displays the updated balances after liquidity removal
-      const removedBalances = balanceCalculator.getCurrentBalances();
-      const expectedBalanceText = `Balance: ${removedBalances.simpBalance.toFixed(4)} SIMP | ${removedBalances.ethBalance.toFixed(4)} ETH`;
-      const balanceElement = page.getByText('Balance:').locator('..');
-      await expect(balanceElement).toHaveText(expectedBalanceText, {
-        timeout: 10000,
-      });
-
       // Take a screenshot of the successful liquidity removal
       await argosScreenshot(page, 'remove-liquidity-success');
     };
@@ -344,6 +322,10 @@ test.describe('AMM Functionality', () => {
       const proceedButton = page.getByRole('button', { name: 'Proceed' });
       await expect(proceedButton).toBeVisible({ timeout: 5000 });
 
+      // Verify the confirmation dialog shows user-friendly text
+      await expect(page.getByText(/You'll pay:/)).toBeVisible();
+      await expect(page.getByText(/You'll receive:/)).toBeVisible();
+
       // Take a snapshot of the ETH to SIMP swap confirmation dialog
       await argosScreenshot(page, 'eth-to-simp-swap-confirm-dialog');
 
@@ -363,14 +345,6 @@ test.describe('AMM Functionality', () => {
       // Update our balance tracker with the swap results and gas costs
       // Using reverse calculation: we want 20 SIMP output
       balanceCalculator.buySimpWithEth(20, ethSwapGasUsed);
-
-      // Verify the UI displays the updated balances
-      const swapUpdatedBalances = balanceCalculator.getCurrentBalances();
-      const expectedBalanceText = `Balance: ${swapUpdatedBalances.simpBalance.toFixed(4)} SIMP | ${swapUpdatedBalances.ethBalance.toFixed(4)} ETH`;
-      const balanceElement = page.getByText('Balance:').locator('..');
-      await expect(balanceElement).toHaveText(expectedBalanceText, {
-        timeout: 10000,
-      });
 
       // Take a screenshot of the successful ETH → SIMP swap
       await argosScreenshot(page, 'swap-eth-to-simp-success');
@@ -415,6 +389,10 @@ test.describe('AMM Functionality', () => {
       const proceedButton = page.getByRole('button', { name: 'Proceed' });
       await expect(proceedButton).toBeVisible({ timeout: 5000 });
 
+      // Verify the confirmation dialog shows user-friendly text
+      await expect(page.getByText(/You'll pay:/)).toBeVisible();
+      await expect(page.getByText(/You'll receive:/)).toBeVisible();
+
       // Take a snapshot of the SIMP to ETH swap confirmation dialog
       await argosScreenshot(page, 'simp-to-eth-swap-confirm-dialog');
 
@@ -437,14 +415,6 @@ test.describe('AMM Functionality', () => {
       // Update our balance tracker with the swap results and gas costs
       // Using reverse calculation: we want 0.5 ETH output
       balanceCalculator.buyEthWithSimp(0.5, simpToEthGasUsed);
-
-      // Verify the UI displays the final balances after all transactions
-      const finalBalances = balanceCalculator.getCurrentBalances();
-      const expectedBalanceText = `Balance: ${finalBalances.simpBalance.toFixed(4)} SIMP | ${finalBalances.ethBalance.toFixed(4)} ETH`;
-      const balanceElement = page.getByText('Balance:').locator('..');
-      await expect(balanceElement).toHaveText(expectedBalanceText, {
-        timeout: 10000,
-      });
 
       // Take a screenshot of the successful SIMP → ETH swap
       await argosScreenshot(page, 'swap-simp-to-eth-success');

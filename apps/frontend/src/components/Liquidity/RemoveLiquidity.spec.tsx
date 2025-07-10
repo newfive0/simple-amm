@@ -160,7 +160,9 @@ describe('RemoveLiquidity', () => {
     // Wait for confirmation dialog and click confirm
     await waitFor(() => {
       const confirmButton = getByRole('button', { name: 'Remove' });
-      fireEvent.click(confirmButton);
+      act(() => {
+        fireEvent.click(confirmButton);
+      });
     });
 
     await waitFor(() => {
@@ -198,7 +200,9 @@ describe('RemoveLiquidity', () => {
     // Wait for confirmation dialog and click cancel
     await waitFor(() => {
       const cancelButton = getByRole('button', { name: 'Cancel' });
-      fireEvent.click(cancelButton);
+      act(() => {
+        fireEvent.click(cancelButton);
+      });
     });
 
     // Dialog should be closed
@@ -238,6 +242,11 @@ describe('RemoveLiquidity', () => {
       resolveDialog([BigInt(5e18), BigInt(2.5e18)]);
     });
 
+    // Wait for dialog to appear after promise resolution
+    await waitFor(() => {
+      expect(getByRole('button', { name: 'Remove' })).toBeTruthy();
+    });
+
     // Now test loading state during transaction execution
     const { promise: txPromise, resolve: resolveTx } =
       createDeferredTransactionPromise();
@@ -246,7 +255,9 @@ describe('RemoveLiquidity', () => {
     // Wait for dialog and click confirm
     await waitFor(() => {
       const confirmButton = getByRole('button', { name: 'Remove' });
-      fireEvent.click(confirmButton);
+      act(() => {
+        fireEvent.click(confirmButton);
+      });
     });
 
     // Should show loading state during transaction
@@ -257,6 +268,11 @@ describe('RemoveLiquidity', () => {
     // Clean up
     act(() => {
       resolveTx();
+    });
+
+    // Wait for transaction to complete and state to settle
+    await waitFor(() => {
+      expect(getByRole('button', { name: 'Remove Liquidity' })).toBeTruthy();
     });
   });
 
@@ -309,7 +325,9 @@ describe('RemoveLiquidity', () => {
     // Wait for confirmation dialog and click confirm
     await waitFor(() => {
       const confirmButton = getByRole('button', { name: 'Remove' });
-      fireEvent.click(confirmButton);
+      act(() => {
+        fireEvent.click(confirmButton);
+      });
     });
 
     await waitFor(() => {

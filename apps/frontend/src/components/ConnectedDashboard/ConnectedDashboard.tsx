@@ -4,14 +4,17 @@ import { WalletInfo, Swap, Liquidity } from '../';
 import { Token__factory, AMMPool__factory } from '@typechain-types';
 import { config } from '../../config';
 import {
-  getWalletBalances,
   getPoolReserves,
   ensureTokenSymbolIsSIMP,
   getLiquidityBalances,
-  WalletBalances,
   PoolReserves,
   LiquidityBalances,
 } from '../../utils/balances';
+import { useErrorMessage } from '../../contexts/ErrorMessageContext';
+import {
+  getFriendlyMessage,
+  ERROR_OPERATIONS,
+} from '../../utils/errorMessages';
 
 export const ConnectedDashboard = () => {
   return <DashboardContent />;
@@ -19,10 +22,7 @@ export const ConnectedDashboard = () => {
 
 const DashboardContent = () => {
   const { account, signer, ethereumProvider } = useWallet();
-  const [walletBalances, setWalletBalances] = useState<WalletBalances>({
-    ethBalance: 0,
-    tokenBalance: 0,
-  });
+  const { setErrorMessage } = useErrorMessage();
   const [poolReserves, setPoolReserves] = useState<PoolReserves>({
     ethReserve: 0n,
     tokenReserve: 0n,
@@ -36,7 +36,6 @@ const DashboardContent = () => {
   // Fetch all balances and token info
   const refreshAllBalances = useCallback(async () => {
     if (!signer || !ethereumProvider || !account) {
-      setWalletBalances({ ethBalance: 0, tokenBalance: 0 });
       setPoolReserves({ ethReserve: 0n, tokenReserve: 0n });
       setLpTokenBalances({
         userLPTokens: 0,
@@ -47,22 +46,21 @@ const DashboardContent = () => {
     }
 
     try {
-      const [walletBal, poolReserves, lpTokenBal] = await Promise.all([
-        getWalletBalances(ethereumProvider, account, signer),
+      const [poolReserves, lpTokenBal] = await Promise.all([
         getPoolReserves(signer),
         getLiquidityBalances(signer, account),
         ensureTokenSymbolIsSIMP(signer),
       ]);
 
-      setWalletBalances(walletBal);
       setPoolReserves(poolReserves);
       setLpTokenBalances(lpTokenBal);
+      setErrorMessage(''); // Clear any previous errors on success
     } catch (error) {
-      console.error(
-        `Failed to fetch balances: ${error instanceof Error ? error.message : 'Unknown error'}`
+      setErrorMessage(
+        getFriendlyMessage(ERROR_OPERATIONS.BALANCE_FETCH, error)
       );
     }
-  }, [signer, ethereumProvider, account]);
+  }, [signer, ethereumProvider, account, setErrorMessage]);
 
   // Initial load
   useEffect(() => {
@@ -85,11 +83,7 @@ const DashboardContent = () => {
         gap: '0',
       }}
     >
-      <WalletInfo
-        account={account}
-        ethBalance={walletBalances.ethBalance}
-        tokenBalance={walletBalances.tokenBalance}
-      />
+      <WalletInfo account={account} />
 
       <ContractsSection
         poolEthReserve={poolReserves.ethReserve}
