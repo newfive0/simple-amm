@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { parseUnits } from 'ethers';
-import { createRemoveLiquidityOutputCalculator } from './outputDisplayFormatters';
+import {
+  createRemoveLiquidityOutputCalculator,
+  createReverseSwapCalculator,
+} from './outputDisplayFormatters';
 
 describe('outputDisplayFormatters', () => {
   describe('createRemoveLiquidityOutputCalculator', () => {
@@ -35,6 +38,61 @@ describe('outputDisplayFormatters', () => {
 
       const result = calculator('2.5');
       expect(result).toBe('0.0000 SIMP + 0.0000 ETH');
+    });
+  });
+
+  describe('createReverseSwapCalculator', () => {
+    it('should show "Exceeds available liquidity" when output equals reserve', () => {
+      const calculator = createReverseSwapCalculator(
+        parseUnits('10.0', 18), // poolEthReserve
+        parseUnits('20.0', 18), // poolTokenReserve
+        'ETH',
+        'SIMP'
+      );
+
+      // Try to get exactly 20 SIMP (equals the entire token reserve)
+      const result = calculator('20.0');
+      expect(result).toBe('Exceeds available liquidity');
+    });
+
+    it('should show "Exceeds available liquidity" when output exceeds reserve', () => {
+      const calculator = createReverseSwapCalculator(
+        parseUnits('10.0', 18), // poolEthReserve
+        parseUnits('20.0', 18), // poolTokenReserve
+        'ETH',
+        'SIMP'
+      );
+
+      // Try to get more than available SIMP reserve
+      const result = calculator('25.0');
+      expect(result).toBe('Exceeds available liquidity');
+    });
+
+    it('should calculate valid swap when output is within reserves', () => {
+      const calculator = createReverseSwapCalculator(
+        parseUnits('10.0', 18), // poolEthReserve
+        parseUnits('20.0', 18), // poolTokenReserve
+        'ETH',
+        'SIMP'
+      );
+
+      // Want 2 SIMP - should calculate required ETH
+      const result = calculator('2.0');
+      expect(result).toMatch(/≈ \d+\.\d{4} ETH/);
+      expect(result).not.toBe('Exceeds available liquidity');
+    });
+
+    it('should handle token-to-eth direction correctly', () => {
+      const calculator = createReverseSwapCalculator(
+        parseUnits('10.0', 18), // poolEthReserve
+        parseUnits('20.0', 18), // poolTokenReserve
+        'SIMP',
+        'ETH'
+      );
+
+      // Try to get exactly 10 ETH (equals the entire ETH reserve)
+      const result = calculator('10.0');
+      expect(result).toBe('Exceeds available liquidity');
     });
   });
 });

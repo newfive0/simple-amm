@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { Token, AMMPool } from '@typechain-types';
 import { SwapHeader } from './SwapHeader';
-import { SwapInput } from './SwapInput';
+import { InputWithOutput } from '../shared/InputWithOutput';
 import { ConfirmationDialog } from '../shared/ConfirmationDialog';
 import { createReverseSwapCalculator } from '../../utils/outputDisplayFormatters';
 import { useErrorMessage } from '../../contexts/ErrorMessageContext';
@@ -52,6 +52,32 @@ export const Swap = ({
     setDesiredOutputAmount(0n);
     setCalculatedInputAmount(0n);
     setShowConfirmDialog(false);
+  };
+
+  const isSwapDisabled = (): boolean => {
+    if (desiredOutputAmount === 0n) return true;
+    if (poolEthReserve === 0n || poolTokenReserve === 0n) return true;
+
+    // Check if output exceeds available reserves
+    const availableReserve =
+      swapDirection === 'eth-to-token' ? poolTokenReserve : poolEthReserve;
+    if (desiredOutputAmount >= availableReserve) return true;
+
+    // Also check if calculateSwapInput would return 0 (invalid calculation)
+    const requiredInput =
+      swapDirection === 'eth-to-token'
+        ? calculateSwapInput(
+            desiredOutputAmount,
+            poolEthReserve,
+            poolTokenReserve
+          )
+        : calculateSwapInput(
+            desiredOutputAmount,
+            poolTokenReserve,
+            poolEthReserve
+          );
+
+    return requiredInput === 0n;
   };
 
   const executeSwapTransaction = async (callback: () => Promise<void>) => {
@@ -156,48 +182,54 @@ export const Swap = ({
     });
   };
 
-  return (
-    <>
-      <div className={styles.swap}>
-        <SwapHeader
-          swapDirection={swapDirection}
-          onDirectionChange={setSwapDirection}
-        />
-        {swapDirection === 'eth-to-token' ? (
-          <SwapInput
-            key="eth-to-token"
-            amountWei={desiredOutputAmount}
-            onChange={setDesiredOutputAmount}
-            placeholder="Get SIMP"
-            onClick={showSwapConfirmation}
-            buttonText="Buy SIMP with ETH"
-            isLoading={isLoading}
-            generateExpectedOutput={createReverseSwapCalculator(
-              poolEthReserve,
-              poolTokenReserve,
-              'ETH',
-              'SIMP'
-            )}
-          />
-        ) : (
-          <SwapInput
-            key="token-to-eth"
-            amountWei={desiredOutputAmount}
-            onChange={setDesiredOutputAmount}
-            placeholder="Get ETH"
-            onClick={showSwapConfirmation}
-            buttonText="Buy ETH with SIMP"
-            isLoading={isLoading}
-            generateExpectedOutput={createReverseSwapCalculator(
-              poolEthReserve,
-              poolTokenReserve,
-              'SIMP',
-              'ETH'
-            )}
-          />
-        )}
-      </div>
+  const renderSwapInput = () => {
+    const inputToken = swapDirection === 'eth-to-token' ? 'ETH' : 'SIMP';
+    const outputToken = swapDirection === 'eth-to-token' ? 'SIMP' : 'ETH';
+    const placeholder = `Get ${outputToken}`;
 
+    return (
+      <InputWithOutput
+        key={swapDirection}
+        amountWei={desiredOutputAmount}
+        onChange={setDesiredOutputAmount}
+        placeholder={placeholder}
+        generateExpectedOutput={createReverseSwapCalculator(
+          poolEthReserve,
+          poolTokenReserve,
+          inputToken,
+          outputToken
+        )}
+      />
+    );
+  };
+
+  const renderSwapButton = () => {
+    const outputToken = swapDirection === 'eth-to-token' ? 'SIMP' : 'ETH';
+    const inputToken = swapDirection === 'eth-to-token' ? 'ETH' : 'SIMP';
+    const buttonText = `Buy ${outputToken} with ${inputToken}`;
+
+    return (
+      <button
+        onClick={showSwapConfirmation}
+        disabled={isSwapDisabled() || isLoading || desiredOutputAmount === 0n}
+        className={styles.swapButton}
+      >
+        {isLoading ? 'Waiting...' : buttonText}
+      </button>
+    );
+  };
+
+  const renderConfirmationDialog = () => {
+    const inputToken = swapDirection === 'eth-to-token' ? 'ETH' : 'SIMP';
+    const outputToken = swapDirection === 'eth-to-token' ? 'SIMP' : 'ETH';
+    const inputAmount = parseFloat(
+      ethers.formatEther(calculatedInputAmount)
+    ).toFixed(4);
+    const outputAmount = parseFloat(
+      ethers.formatEther(desiredOutputAmount)
+    ).toFixed(4);
+
+    return (
       <ConfirmationDialog
         isOpen={showConfirmDialog}
         title="Swap Confirmation"
@@ -207,39 +239,29 @@ export const Swap = ({
         cancelText="Cancel"
       >
         <div>
-          {swapDirection === 'eth-to-token' ? (
-            <>
-              <p>
-                You'll pay:{' '}
-                {parseFloat(ethers.formatEther(calculatedInputAmount)).toFixed(
-                  4
-                )}{' '}
-                ETH
-              </p>
-              <p>
-                You'll receive:{' '}
-                {parseFloat(ethers.formatEther(desiredOutputAmount)).toFixed(4)}{' '}
-                SIMP
-              </p>
-            </>
-          ) : (
-            <>
-              <p>
-                You'll pay:{' '}
-                {parseFloat(ethers.formatEther(calculatedInputAmount)).toFixed(
-                  4
-                )}{' '}
-                SIMP
-              </p>
-              <p>
-                You'll receive:{' '}
-                {parseFloat(ethers.formatEther(desiredOutputAmount)).toFixed(4)}{' '}
-                ETH
-              </p>
-            </>
-          )}
+          <p>
+            You'll pay: {inputAmount} {inputToken}
+          </p>
+          <p>
+            You'll receive: {outputAmount} {outputToken}
+          </p>
         </div>
       </ConfirmationDialog>
+    );
+  };
+
+  return (
+    <>
+      <div className={styles.swap}>
+        <SwapHeader
+          swapDirection={swapDirection}
+          onDirectionChange={setSwapDirection}
+        />
+        {renderSwapInput()}
+        {renderSwapButton()}
+      </div>
+
+      {renderConfirmationDialog()}
     </>
   );
 };
