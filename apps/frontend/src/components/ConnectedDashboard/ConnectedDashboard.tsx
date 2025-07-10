@@ -10,6 +10,11 @@ import {
   PoolReserves,
   LiquidityBalances,
 } from '../../utils/balances';
+import { useErrorMessage } from '../../contexts/ErrorMessageContext';
+import {
+  getFriendlyMessage,
+  ERROR_OPERATIONS,
+} from '../../utils/errorMessages';
 
 export const ConnectedDashboard = () => {
   return <DashboardContent />;
@@ -17,6 +22,7 @@ export const ConnectedDashboard = () => {
 
 const DashboardContent = () => {
   const { account, signer, ethereumProvider } = useWallet();
+  const { setErrorMessage } = useErrorMessage();
   const [poolReserves, setPoolReserves] = useState<PoolReserves>({
     ethReserve: 0n,
     tokenReserve: 0n,
@@ -48,12 +54,13 @@ const DashboardContent = () => {
 
       setPoolReserves(poolReserves);
       setLpTokenBalances(lpTokenBal);
+      setErrorMessage(''); // Clear any previous errors on success
     } catch (error) {
-      console.error(
-        `Failed to fetch balances: ${error instanceof Error ? error.message : 'Unknown error'}`
+      setErrorMessage(
+        getFriendlyMessage(ERROR_OPERATIONS.BALANCE_FETCH, error)
       );
     }
-  }, [signer, ethereumProvider, account]);
+  }, [signer, ethereumProvider, account, setErrorMessage]);
 
   // Initial load
   useEffect(() => {

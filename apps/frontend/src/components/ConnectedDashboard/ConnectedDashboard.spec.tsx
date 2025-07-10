@@ -5,10 +5,17 @@ import { ConnectedDashboard } from './ConnectedDashboard';
 
 // Mock balance utilities
 vi.mock('../../utils/balances', () => ({
-  getWalletBalances: vi.fn(),
   getPoolReserves: vi.fn(),
   ensureTokenSymbolIsSIMP: vi.fn(),
   getLiquidityBalances: vi.fn(),
+}));
+
+// Mock error message context
+const mockSetErrorMessage = vi.fn();
+vi.mock('../../contexts/ErrorMessageContext', () => ({
+  useErrorMessage: () => ({
+    setErrorMessage: mockSetErrorMessage,
+  }),
 }));
 
 // Mock the child components
@@ -107,13 +114,11 @@ vi.mock('../../contexts', () => ({
 
 // Import mocked functions
 import {
-  getWalletBalances,
   getPoolReserves,
   ensureTokenSymbolIsSIMP,
   getLiquidityBalances,
 } from '../../utils/balances';
 
-const mockGetWalletBalances = vi.mocked(getWalletBalances);
 const mockGetPoolReserves = vi.mocked(getPoolReserves);
 const mockEnsureTokenSymbolIsSIMP = vi.mocked(ensureTokenSymbolIsSIMP);
 const mockGetLiquidityBalances = vi.mocked(getLiquidityBalances);
@@ -126,11 +131,6 @@ describe('ConnectedDashboard', () => {
     mockWalletContext.signer = mockSigner;
 
     // Setup default mock returns
-    mockGetWalletBalances.mockResolvedValue({
-      ethBalance: 5.0,
-      tokenBalance: 1000.0,
-    });
-
     mockGetPoolReserves.mockResolvedValue({
       ethReserve: BigInt(10e18),
       tokenReserve: BigInt(20e18),
@@ -186,12 +186,11 @@ describe('ConnectedDashboard', () => {
       render(<ConnectedDashboard />);
 
       await waitFor(() => {
-        expect(mockGetWalletBalances).toHaveBeenCalledWith(
-          mockEthereumProvider,
-          mockWalletContext.account,
-          mockSigner
-        );
         expect(mockGetPoolReserves).toHaveBeenCalledWith(mockSigner);
+        expect(mockGetLiquidityBalances).toHaveBeenCalledWith(
+          mockSigner,
+          mockWalletContext.account
+        );
         expect(mockEnsureTokenSymbolIsSIMP).toHaveBeenCalledWith(mockSigner);
       });
     });
@@ -213,8 +212,8 @@ describe('ConnectedDashboard', () => {
       });
 
       // Should not call balance utilities when signer is missing
-      expect(mockGetWalletBalances).not.toHaveBeenCalled();
       expect(mockGetPoolReserves).not.toHaveBeenCalled();
+      expect(mockGetLiquidityBalances).not.toHaveBeenCalled();
       expect(mockEnsureTokenSymbolIsSIMP).not.toHaveBeenCalled();
 
       mockWalletContext.signer = originalSigner;
@@ -224,10 +223,6 @@ describe('ConnectedDashboard', () => {
       // Ensure signer is available
       mockWalletContext.signer = mockSigner;
       mockEnsureTokenSymbolIsSIMP.mockResolvedValue();
-      mockGetWalletBalances.mockResolvedValue({
-        ethBalance: 5.0,
-        tokenBalance: 1000.0,
-      });
 
       render(<ConnectedDashboard />);
 
@@ -257,9 +252,14 @@ describe('ConnectedDashboard', () => {
       vi.clearAllMocks();
 
       // Setup new mock values
-      mockGetWalletBalances.mockResolvedValue({
-        ethBalance: 4.0,
-        tokenBalance: 1100.0,
+      mockGetPoolReserves.mockResolvedValue({
+        ethReserve: BigInt(9e18),
+        tokenReserve: BigInt(22e18),
+      });
+      mockGetLiquidityBalances.mockResolvedValue({
+        userLPTokens: 4.5,
+        totalLPTokens: 10.0,
+        poolOwnershipPercentage: 45.0,
       });
 
       act(() => {
@@ -267,7 +267,6 @@ describe('ConnectedDashboard', () => {
       });
 
       await waitFor(() => {
-        expect(mockGetWalletBalances).toHaveBeenCalled();
         expect(mockGetPoolReserves).toHaveBeenCalled();
         expect(mockGetLiquidityBalances).toHaveBeenCalled();
         expect(mockEnsureTokenSymbolIsSIMP).toHaveBeenCalled();
@@ -290,7 +289,6 @@ describe('ConnectedDashboard', () => {
       });
 
       await waitFor(() => {
-        expect(mockGetWalletBalances).toHaveBeenCalled();
         expect(mockGetPoolReserves).toHaveBeenCalled();
         expect(mockGetLiquidityBalances).toHaveBeenCalled();
         expect(mockEnsureTokenSymbolIsSIMP).toHaveBeenCalled();
@@ -300,18 +298,10 @@ describe('ConnectedDashboard', () => {
 
   describe('Error Handling', () => {
     it('should handle balance fetching errors gracefully', async () => {
-      const consoleSpy = vi
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
-
       // Ensure signer is available for this test
       mockWalletContext.signer = mockSigner;
 
-      mockGetWalletBalances.mockRejectedValue(new Error('Network error'));
-      mockGetPoolReserves.mockResolvedValue({
-        ethReserve: BigInt(10e18),
-        tokenReserve: BigInt(20e18),
-      });
+      mockGetPoolReserves.mockRejectedValue(new Error('Network error'));
       mockGetLiquidityBalances.mockResolvedValue({
         userLPTokens: 5.0,
         totalLPTokens: 10.0,
@@ -322,12 +312,21 @@ describe('ConnectedDashboard', () => {
       render(<ConnectedDashboard />);
 
       await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalledWith(
-          'Failed to fetch balances: Network error'
+        expect(mockSetErrorMessage).toHaveBeenCalledWith(
+          expect.stringContaining('Network error')
         );
       });
+    });
 
-      consoleSpy.mockRestore();
+    it('should clear errors on successful balance fetching', async () => {
+      // Ensure signer is available for this test
+      mockWalletContext.signer = mockSigner;
+
+      render(<ConnectedDashboard />);
+
+      await waitFor(() => {
+        expect(mockSetErrorMessage).toHaveBeenCalledWith('');
+      });
     });
   });
 });

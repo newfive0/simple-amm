@@ -12,6 +12,7 @@ export const ERROR_OPERATIONS = {
   ADD_LIQUIDITY: 'Add liquidity',
   REMOVE_LIQUIDITY: 'Remove liquidity',
   WALLET_CONNECTION: 'Wallet connection',
+  BALANCE_FETCH: 'Balance fetch',
 } as const;
 
 export type ErrorOperation =
