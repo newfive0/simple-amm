@@ -1,6 +1,7 @@
 import { testWithSynpress } from '@synthetixio/synpress';
 import { metaMaskFixtures } from '@synthetixio/synpress/playwright';
 import { argosScreenshot } from '@argos-ci/playwright';
+import { ethers } from 'ethers';
 import basicSetup from '../test/wallet-setup/basic.setup';
 import { BalanceCalculator } from './utils/balance-calculator';
 import { getGasCostsFromRecentTransactions } from './utils/gas-tracker';
@@ -78,7 +79,7 @@ test.describe('AMM Functionality', () => {
     const balanceCalculator = new BalanceCalculator();
 
     // Helper function to handle MetaMask transactions with 3 confirmations and return gas cost
-    const handleTripleConfirmation = async (): Promise<number> => {
+    const handleTripleConfirmation = async (): Promise<bigint> => {
       await page.waitForTimeout(1000);
       await metamask.confirmTransaction();
       await page.waitForTimeout(1000);
@@ -94,7 +95,7 @@ test.describe('AMM Functionality', () => {
       return await getGasCostsFromRecentTransactions(2);
     };
 
-    const handleSingleConfirmation = async (): Promise<number> => {
+    const handleSingleConfirmation = async (): Promise<bigint> => {
       await metamask.confirmTransaction();
       await page.waitForTimeout(1000);
 
@@ -190,8 +191,12 @@ test.describe('AMM Functionality', () => {
       await expect(ethInput).toHaveValue('');
       await expect(simpInput).toHaveValue('');
 
-      // Update our balance tracker
-      balanceCalculator.addLiquidity(100, 2000, gasUsed);
+      // Update our balance tracker (convert ETH/SIMP to WEI)
+      balanceCalculator.addLiquidity(
+        ethers.parseEther('100'),
+        ethers.parseEther('2000'),
+        gasUsed
+      );
 
       // Take a screenshot of the successful liquidity addition
       await argosScreenshot(page, 'add-liquidity-success');
@@ -296,8 +301,11 @@ test.describe('AMM Functionality', () => {
       // Verify the input field is cleared after successful transaction
       await expect(lpInput).toHaveValue('');
 
-      // Update our balance tracker with the removal results and gas costs
-      balanceCalculator.removeLiquidity(50, removeLiquidityGasUsed);
+      // Update our balance tracker with the removal results and gas costs (convert LP tokens to WEI)
+      balanceCalculator.removeLiquidity(
+        ethers.parseEther('50'),
+        removeLiquidityGasUsed
+      );
 
       // Take a screenshot of the successful liquidity removal
       await argosScreenshot(page, 'remove-liquidity-success');
@@ -380,9 +388,9 @@ test.describe('AMM Functionality', () => {
       // Verify the input field is cleared after successful swap
       await expect(swapInput).toHaveValue('');
 
-      // Update our balance tracker with the swap results and gas costs
+      // Update our balance tracker with the swap results and gas costs (convert SIMP to WEI)
       // Using reverse calculation: we want 20 SIMP output
-      balanceCalculator.buySimpWithEth(20, ethSwapGasUsed);
+      balanceCalculator.buySimpWithEth(ethers.parseEther('20'), ethSwapGasUsed);
 
       // Take a screenshot of the successful ETH → SIMP swap
       await argosScreenshot(page, 'swap-eth-to-simp-success');
@@ -471,9 +479,12 @@ test.describe('AMM Functionality', () => {
       // Verify the input field is cleared after successful swap
       await expect(swapInput).toHaveValue('', { timeout: 10000 });
 
-      // Update our balance tracker with the swap results and gas costs
+      // Update our balance tracker with the swap results and gas costs (convert ETH to WEI)
       // Using reverse calculation: we want 0.5 ETH output
-      balanceCalculator.buyEthWithSimp(0.5, simpToEthGasUsed);
+      balanceCalculator.buyEthWithSimp(
+        ethers.parseEther('0.5'),
+        simpToEthGasUsed
+      );
 
       // Take a screenshot of the successful SIMP → ETH swap
       await argosScreenshot(page, 'swap-simp-to-eth-success');
@@ -537,9 +548,9 @@ test.describe('AMM Functionality', () => {
       // Confirm the transaction and get gas costs
       const ethSwapGasUsed = await handleSingleConfirmation();
 
-      // Update balance calculator with the swap using reverse logic
+      // Update balance calculator with the swap using reverse logic (convert SIMP to WEI)
       // We want 1 SIMP output
-      balanceCalculator.buySimpWithEth(1, ethSwapGasUsed);
+      balanceCalculator.buySimpWithEth(ethers.parseEther('1'), ethSwapGasUsed);
 
       // Verify error is cleared
       await verifyNoError(page);
@@ -573,9 +584,9 @@ test.describe('AMM Functionality', () => {
       await ethInput.clear();
       await ethInput.fill('10');
 
-      // Calculate expected SIMP amount based on current pool ratio
-      const expectedSimpAmount =
-        balanceCalculator.calculateRequiredTokenAmount(10);
+      // Calculate expected SIMP amount based on current pool ratio (convert ETH to WEI)
+      const expectedSimpAmountWei =
+        balanceCalculator.calculateRequiredTokenAmount(ethers.parseEther('10'));
 
       const simpInput = liquiditySection.getByPlaceholder('Enter SIMP amount');
 
@@ -584,6 +595,10 @@ test.describe('AMM Functionality', () => {
       const actualAmount = parseFloat(actualValue);
 
       // The balance calculator should now match the contract calculation closely
+      // Convert WEI back to ETH for comparison
+      const expectedSimpAmount = Number(
+        ethers.formatEther(expectedSimpAmountWei)
+      );
 
       expect(actualAmount).toBeCloseTo(expectedSimpAmount, 4);
 
@@ -603,6 +618,19 @@ test.describe('AMM Functionality', () => {
       // Large swap to significantly change pool ratios and create slippage
       await manipulator.swapEthForTokens(BigInt(50e18));
 
+      // Update balance calculator to account for the manipulator's impact on pool reserves
+      // This large swap affects the pool ratios but doesn't change our wallet balances
+      // However, we need to update our internal pool state tracking (convert ETH to WEI)
+      const manipulatorEthInputWei = ethers.parseEther('50');
+      const manipulatorSimpOutputWei =
+        balanceCalculator.calculateSimpOutputFromEthInput(
+          manipulatorEthInputWei
+        );
+      balanceCalculator.updatePoolReservesAfterExternalSwap(
+        manipulatorEthInputWei,
+        manipulatorSimpOutputWei
+      );
+
       // Step 4: Now confirm the UI transaction (should fail due to slippage)
       await proceedButton.click();
       await page.waitForTimeout(1000);
@@ -620,6 +648,13 @@ test.describe('AMM Functionality', () => {
       await expect(page.getByRole('button', { name: 'Waiting...' })).toBeHidden(
         { timeout: 60000 }
       );
+
+      // Track gas costs from both transactions (approval + failed addLiquidity)
+      const totalGasCost = await getGasCostsFromRecentTransactions(2);
+
+      // Update balance calculator to account for gas cost of both transactions
+      // Even though the addLiquidity transaction failed, gas was still consumed
+      balanceCalculator.trackFailedTransactionGasCost(totalGasCost);
 
       // Verify the specific slippage protection error is displayed
       // The error should show our user-friendly custom error message
