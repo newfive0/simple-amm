@@ -70,6 +70,13 @@ export const createReverseSwapCalculator = (
 
     // Convert desired output to wei for calculation
     const outputAmountWei = parseUnits(outputAmountString, 18);
+
+    // Check if output exceeds available reserves
+    const availableReserve = isEthToToken ? poolTokenReserve : poolEthReserve;
+    if (outputAmountWei >= availableReserve) {
+      return 'Exceeds available liquidity';
+    }
+
     let inputAmountWei: bigint;
 
     if (isEthToToken) {
@@ -86,6 +93,11 @@ export const createReverseSwapCalculator = (
         poolTokenReserve,
         poolEthReserve
       );
+    }
+
+    // If calculation returns 0n, it means the swap is invalid
+    if (inputAmountWei === 0n) {
+      return 'Exceeds available liquidity';
     }
 
     // Convert back to display format

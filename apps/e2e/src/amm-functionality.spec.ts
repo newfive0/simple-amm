@@ -232,10 +232,27 @@ test.describe('AMM Functionality', () => {
         timeout: 5000,
       });
 
-      // Click the "Remove Liquidity" button to initiate the transaction
+      // Get reference to the remove liquidity button for testing
       const removeLiquidityButton = page.getByRole('button', {
         name: 'Remove Liquidity',
       });
+
+      // Test exceeding balance scenario: Try to remove more LP tokens than available
+      // The user should have approximately sqrt(100 * 2000) = ~447 LP tokens from initial liquidity
+      await lpInput.fill('500'); // Exceeds available LP tokens
+
+      // Verify the remove liquidity button is disabled when exceeding balance
+      await expect(removeLiquidityButton).toBeDisabled();
+
+      // Reset to valid amount to continue with the test
+      await lpInput.fill('50');
+      await expect(
+        liquiditySection.locator('div[class*="expectedOutput"]')
+      ).toBeVisible({
+        timeout: 5000,
+      });
+
+      // Click the "Remove Liquidity" button to initiate the transaction
       await expect(removeLiquidityButton).toBeEnabled();
       await removeLiquidityButton.click();
 
@@ -286,7 +303,7 @@ test.describe('AMM Functionality', () => {
       await argosScreenshot(page, 'remove-liquidity-success');
     };
 
-    const swapEthForSimp = async () => {
+    const buySimpWithEth = async () => {
       // Locate the swap section and verify it's visible
       const swapSection = page
         .locator('h2')
@@ -298,12 +315,12 @@ test.describe('AMM Functionality', () => {
       // Default direction is already eth-to-token (Get SIMP), so no switch needed
 
       // Fill in the desired SIMP amount to get (using reverse calculation)
-      const ethSwapInput = swapSection.getByPlaceholder('Get SIMP');
-      await expect(ethSwapInput).toBeVisible({ timeout: 5000 });
-      await ethSwapInput.fill('20');
+      const swapInput = swapSection.getByPlaceholder('Get SIMP');
+      await expect(swapInput).toBeVisible({ timeout: 5000 });
+      await swapInput.fill('20');
 
       // Verify the input value is correctly set
-      await expect(ethSwapInput).toHaveValue('20');
+      await expect(swapInput).toHaveValue('20');
 
       // Wait for the estimated ETH input to be displayed (reverse calculation)
       // The "≈" symbol indicates this is an estimate based on current pool ratios
@@ -311,12 +328,33 @@ test.describe('AMM Functionality', () => {
         timeout: 5000,
       });
 
-      // Click the swap button to initiate the ETH → SIMP transaction
-      const swapEthButton = swapSection
+      // Get reference to the swap button for testing
+      const swapButton = swapSection
         .locator('button')
         .filter({ hasText: 'Buy SIMP with ETH' });
-      await expect(swapEthButton).toBeEnabled();
-      await swapEthButton.click();
+
+      // Test exceeding reserve scenario: Try to get more SIMP than available
+      await swapInput.fill('2500'); // Exceeds the ~2000 SIMP reserve after initial liquidity
+
+      // Verify the "Exceeds available liquidity" message appears
+      await expect(
+        swapSection
+          .locator('div[class*="expectedOutput"]')
+          .getByText('Exceeds available liquidity')
+      ).toBeVisible({ timeout: 5000 });
+
+      // Verify the swap button is disabled when exceeding reserves
+      await expect(swapButton).toBeDisabled();
+
+      // Reset to valid amount to continue with the test
+      await swapInput.fill('20');
+      await expect(swapSection.locator('text=/≈.*ETH/i')).toBeVisible({
+        timeout: 5000,
+      });
+
+      // Click the swap button to initiate the ETH → SIMP transaction
+      await expect(swapButton).toBeEnabled();
+      await swapButton.click();
 
       // Wait for the confirmation dialog and click proceed
       const proceedButton = page.getByRole('button', { name: 'Proceed' });
@@ -340,7 +378,7 @@ test.describe('AMM Functionality', () => {
       ).toBeHidden({ timeout: 60000 });
 
       // Verify the input field is cleared after successful swap
-      await expect(ethSwapInput).toHaveValue('');
+      await expect(swapInput).toHaveValue('');
 
       // Update our balance tracker with the swap results and gas costs
       // Using reverse calculation: we want 20 SIMP output
@@ -349,7 +387,7 @@ test.describe('AMM Functionality', () => {
       // Take a screenshot of the successful ETH → SIMP swap
       await argosScreenshot(page, 'swap-eth-to-simp-success');
     };
-    const swapSimpForEth = async () => {
+    const buyEthWithSimp = async () => {
       // Locate the swap section for the reverse swap (SIMP → ETH)
       const swapSection = page
         .locator('h2')
@@ -365,12 +403,12 @@ test.describe('AMM Functionality', () => {
       await switchButton.click();
 
       // Fill in the desired ETH amount to get (using reverse calculation)
-      const simpSwapInput = swapSection.getByPlaceholder('Get ETH');
-      await expect(simpSwapInput).toBeVisible({ timeout: 5000 });
-      await simpSwapInput.fill('0.5');
+      const swapInput = swapSection.getByPlaceholder('Get ETH');
+      await expect(swapInput).toBeVisible({ timeout: 5000 });
+      await swapInput.fill('0.5');
 
       // Verify the input value is correctly set
-      await expect(simpSwapInput).toHaveValue('0.5');
+      await expect(swapInput).toHaveValue('0.5');
 
       // Wait for the estimated SIMP input to be displayed (reverse calculation)
       // The pool ratios have changed from previous swaps, affecting the exchange rate
@@ -378,12 +416,33 @@ test.describe('AMM Functionality', () => {
         timeout: 5000,
       });
 
-      // Click the swap button to initiate the SIMP → ETH transaction
-      const swapSimpButton = swapSection
+      // Get reference to the swap button for testing
+      const swapButton = swapSection
         .locator('button')
         .filter({ hasText: 'Buy ETH with SIMP' });
-      await expect(swapSimpButton).toBeEnabled();
-      await swapSimpButton.click();
+
+      // Test exceeding reserve scenario: Try to get more ETH than available
+      await swapInput.fill('150'); // Exceeds the ~100 ETH reserve after initial liquidity
+
+      // Verify the "Exceeds available liquidity" message appears
+      await expect(
+        swapSection
+          .locator('div[class*="expectedOutput"]')
+          .getByText('Exceeds available liquidity')
+      ).toBeVisible({ timeout: 5000 });
+
+      // Verify the swap button is disabled when exceeding reserves
+      await expect(swapButton).toBeDisabled();
+
+      // Reset to valid amount to continue with the test
+      await swapInput.fill('0.5');
+      await expect(swapSection.locator('text=/≈.*SIMP/i')).toBeVisible({
+        timeout: 5000,
+      });
+
+      // Click the swap button to initiate the SIMP → ETH transaction
+      await expect(swapButton).toBeEnabled();
+      await swapButton.click();
 
       // Wait for the confirmation dialog and click proceed
       const proceedButton = page.getByRole('button', { name: 'Proceed' });
@@ -410,7 +469,7 @@ test.describe('AMM Functionality', () => {
       ).toBeHidden({ timeout: 60000 });
 
       // Verify the input field is cleared after successful swap
-      await expect(simpSwapInput).toHaveValue('', { timeout: 10000 });
+      await expect(swapInput).toHaveValue('', { timeout: 10000 });
 
       // Update our balance tracker with the swap results and gas costs
       // Using reverse calculation: we want 0.5 ETH output
@@ -579,8 +638,8 @@ test.describe('AMM Functionality', () => {
     await setupAndConnect();
     await addLiquidity();
     await removeLiquidity();
-    await swapEthForSimp();
-    await swapSimpForEth();
+    await buySimpWithEth();
+    await buyEthWithSimp();
 
     // Test error handling scenarios
     await testTransactionRejection();
