@@ -147,7 +147,7 @@ export class BalanceCalculator {
    */
   private async verifyBalances(): Promise<void> {
     const actualBalances = await this.fetchActualBalances();
-    const tolerance = BigInt(1e14); // 0.0001 ETH tolerance for gas variations
+    const tolerance = 100n; // 100 WEI tolerance
 
     const ethDiff = this.balances.ethBalance - actualBalances.ethBalance;
     if (ethDiff < -tolerance || ethDiff > tolerance) {
@@ -175,7 +175,7 @@ export class BalanceCalculator {
    */
   private async verifyReserves(): Promise<void> {
     const actualReserves = await this.fetchActualReserves();
-    const tolerance = BigInt(1e14); // 0.0001 ETH tolerance for gas variations
+    const tolerance = 100n; // 100 WEI tolerance
 
     const ethReserveDiff = this.reserves.ethReserve - actualReserves.ethReserve;
     if (ethReserveDiff < -tolerance || ethReserveDiff > tolerance) {

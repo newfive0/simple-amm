@@ -655,13 +655,6 @@ test.describe('AMM Functionality', () => {
         { timeout: 60000 }
       );
 
-      // Track gas costs from both transactions (approval + failed addLiquidity)
-      const totalGasCost = await getGasCostsFromRecentTransactions(2);
-
-      // Update balance calculator to account for gas cost of both transactions
-      // Even though the addLiquidity transaction failed, gas was still consumed
-      await balanceCalculator.trackFailedTransactionGasCost(totalGasCost);
-
       // Verify the specific slippage protection error is displayed
       // The error should show our user-friendly custom error message
       await verifyErrorDisplay(
