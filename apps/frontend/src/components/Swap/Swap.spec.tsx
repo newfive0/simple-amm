@@ -43,8 +43,10 @@ describe('Swap Component', () => {
       expect(
         screen.getByRole('button', { name: 'Switch Direction' })
       ).toBeInTheDocument();
-      expect(screen.getByPlaceholderText('Get SIMP')).toBeInTheDocument();
-      expect(screen.getByText('Buy SIMP with ETH')).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText('Amount of ETH to spend')
+      ).toBeInTheDocument();
+      expect(screen.getByText('Swap ETH for SIMP')).toBeInTheDocument();
     });
 
     it('should render Token to ETH direction when switch direction button clicked', () => {
@@ -55,8 +57,10 @@ describe('Swap Component', () => {
       });
       fireEvent.click(switchButton);
 
-      expect(screen.getByPlaceholderText('Get ETH')).toBeInTheDocument();
-      expect(screen.getByText('Buy ETH with SIMP')).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText('Amount of SIMP to spend')
+      ).toBeInTheDocument();
+      expect(screen.getByText('Swap SIMP for ETH')).toBeInTheDocument();
     });
   });
 
@@ -64,12 +68,12 @@ describe('Swap Component', () => {
     it('should calculate ETH to Token swap correctly', () => {
       render(<Swap {...defaultProps} />);
 
-      const input = screen.getByPlaceholderText('Get SIMP');
+      const input = screen.getByPlaceholderText('Amount of ETH to spend');
       fireEvent.change(input, { target: { value: '2' } });
 
       // With pool reserves ETH: 10, Token: 20 and 0.3% fee
-      // Reverse calculation: Want 2 SIMP, need ~1.1145 ETH
-      expect(screen.getByText(/≈ 1\.1145 ETH/)).toBeInTheDocument();
+      // Forward calculation: Spend 2 ETH, get ~3.3250 SIMP
+      expect(screen.getByText(/≈ 3\.3250 SIMP/)).toBeInTheDocument();
     });
 
     it('should calculate Token to ETH swap correctly', () => {
@@ -80,12 +84,12 @@ describe('Swap Component', () => {
       });
       fireEvent.click(switchButton);
 
-      const input = screen.getByPlaceholderText('Get ETH');
+      const input = screen.getByPlaceholderText('Amount of SIMP to spend');
       fireEvent.change(input, { target: { value: '5' } });
 
       // With pool reserves ETH: 10, Token: 20 and 0.3% fee
-      // Reverse calculation: Want 5 ETH, need ~20.0602 SIMP
-      expect(screen.getByText(/≈ 20\.0602 SIMP/)).toBeInTheDocument();
+      // Forward calculation: Spend 5 SIMP, get ~1.9952 ETH
+      expect(screen.getByText(/≈ 1\.9952 ETH/)).toBeInTheDocument();
     });
 
     it('should handle zero pool reserves', () => {
@@ -93,19 +97,19 @@ describe('Swap Component', () => {
         <Swap {...defaultProps} poolEthReserve={0n} poolTokenReserve={0n} />
       );
 
-      const input = screen.getByPlaceholderText('Get SIMP');
+      const input = screen.getByPlaceholderText('Amount of ETH to spend');
       fireEvent.change(input, { target: { value: '1' } });
 
-      expect(screen.getByText('≈ 0 ETH')).toBeInTheDocument();
+      expect(screen.getByText('≈ 0 SIMP')).toBeInTheDocument();
     });
 
     it('should handle invalid input amounts', () => {
       render(<Swap {...defaultProps} />);
 
-      const input = screen.getByPlaceholderText('Get SIMP');
+      const input = screen.getByPlaceholderText('Amount of ETH to spend');
       fireEvent.change(input, { target: { value: 'invalid' } });
 
-      expect(screen.getByText('1 SIMP ≈ 0.5000 ETH')).toBeInTheDocument();
+      expect(screen.getByText('1 ETH ≈ 2.0000 SIMP')).toBeInTheDocument();
     });
   });
 
@@ -124,10 +128,10 @@ describe('Swap Component', () => {
       });
       fireEvent.click(switchButton);
 
-      const input = screen.getByPlaceholderText('Get ETH');
+      const input = screen.getByPlaceholderText('Amount of SIMP to spend');
       fireEvent.change(input, { target: { value: '1.5' } });
 
-      const swapButton = screen.getByText('Buy ETH with SIMP');
+      const swapButton = screen.getByText('Swap SIMP for ETH');
       fireEvent.click(swapButton);
 
       // Wait for confirmation dialog to appear
@@ -154,7 +158,7 @@ describe('Swap Component', () => {
 
       await waitFor(() => {
         expect(mockOnSwapComplete).toHaveBeenCalled();
-        expect(swapButton).toHaveTextContent('Buy ETH with SIMP');
+        expect(swapButton).toHaveTextContent('Swap SIMP for ETH');
         expect(input).toHaveDisplayValue('');
       });
     });
@@ -173,10 +177,10 @@ describe('Swap Component', () => {
       });
       fireEvent.click(switchButton);
 
-      const input = screen.getByPlaceholderText('Get ETH');
+      const input = screen.getByPlaceholderText('Amount of SIMP to spend');
       fireEvent.change(input, { target: { value: '1' } });
 
-      const swapButton = screen.getByText('Buy ETH with SIMP');
+      const swapButton = screen.getByText('Swap SIMP for ETH');
       fireEvent.click(swapButton);
 
       // Wait for confirmation dialog to appear
@@ -192,7 +196,7 @@ describe('Swap Component', () => {
         expect(mockSetErrorMessage).toHaveBeenCalledWith(
           'Swap failed: Transaction failed'
         );
-        expect(swapButton).toHaveTextContent('Buy ETH with SIMP');
+        expect(swapButton).toHaveTextContent('Swap SIMP for ETH');
         expect(swapButton).not.toBeDisabled();
       });
     });
@@ -206,10 +210,10 @@ describe('Swap Component', () => {
 
       render(<Swap {...defaultProps} />);
 
-      const input = screen.getByPlaceholderText('Get SIMP');
+      const input = screen.getByPlaceholderText('Amount of ETH to spend');
       fireEvent.change(input, { target: { value: '1.5' } });
 
-      const swapButton = screen.getByText('Buy SIMP with ETH');
+      const swapButton = screen.getByText('Swap ETH for SIMP');
       fireEvent.click(swapButton);
 
       // Wait for confirmation dialog to appear
@@ -236,7 +240,7 @@ describe('Swap Component', () => {
 
       await waitFor(() => {
         expect(mockOnSwapComplete).toHaveBeenCalled();
-        expect(swapButton).toHaveTextContent('Buy SIMP with ETH');
+        expect(swapButton).toHaveTextContent('Swap ETH for SIMP');
         expect(input).toHaveDisplayValue('');
       });
     });
@@ -247,10 +251,10 @@ describe('Swap Component', () => {
 
       render(<Swap {...defaultProps} />);
 
-      const input = screen.getByPlaceholderText('Get SIMP');
+      const input = screen.getByPlaceholderText('Amount of ETH to spend');
       fireEvent.change(input, { target: { value: '1' } });
 
-      const swapButton = screen.getByText('Buy SIMP with ETH');
+      const swapButton = screen.getByText('Swap ETH for SIMP');
       fireEvent.click(swapButton);
 
       // Wait for confirmation dialog to appear
@@ -266,7 +270,7 @@ describe('Swap Component', () => {
         expect(mockSetErrorMessage).toHaveBeenCalledWith(
           'Swap failed: Transaction failed'
         );
-        expect(swapButton).toHaveTextContent('Buy SIMP with ETH');
+        expect(swapButton).toHaveTextContent('Swap ETH for SIMP');
         expect(swapButton).not.toBeDisabled();
       });
     });
@@ -281,18 +285,18 @@ describe('Swap Component', () => {
 
       render(<Swap {...defaultProps} />);
 
-      // Switch to Token to ETH direction for this test
+      // Switch to Token to ETH direction
       const switchButton = screen.getByRole('button', {
         name: 'Switch Direction',
       });
       fireEvent.click(switchButton);
 
-      const input = screen.getByPlaceholderText('Get ETH');
+      const input = screen.getByPlaceholderText('Amount of SIMP to spend');
       fireEvent.change(input, { target: { value: '1.5' } });
 
       expect(input).toHaveDisplayValue('1.5');
 
-      const swapButton = screen.getByText('Buy ETH with SIMP');
+      const swapButton = screen.getByText('Swap SIMP for ETH');
       fireEvent.click(swapButton);
 
       // Wait for confirmation dialog to appear and click proceed
@@ -314,16 +318,16 @@ describe('Swap Component', () => {
 
       render(<Swap {...defaultProps} />);
 
-      // Switch to Token to ETH direction for this test
+      // Switch to Token to ETH direction
       const switchButton = screen.getByRole('button', {
         name: 'Switch Direction',
       });
       fireEvent.click(switchButton);
 
-      const input = screen.getByPlaceholderText('Get ETH');
+      const input = screen.getByPlaceholderText('Amount of SIMP to spend');
       fireEvent.change(input, { target: { value: '1.5' } });
 
-      const swapButton = screen.getByText('Buy ETH with SIMP');
+      const swapButton = screen.getByText('Swap SIMP for ETH');
       fireEvent.click(swapButton);
 
       // Wait for confirmation dialog to appear and click proceed
@@ -346,16 +350,16 @@ describe('Swap Component', () => {
 
       render(<Swap {...defaultProps} />);
 
-      // Switch to Token to ETH direction for this test
+      // Switch to Token to ETH direction
       const switchButton = screen.getByRole('button', {
         name: 'Switch Direction',
       });
       fireEvent.click(switchButton);
 
-      const input = screen.getByPlaceholderText('Get ETH');
+      const input = screen.getByPlaceholderText('Amount of SIMP to spend');
       fireEvent.change(input, { target: { value: '1.0' } });
 
-      const swapButton = screen.getByText('Buy ETH with SIMP');
+      const swapButton = screen.getByText('Swap SIMP for ETH');
       fireEvent.click(swapButton);
 
       // Confirmation dialog should appear
@@ -372,16 +376,16 @@ describe('Swap Component', () => {
 
       render(<Swap {...defaultProps} />);
 
-      // Switch to Token to ETH direction for this test
+      // Switch to Token to ETH direction
       const switchButton = screen.getByRole('button', {
         name: 'Switch Direction',
       });
       fireEvent.click(switchButton);
 
-      const input = screen.getByPlaceholderText('Get ETH');
+      const input = screen.getByPlaceholderText('Amount of SIMP to spend');
       fireEvent.change(input, { target: { value: '1.0' } });
 
-      const swapButton = screen.getByText('Buy ETH with SIMP');
+      const swapButton = screen.getByText('Swap SIMP for ETH');
       fireEvent.click(swapButton);
 
       await waitFor(() => {
@@ -404,11 +408,11 @@ describe('Swap Component', () => {
 
       render(<Swap {...defaultProps} />);
 
-      // Test ETH to Token swap confirmation text
-      const input = screen.getByPlaceholderText('Get SIMP');
+      // Component defaults to ETH to Token direction
+      const input = screen.getByPlaceholderText('Amount of ETH to spend');
       fireEvent.change(input, { target: { value: '1.0' } });
 
-      const swapButton = screen.getByText('Buy SIMP with ETH');
+      const swapButton = screen.getByText('Swap ETH for SIMP');
       fireEvent.click(swapButton);
 
       await waitFor(() => {
@@ -430,16 +434,16 @@ describe('Swap Component', () => {
 
       render(<Swap {...defaultProps} />);
 
-      // Switch to Token to ETH direction for this test
+      // Switch to Token to ETH direction
       const switchButton = screen.getByRole('button', {
         name: 'Switch Direction',
       });
       fireEvent.click(switchButton);
 
-      const input = screen.getByPlaceholderText('Get ETH');
+      const input = screen.getByPlaceholderText('Amount of SIMP to spend');
       fireEvent.change(input, { target: { value: '1' } });
 
-      const swapButton = screen.getByText('Buy ETH with SIMP');
+      const swapButton = screen.getByText('Swap SIMP for ETH');
       fireEvent.click(swapButton);
 
       // Wait for confirmation dialog to appear and click proceed
@@ -460,9 +464,9 @@ describe('Swap Component', () => {
       render(<Swap {...defaultProps} />);
 
       // Start with ETH to Token (default)
-      const ethInput = screen.getByPlaceholderText('Get SIMP');
-      fireEvent.change(ethInput, { target: { value: '1' } });
-      expect(screen.getByText(/≈ 0\.5279 ETH/)).toBeInTheDocument();
+      const ethInput = screen.getByPlaceholderText('Amount of ETH to spend');
+      fireEvent.change(ethInput, { target: { value: '2' } });
+      expect(screen.getByText(/≈ 3\.3250 SIMP/)).toBeInTheDocument();
 
       // Switch to Token to ETH
       const switchButton = screen.getByRole('button', {
@@ -470,9 +474,9 @@ describe('Swap Component', () => {
       });
       fireEvent.click(switchButton);
 
-      const tokenInput = screen.getByPlaceholderText('Get ETH');
+      const tokenInput = screen.getByPlaceholderText('Amount of SIMP to spend');
       fireEvent.change(tokenInput, { target: { value: '5' } });
-      expect(screen.getByText(/≈ 20\.0602 SIMP/)).toBeInTheDocument();
+      expect(screen.getByText(/≈ 1\.9952 ETH/)).toBeInTheDocument();
     });
   });
 });
