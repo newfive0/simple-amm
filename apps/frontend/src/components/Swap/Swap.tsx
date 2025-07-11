@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
 import { Token, AMMPool } from '@typechain-types';
 import { SwapHeader } from './SwapHeader';
-import { InputWithOutput } from '../shared/InputWithOutput';
+import { TokenAmountInputPair } from '../shared';
 import { ConfirmationDialog } from '../shared/ConfirmationDialog';
-import { createSwapOutputCalculator } from '../../utils/outputDisplayFormatters';
+import {
+  calculateSwapOutput,
+  calculateSwapInput,
+} from '../../utils/ammCalculations';
 import { useErrorMessage } from '../../contexts/ErrorMessageContext';
 import {
   getFriendlyMessage,
@@ -60,6 +63,16 @@ export const Swap = ({
     if (swapDirection === 'token-to-eth' && tokenAmount === 0n) return true;
     if (poolEthReserve === 0n || poolTokenReserve === 0n) return true;
     return false;
+  };
+
+  const isSwapExceedsLiquidity = (): boolean => {
+    if (swapDirection === 'eth-to-token') {
+      // Check if SIMP output exceeds available reserves
+      return tokenAmount >= poolTokenReserve;
+    } else {
+      // Check if ETH output exceeds available reserves
+      return ethAmount >= poolEthReserve;
+    }
   };
 
   const executeSwapTransaction = async (callback: () => Promise<void>) => {
@@ -166,27 +179,86 @@ export const Swap = ({
     });
   };
 
+  const calculateSwapOutputAmount = (
+    inputAmount: bigint,
+    direction: 'eth-to-token' | 'token-to-eth'
+  ): bigint => {
+    if (
+      inputAmount === 0n ||
+      poolEthReserve === 0n ||
+      poolTokenReserve === 0n
+    ) {
+      return 0n;
+    }
+
+    if (direction === 'eth-to-token') {
+      return calculateSwapOutput(inputAmount, poolEthReserve, poolTokenReserve);
+    } else {
+      return calculateSwapOutput(inputAmount, poolTokenReserve, poolEthReserve);
+    }
+  };
+
+  const calculateSwapInputAmount = (
+    outputAmount: bigint,
+    direction: 'eth-to-token' | 'token-to-eth'
+  ): bigint => {
+    if (
+      outputAmount === 0n ||
+      poolEthReserve === 0n ||
+      poolTokenReserve === 0n
+    ) {
+      return 0n;
+    }
+
+    if (direction === 'eth-to-token') {
+      return calculateSwapInput(outputAmount, poolEthReserve, poolTokenReserve);
+    } else {
+      return calculateSwapInput(outputAmount, poolTokenReserve, poolEthReserve);
+    }
+  };
+
+  const handleEthAmountChange = (amount: bigint) => {
+    setEthAmount(amount);
+    if (swapDirection === 'eth-to-token') {
+      // ETH input -> calculate SIMP output
+      const output = calculateSwapOutputAmount(amount, 'eth-to-token');
+      setTokenAmount(output);
+    } else {
+      // token-to-eth: ETH is output, so calculate required SIMP input
+      const input = calculateSwapInputAmount(amount, 'token-to-eth');
+      setTokenAmount(input);
+    }
+  };
+
+  const handleTokenAmountChange = (amount: bigint) => {
+    setTokenAmount(amount);
+    if (swapDirection === 'token-to-eth') {
+      // SIMP input -> calculate ETH output
+      const output = calculateSwapOutputAmount(amount, 'token-to-eth');
+      setEthAmount(output);
+    } else {
+      // eth-to-token: SIMP is output, so calculate required ETH input
+      const input = calculateSwapInputAmount(amount, 'eth-to-token');
+      setEthAmount(input);
+    }
+  };
+
   const renderSwapInput = () => {
-    const inputToken = swapDirection === 'eth-to-token' ? 'ETH' : 'SIMP';
-    const outputToken = swapDirection === 'eth-to-token' ? 'SIMP' : 'ETH';
-    const placeholder = `Amount of ${inputToken} to spend`;
-    const currentAmount =
-      swapDirection === 'eth-to-token' ? ethAmount : tokenAmount;
-    const setCurrentAmount =
-      swapDirection === 'eth-to-token' ? setEthAmount : setTokenAmount;
+    const ethPlaceholder =
+      swapDirection === 'eth-to-token' ? 'Sell ETH' : 'Buy ETH';
+    const tokenPlaceholder =
+      swapDirection === 'eth-to-token' ? 'Buy SIMP' : 'Sell SIMP';
 
     return (
-      <InputWithOutput
+      <TokenAmountInputPair
         key={swapDirection}
-        amountWei={currentAmount}
-        onChange={setCurrentAmount}
-        placeholder={placeholder}
-        generateExpectedOutput={createSwapOutputCalculator(
-          poolEthReserve,
-          poolTokenReserve,
-          inputToken,
-          outputToken
-        )}
+        ethAmount={ethAmount}
+        tokenAmount={tokenAmount}
+        onEthAmountChange={handleEthAmountChange}
+        onTokenAmountChange={handleTokenAmountChange}
+        ethPlaceholder={ethPlaceholder}
+        tokenPlaceholder={tokenPlaceholder}
+        reversed={swapDirection === 'token-to-eth'}
       />
     );
   };
@@ -194,14 +266,21 @@ export const Swap = ({
   const renderSwapButton = () => {
     const outputToken = swapDirection === 'eth-to-token' ? 'SIMP' : 'ETH';
     const inputToken = swapDirection === 'eth-to-token' ? 'ETH' : 'SIMP';
-    const buttonText = `Swap ${inputToken} for ${outputToken}`;
     const currentAmount =
       swapDirection === 'eth-to-token' ? ethAmount : tokenAmount;
+
+    let buttonText = `Swap ${inputToken} → ${outputToken}`;
+    let buttonDisabled = isSwapDisabled() || isLoading || currentAmount === 0n;
+
+    if (isSwapExceedsLiquidity()) {
+      buttonText = 'Exceeds Available Liquidity';
+      buttonDisabled = true;
+    }
 
     return (
       <button
         onClick={showSwapConfirmation}
-        disabled={isSwapDisabled() || isLoading || currentAmount === 0n}
+        disabled={buttonDisabled}
         className={styles.swapButton}
       >
         {isLoading ? 'Waiting...' : buttonText}
