@@ -1,17 +1,17 @@
-import { LiquidityInput } from './LiquidityInput';
+import { TokenAmountInput } from '../shared';
 import styles from './AddLiquidity.module.scss';
 
 export const DisabledAddLiquidity = () => {
   return (
     <>
       <div className={styles.inputRow}>
-        <LiquidityInput
+        <TokenAmountInput
           amountWei={0n}
           onChange={() => {}}
           placeholder="Enter ETH amount"
           disabled={true}
         />
-        <LiquidityInput
+        <TokenAmountInput
           amountWei={0n}
           onChange={() => {}}
           placeholder="Enter SIMP amount"

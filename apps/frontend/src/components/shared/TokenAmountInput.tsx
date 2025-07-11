@@ -1,21 +1,21 @@
 import { useEffect, useRef, useState } from 'react';
 import { ethers } from 'ethers';
 import { useErrorMessage } from '../../contexts/ErrorMessageContext';
-import styles from './InputField.module.scss';
+import styles from './TokenAmountInput.module.scss';
 
-interface LiquidityInputProps {
+interface TokenAmountInputProps {
   amountWei: bigint;
   onChange: (amountWei: bigint) => void;
   placeholder: string;
   disabled?: boolean;
 }
 
-export const LiquidityInput = ({
+export const TokenAmountInput = ({
   amountWei,
   onChange,
   placeholder,
   disabled = false,
-}: LiquidityInputProps) => {
+}: TokenAmountInputProps) => {
   const { setErrorMessage } = useErrorMessage();
   const inputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -42,6 +42,7 @@ export const LiquidityInput = ({
         onChange={(e) => {
           if (disabled) return;
           const value = e.target.value;
+
           if (value === '') {
             onChange(0n);
             return;

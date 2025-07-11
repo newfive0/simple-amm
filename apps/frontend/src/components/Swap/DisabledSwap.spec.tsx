@@ -7,19 +7,25 @@ describe('DisabledSwap Component', () => {
     render(<DisabledSwap />);
 
     expect(screen.getByText('Swap')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Get SIMP')).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText('Amount of ETH to spend')
+    ).toBeInTheDocument();
   });
 
   it('should render with SIMP token symbol', () => {
     render(<DisabledSwap />);
 
-    expect(screen.getByPlaceholderText('Get SIMP')).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText('Amount of ETH to spend')
+    ).toBeInTheDocument();
   });
 
-  it('should show token-to-eth swap by default', () => {
+  it('should show eth-to-token swap by default', () => {
     render(<DisabledSwap />);
 
-    expect(screen.getByPlaceholderText('Get SIMP')).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText('Amount of ETH to spend')
+    ).toBeInTheDocument();
     expect(screen.getByText('Please connect wallet')).toBeInTheDocument();
   });
 
@@ -33,13 +39,15 @@ describe('DisabledSwap Component', () => {
     expect(switchButton).toBeDisabled();
 
     // Switch button is disabled but component should show default direction
-    expect(screen.getByPlaceholderText('Get SIMP')).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText('Amount of ETH to spend')
+    ).toBeInTheDocument();
   });
 
   it('should have disabled input and button', () => {
     render(<DisabledSwap />);
 
-    const input = screen.getByPlaceholderText('Get SIMP');
+    const input = screen.getByPlaceholderText('Amount of ETH to spend');
     const button = screen.getByRole('button', {
       name: 'Please connect wallet',
     });
@@ -57,6 +65,6 @@ describe('DisabledSwap Component', () => {
     );
 
     // Should show expected output with specific calculation result
-    expect(screen.getByText(/1 SIMP ≈ 0.5000 ETH/)).toBeInTheDocument();
+    expect(screen.getByText(/1 ETH ≈ 2.0000 SIMP/)).toBeInTheDocument();
   });
 });
