@@ -320,26 +320,26 @@ test.describe('AMM Functionality', () => {
       await expect(swapSection.locator('h2')).toBeVisible();
 
       // For ETH → SIMP swap, we input the ETH amount to spend (forward calculation)
-      // Default direction is already eth-to-token (Amount of ETH to spend), so no switch needed
+      // Default direction is already eth-to-token (Sell ETH), so no switch needed
 
       // Fill in the ETH amount to spend (using forward calculation)
-      const swapInput = swapSection.getByPlaceholder('Amount of ETH to spend');
+      const swapInput = swapSection.getByPlaceholder('Sell ETH');
       await expect(swapInput).toBeVisible({ timeout: 5000 });
       await swapInput.fill('1');
 
       // Verify the input value is correctly set
       await expect(swapInput).toHaveValue('1');
 
-      // Wait for the estimated SIMP output to be displayed (forward calculation)
-      // The "≈" symbol indicates this is an estimate based on current pool ratios
-      await expect(swapSection.locator('text=/≈.*SIMP/i')).toBeVisible({
-        timeout: 5000,
-      });
+      // Wait for the calculated SIMP output to be displayed in the second input field
+      const simpInput = swapSection.getByPlaceholder('Buy SIMP');
+      await expect(simpInput).toBeVisible({ timeout: 5000 });
+      // Verify the SIMP amount is calculated and displayed
+      await expect(simpInput).not.toHaveValue('');
 
       // Get reference to the swap button for testing
       const swapButton = swapSection
         .locator('button')
-        .filter({ hasText: 'Swap ETH for SIMP' });
+        .filter({ hasText: 'Swap ETH → SIMP' });
 
       // Test exceeding reserve scenario: Try to spend more ETH than reasonable
       await swapInput.fill('200'); // Very large ETH amount that would result in minimal SIMP output
@@ -350,9 +350,9 @@ test.describe('AMM Functionality', () => {
 
       // Reset to valid amount to continue with the test
       await swapInput.fill('1');
-      await expect(swapSection.locator('text=/≈.*SIMP/i')).toBeVisible({
-        timeout: 5000,
-      });
+      // Verify the SIMP amount is recalculated and displayed
+      const simpInputAfterReset = swapSection.getByPlaceholder('Buy SIMP');
+      await expect(simpInputAfterReset).not.toHaveValue('');
 
       // Click the swap button to initiate the ETH → SIMP transaction
       await expect(swapButton).toBeEnabled();
@@ -399,7 +399,7 @@ test.describe('AMM Functionality', () => {
         .filter({ hasText: 'Swap' })
         .locator('../..');
 
-      // For SIMP → ETH swap, we need to switch direction to 'Amount of SIMP to spend'
+      // For SIMP → ETH swap, we need to switch direction to 'Sell SIMP'
       const switchButton = swapSection.getByRole('button', {
         name: 'Switch Direction',
         exact: true,
@@ -408,23 +408,24 @@ test.describe('AMM Functionality', () => {
       await switchButton.click();
 
       // Fill in the SIMP amount to spend (using forward calculation)
-      const swapInput = swapSection.getByPlaceholder('Amount of SIMP to spend');
+      const swapInput = swapSection.getByPlaceholder('Sell SIMP');
       await expect(swapInput).toBeVisible({ timeout: 5000 });
       await swapInput.fill('10');
 
       // Verify the input value is correctly set
       await expect(swapInput).toHaveValue('10');
 
-      // Wait for the estimated ETH output to be displayed (forward calculation)
+      // Wait for the calculated ETH output to be displayed in the second input field
       // The pool ratios have changed from previous swaps, affecting the exchange rate
-      await expect(swapSection.locator('text=/≈.*ETH/i')).toBeVisible({
-        timeout: 5000,
-      });
+      const ethOutput = swapSection.getByPlaceholder('Buy ETH');
+      await expect(ethOutput).toBeVisible({ timeout: 5000 });
+      // Verify the ETH amount is calculated and displayed
+      await expect(ethOutput).not.toHaveValue('');
 
       // Get reference to the swap button for testing
       const swapButton = swapSection
         .locator('button')
-        .filter({ hasText: 'Swap SIMP for ETH' });
+        .filter({ hasText: 'Swap SIMP → ETH' });
 
       // Test with a large SIMP amount (forward calculation doesn't have liquidity limits in the same way)
       await swapInput.fill('1000'); // Large SIMP amount that will result in poor exchange rate
@@ -434,9 +435,9 @@ test.describe('AMM Functionality', () => {
 
       // Reset to valid amount to continue with the test
       await swapInput.fill('10');
-      await expect(swapSection.locator('text=/≈.*ETH/i')).toBeVisible({
-        timeout: 5000,
-      });
+      // Verify the ETH amount is recalculated and displayed
+      const ethOutputAfterReset = swapSection.getByPlaceholder('Buy ETH');
+      await expect(ethOutputAfterReset).not.toHaveValue('');
 
       // Click the swap button to initiate the SIMP → ETH transaction
       await expect(swapButton).toBeEnabled();
@@ -493,12 +494,12 @@ test.describe('AMM Functionality', () => {
       });
       await switchButton.click();
 
-      const ethInput = swapSection.getByPlaceholder('Amount of ETH to spend');
+      const ethInput = swapSection.getByPlaceholder('Sell ETH');
       await ethInput.fill('0.1');
 
       const swapButton = swapSection
         .locator('button')
-        .filter({ hasText: 'Swap ETH for SIMP' });
+        .filter({ hasText: 'Swap ETH → SIMP' });
       await swapButton.click();
 
       // Wait for the confirmation dialog and click proceed
@@ -522,14 +523,12 @@ test.describe('AMM Functionality', () => {
         .filter({ hasText: 'Swap' })
         .locator('../..');
 
-      const newSwapInput = swapSection.getByPlaceholder(
-        'Amount of ETH to spend'
-      );
+      const newSwapInput = swapSection.getByPlaceholder('Sell ETH');
       await newSwapInput.fill('0.1');
 
       const newSwapButton = swapSection
         .locator('button')
-        .filter({ hasText: 'Swap ETH for SIMP' });
+        .filter({ hasText: 'Swap ETH → SIMP' });
       await newSwapButton.click();
 
       // Wait for the confirmation dialog and click proceed

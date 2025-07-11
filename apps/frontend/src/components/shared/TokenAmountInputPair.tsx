@@ -9,6 +9,7 @@ interface TokenAmountInputPairProps {
   ethPlaceholder?: string;
   tokenPlaceholder?: string;
   disabled?: boolean;
+  reversed?: boolean;
 }
 
 export const TokenAmountInputPair = ({
@@ -19,21 +20,30 @@ export const TokenAmountInputPair = ({
   ethPlaceholder = 'Enter ETH amount',
   tokenPlaceholder = 'Enter SIMP amount',
   disabled = false,
+  reversed = false,
 }: TokenAmountInputPairProps) => {
+  const ethInput = (
+    <TokenAmountInput
+      amountWei={ethAmount}
+      onChange={onEthAmountChange}
+      placeholder={ethPlaceholder}
+      disabled={disabled}
+    />
+  );
+
+  const tokenInput = (
+    <TokenAmountInput
+      amountWei={tokenAmount}
+      onChange={onTokenAmountChange}
+      placeholder={tokenPlaceholder}
+      disabled={disabled}
+    />
+  );
+
   return (
     <div className={styles.inputRow}>
-      <TokenAmountInput
-        amountWei={ethAmount}
-        onChange={onEthAmountChange}
-        placeholder={ethPlaceholder}
-        disabled={disabled}
-      />
-      <TokenAmountInput
-        amountWei={tokenAmount}
-        onChange={onTokenAmountChange}
-        placeholder={tokenPlaceholder}
-        disabled={disabled}
-      />
+      {reversed ? tokenInput : ethInput}
+      {reversed ? ethInput : tokenInput}
     </div>
   );
 };
