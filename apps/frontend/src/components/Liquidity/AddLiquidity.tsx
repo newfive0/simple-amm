@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ethers } from 'ethers';
 import { Token, AMMPool } from '@typechain-types';
-import { LiquidityInput } from './LiquidityInput';
+import { TokenAmountInputPair } from '../shared';
 import { ConfirmationDialog } from '../shared/ConfirmationDialog';
 import { useErrorMessage } from '../../contexts/ErrorMessageContext';
 import {
@@ -139,18 +139,12 @@ export const AddLiquidity = ({
 
   return (
     <>
-      <div className={styles.inputRow}>
-        <LiquidityInput
-          amountWei={liquidityEthAmount}
-          onChange={handleEthAmountChange}
-          placeholder="Enter ETH amount"
-        />
-        <LiquidityInput
-          amountWei={liquidityTokenAmount}
-          onChange={handleTokenAmountChange}
-          placeholder="Enter SIMP amount"
-        />
-      </div>
+      <TokenAmountInputPair
+        ethAmount={liquidityEthAmount}
+        tokenAmount={liquidityTokenAmount}
+        onEthAmountChange={handleEthAmountChange}
+        onTokenAmountChange={handleTokenAmountChange}
+      />
       <button
         onClick={addLiquidity}
         disabled={
