@@ -1,6 +1,6 @@
 import { SwitchDirectionButton } from './SwitchDirectionButton';
 import { InputWithOutput } from '../shared/InputWithOutput';
-import { createReverseSwapCalculator } from '../../utils/outputDisplayFormatters';
+import { createSwapOutputCalculator } from '../../utils/outputDisplayFormatters';
 import styles from './Swap.module.scss';
 
 interface DisabledSwapProps {
@@ -22,8 +22,8 @@ export const DisabledSwap = ({
         key="eth-to-token"
         amountWei={0n}
         onChange={() => {}}
-        placeholder="Get SIMP"
-        generateExpectedOutput={createReverseSwapCalculator(
+        placeholder="Amount of ETH to spend"
+        generateExpectedOutput={createSwapOutputCalculator(
           poolEthReserve,
           poolTokenReserve,
           'ETH',

@@ -297,94 +297,6 @@ export class BalanceCalculator {
   }
 
   /**
-   * Calculate required ETH input for desired SIMP output (reverse calculation)
-   * Uses AMM formula: ethInput = (ethReserve * simpOutput * 1000) / ((simpReserve - simpOutput) * 997)
-   * @param simpOutputWei Desired SIMP output amount in WEI
-   * @returns Required ETH input amount in WEI
-   */
-  calculateEthNeededToBuySimp(simpOutputWei: bigint): bigint {
-    const ethReserveWei = this.reserves.ethReserve;
-    const simpReserveWei = this.reserves.simpReserve;
-
-    // ethInput = (ethReserve * simpOutput * 1000) / ((simpReserve - simpOutput) * 997)
-    const ethInputWei =
-      (ethReserveWei * simpOutputWei * 1000n) /
-      ((simpReserveWei - simpOutputWei) * 997n);
-
-    return ethInputWei;
-  }
-
-  /**
-   * Calculate required SIMP input for desired ETH output (reverse calculation)
-   * Uses AMM formula: simpInput = (simpReserve * ethOutput * 1000) / ((ethReserve - ethOutput) * 997)
-   * @param ethOutputWei Desired ETH output amount in WEI
-   * @returns Required SIMP input amount in WEI
-   */
-  calculateSimpNeededToBuyEth(ethOutputWei: bigint): bigint {
-    const ethReserveWei = this.reserves.ethReserve;
-    const simpReserveWei = this.reserves.simpReserve;
-
-    // simpInput = (simpReserve * ethOutput * 1000) / ((ethReserve - ethOutput) * 997)
-    const simpInputWei =
-      (simpReserveWei * ethOutputWei * 1000n) /
-      ((ethReserveWei - ethOutputWei) * 997n);
-
-    return simpInputWei;
-  }
-
-  /**
-   * Update balances after buying SIMP with ETH (reverse calculation)
-   * @param simpOutputWei Desired SIMP output amount in WEI
-   * @param actualGasCostWei Actual gas cost in WEI
-   */
-  async buySimpWithEth(
-    simpOutputWei: bigint,
-    actualGasCostWei: bigint
-  ): Promise<void> {
-    const ethInputWei = this.calculateEthNeededToBuySimp(simpOutputWei);
-
-    this.balances = {
-      ethBalance: this.balances.ethBalance - ethInputWei - actualGasCostWei,
-      simpBalance: this.balances.simpBalance + simpOutputWei,
-    };
-    this.reserves = {
-      ethReserve: this.reserves.ethReserve + ethInputWei,
-      simpReserve: this.reserves.simpReserve - simpOutputWei,
-      totalLPTokens: this.reserves.totalLPTokens,
-    };
-
-    // Verify our tracked state matches blockchain state
-    await this.verifyBalances();
-    await this.verifyReserves();
-  }
-
-  /**
-   * Update balances after buying ETH with SIMP (reverse calculation)
-   * @param ethOutputWei Desired ETH output amount in WEI
-   * @param actualGasCostWei Actual gas cost in WEI
-   */
-  async buyEthWithSimp(
-    ethOutputWei: bigint,
-    actualGasCostWei: bigint
-  ): Promise<void> {
-    const simpInputWei = this.calculateSimpNeededToBuyEth(ethOutputWei);
-
-    this.balances = {
-      ethBalance: this.balances.ethBalance + ethOutputWei - actualGasCostWei,
-      simpBalance: this.balances.simpBalance - simpInputWei,
-    };
-    this.reserves = {
-      ethReserve: this.reserves.ethReserve - ethOutputWei,
-      simpReserve: this.reserves.simpReserve + simpInputWei,
-      totalLPTokens: this.reserves.totalLPTokens,
-    };
-
-    // Verify our tracked state matches blockchain state
-    await this.verifyBalances();
-    await this.verifyReserves();
-  }
-
-  /**
    * Calculate required token amount for adding liquidity to maintain pool ratio
    * @param ethAmountWei ETH amount to add in WEI
    * @returns Required SIMP token amount in WEI to maintain ratio
@@ -421,6 +333,76 @@ export class BalanceCalculator {
       (ethReserveWei * 1000n + ethInputWei * 997n);
 
     return simpOutputWei;
+  }
+
+  /**
+   * Calculate ETH output from SIMP input (forward calculation)
+   * Uses AMM formula: ethOutput = (ethReserve * simpInput * 997) / ((simpReserve * 1000) + (simpInput * 997))
+   * @param simpInputWei SIMP input amount in WEI
+   * @returns ETH output amount in WEI
+   */
+  calculateEthOutputFromSimpInput(simpInputWei: bigint): bigint {
+    const ethReserveWei = this.reserves.ethReserve;
+    const simpReserveWei = this.reserves.simpReserve;
+
+    // ethOutput = (ethReserve * simpInput * 997) / ((simpReserve * 1000) + (simpInput * 997))
+    const ethOutputWei =
+      (ethReserveWei * simpInputWei * 997n) /
+      (simpReserveWei * 1000n + simpInputWei * 997n);
+
+    return ethOutputWei;
+  }
+
+  /**
+   * Update balances after ETH to SIMP swap (forward calculation)
+   * @param ethInputWei ETH input amount in WEI
+   * @param actualGasCostWei Actual gas cost in WEI
+   */
+  async ethToSimpSwap(
+    ethInputWei: bigint,
+    actualGasCostWei: bigint
+  ): Promise<void> {
+    const simpOutputWei = this.calculateSimpOutputFromEthInput(ethInputWei);
+
+    this.balances = {
+      ethBalance: this.balances.ethBalance - ethInputWei - actualGasCostWei,
+      simpBalance: this.balances.simpBalance + simpOutputWei,
+    };
+    this.reserves = {
+      ethReserve: this.reserves.ethReserve + ethInputWei,
+      simpReserve: this.reserves.simpReserve - simpOutputWei,
+      totalLPTokens: this.reserves.totalLPTokens,
+    };
+
+    // Verify our tracked state matches blockchain state
+    await this.verifyBalances();
+    await this.verifyReserves();
+  }
+
+  /**
+   * Update balances after SIMP to ETH swap (forward calculation)
+   * @param simpInputWei SIMP input amount in WEI
+   * @param actualGasCostWei Actual gas cost in WEI
+   */
+  async simpToEthSwap(
+    simpInputWei: bigint,
+    actualGasCostWei: bigint
+  ): Promise<void> {
+    const ethOutputWei = this.calculateEthOutputFromSimpInput(simpInputWei);
+
+    this.balances = {
+      ethBalance: this.balances.ethBalance + ethOutputWei - actualGasCostWei,
+      simpBalance: this.balances.simpBalance - simpInputWei,
+    };
+    this.reserves = {
+      ethReserve: this.reserves.ethReserve - ethOutputWei,
+      simpReserve: this.reserves.simpReserve + simpInputWei,
+      totalLPTokens: this.reserves.totalLPTokens,
+    };
+
+    // Verify our tracked state matches blockchain state
+    await this.verifyBalances();
+    await this.verifyReserves();
   }
 
   /**

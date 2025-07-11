@@ -311,7 +311,7 @@ test.describe('AMM Functionality', () => {
       await argosScreenshot(page, 'remove-liquidity-success');
     };
 
-    const buySimpWithEth = async () => {
+    const ethToSimp = async () => {
       // Locate the swap section and verify it's visible
       const swapSection = page
         .locator('h2')
@@ -319,44 +319,38 @@ test.describe('AMM Functionality', () => {
         .locator('../..');
       await expect(swapSection.locator('h2')).toBeVisible();
 
-      // For ETH → SIMP swap, we input the desired SIMP amount (reverse calculation)
-      // Default direction is already eth-to-token (Get SIMP), so no switch needed
+      // For ETH → SIMP swap, we input the ETH amount to spend (forward calculation)
+      // Default direction is already eth-to-token (Amount of ETH to spend), so no switch needed
 
-      // Fill in the desired SIMP amount to get (using reverse calculation)
-      const swapInput = swapSection.getByPlaceholder('Get SIMP');
+      // Fill in the ETH amount to spend (using forward calculation)
+      const swapInput = swapSection.getByPlaceholder('Amount of ETH to spend');
       await expect(swapInput).toBeVisible({ timeout: 5000 });
-      await swapInput.fill('20');
+      await swapInput.fill('1');
 
       // Verify the input value is correctly set
-      await expect(swapInput).toHaveValue('20');
+      await expect(swapInput).toHaveValue('1');
 
-      // Wait for the estimated ETH input to be displayed (reverse calculation)
+      // Wait for the estimated SIMP output to be displayed (forward calculation)
       // The "≈" symbol indicates this is an estimate based on current pool ratios
-      await expect(swapSection.locator('text=/≈.*ETH/i')).toBeVisible({
+      await expect(swapSection.locator('text=/≈.*SIMP/i')).toBeVisible({
         timeout: 5000,
       });
 
       // Get reference to the swap button for testing
       const swapButton = swapSection
         .locator('button')
-        .filter({ hasText: 'Buy SIMP with ETH' });
+        .filter({ hasText: 'Swap ETH for SIMP' });
 
-      // Test exceeding reserve scenario: Try to get more SIMP than available
-      await swapInput.fill('2500'); // Exceeds the ~2000 SIMP reserve after initial liquidity
+      // Test exceeding reserve scenario: Try to spend more ETH than reasonable
+      await swapInput.fill('200'); // Very large ETH amount that would result in minimal SIMP output
 
-      // Verify the "Exceeds available liquidity" message appears
-      await expect(
-        swapSection
-          .locator('div[class*="expectedOutput"]')
-          .getByText('Exceeds available liquidity')
-      ).toBeVisible({ timeout: 5000 });
-
-      // Verify the swap button is disabled when exceeding reserves
-      await expect(swapButton).toBeDisabled();
+      // For forward calculation, the button should still be enabled but with very poor exchange
+      // The user gets to see the poor exchange rate and decide
+      await expect(swapButton).toBeEnabled();
 
       // Reset to valid amount to continue with the test
-      await swapInput.fill('20');
-      await expect(swapSection.locator('text=/≈.*ETH/i')).toBeVisible({
+      await swapInput.fill('1');
+      await expect(swapSection.locator('text=/≈.*SIMP/i')).toBeVisible({
         timeout: 5000,
       });
 
@@ -388,24 +382,24 @@ test.describe('AMM Functionality', () => {
       // Verify the input field is cleared after successful swap
       await expect(swapInput).toHaveValue('');
 
-      // Update our balance tracker with the swap results and gas costs (convert SIMP to WEI)
-      // Using reverse calculation: we want 20 SIMP output
-      await balanceCalculator.buySimpWithEth(
-        ethers.parseEther('20'),
+      // Update our balance tracker with the swap results and gas costs (convert ETH to WEI)
+      // Using forward calculation: we spend 1 ETH input
+      await balanceCalculator.ethToSimpSwap(
+        ethers.parseEther('1'),
         ethSwapGasUsed
       );
 
       // Take a screenshot of the successful ETH → SIMP swap
       await argosScreenshot(page, 'swap-eth-to-simp-success');
     };
-    const buyEthWithSimp = async () => {
-      // Locate the swap section for the reverse swap (SIMP → ETH)
+    const simpToEth = async () => {
+      // Locate the swap section for the SIMP → ETH swap
       const swapSection = page
         .locator('h2')
         .filter({ hasText: 'Swap' })
         .locator('../..');
 
-      // For SIMP → ETH swap, we need to switch direction to 'Get ETH'
+      // For SIMP → ETH swap, we need to switch direction to 'Amount of SIMP to spend'
       const switchButton = swapSection.getByRole('button', {
         name: 'Switch Direction',
         exact: true,
@@ -413,41 +407,34 @@ test.describe('AMM Functionality', () => {
       await expect(switchButton).toBeEnabled();
       await switchButton.click();
 
-      // Fill in the desired ETH amount to get (using reverse calculation)
-      const swapInput = swapSection.getByPlaceholder('Get ETH');
+      // Fill in the SIMP amount to spend (using forward calculation)
+      const swapInput = swapSection.getByPlaceholder('Amount of SIMP to spend');
       await expect(swapInput).toBeVisible({ timeout: 5000 });
-      await swapInput.fill('0.5');
+      await swapInput.fill('10');
 
       // Verify the input value is correctly set
-      await expect(swapInput).toHaveValue('0.5');
+      await expect(swapInput).toHaveValue('10');
 
-      // Wait for the estimated SIMP input to be displayed (reverse calculation)
+      // Wait for the estimated ETH output to be displayed (forward calculation)
       // The pool ratios have changed from previous swaps, affecting the exchange rate
-      await expect(swapSection.locator('text=/≈.*SIMP/i')).toBeVisible({
+      await expect(swapSection.locator('text=/≈.*ETH/i')).toBeVisible({
         timeout: 5000,
       });
 
       // Get reference to the swap button for testing
       const swapButton = swapSection
         .locator('button')
-        .filter({ hasText: 'Buy ETH with SIMP' });
+        .filter({ hasText: 'Swap SIMP for ETH' });
 
-      // Test exceeding reserve scenario: Try to get more ETH than available
-      await swapInput.fill('150'); // Exceeds the ~100 ETH reserve after initial liquidity
+      // Test with a large SIMP amount (forward calculation doesn't have liquidity limits in the same way)
+      await swapInput.fill('1000'); // Large SIMP amount that will result in poor exchange rate
 
-      // Verify the "Exceeds available liquidity" message appears
-      await expect(
-        swapSection
-          .locator('div[class*="expectedOutput"]')
-          .getByText('Exceeds available liquidity')
-      ).toBeVisible({ timeout: 5000 });
-
-      // Verify the swap button is disabled when exceeding reserves
-      await expect(swapButton).toBeDisabled();
+      // For forward calculation, the button should still be enabled but with very poor exchange
+      await expect(swapButton).toBeEnabled();
 
       // Reset to valid amount to continue with the test
-      await swapInput.fill('0.5');
-      await expect(swapSection.locator('text=/≈.*SIMP/i')).toBeVisible({
+      await swapInput.fill('10');
+      await expect(swapSection.locator('text=/≈.*ETH/i')).toBeVisible({
         timeout: 5000,
       });
 
@@ -482,10 +469,10 @@ test.describe('AMM Functionality', () => {
       // Verify the input field is cleared after successful swap
       await expect(swapInput).toHaveValue('', { timeout: 10000 });
 
-      // Update our balance tracker with the swap results and gas costs (convert ETH to WEI)
-      // Using reverse calculation: we want 0.5 ETH output
-      await balanceCalculator.buyEthWithSimp(
-        ethers.parseEther('0.5'),
+      // Update our balance tracker with the swap results and gas costs (convert SIMP to WEI)
+      // Using forward calculation: we spend 10 SIMP input
+      await balanceCalculator.simpToEthSwap(
+        ethers.parseEther('10'),
         simpToEthGasUsed
       );
 
@@ -506,12 +493,12 @@ test.describe('AMM Functionality', () => {
       });
       await switchButton.click();
 
-      const ethInput = swapSection.getByPlaceholder('Get SIMP');
+      const ethInput = swapSection.getByPlaceholder('Amount of ETH to spend');
       await ethInput.fill('0.1');
 
       const swapButton = swapSection
         .locator('button')
-        .filter({ hasText: 'Buy SIMP with ETH' });
+        .filter({ hasText: 'Swap ETH for SIMP' });
       await swapButton.click();
 
       // Wait for the confirmation dialog and click proceed
@@ -535,12 +522,14 @@ test.describe('AMM Functionality', () => {
         .filter({ hasText: 'Swap' })
         .locator('../..');
 
-      const newSwapInput = swapSection.getByPlaceholder('Get SIMP');
-      await newSwapInput.fill('1');
+      const newSwapInput = swapSection.getByPlaceholder(
+        'Amount of ETH to spend'
+      );
+      await newSwapInput.fill('0.1');
 
       const newSwapButton = swapSection
         .locator('button')
-        .filter({ hasText: 'Buy SIMP with ETH' });
+        .filter({ hasText: 'Swap ETH for SIMP' });
       await newSwapButton.click();
 
       // Wait for the confirmation dialog and click proceed
@@ -551,10 +540,10 @@ test.describe('AMM Functionality', () => {
       // Confirm the transaction and get gas costs
       const ethSwapGasUsed = await handleSingleConfirmation();
 
-      // Update balance calculator with the swap using reverse logic (convert SIMP to WEI)
-      // We want 1 SIMP output
-      await balanceCalculator.buySimpWithEth(
-        ethers.parseEther('1'),
+      // Update balance calculator with the swap using forward logic (convert ETH to WEI)
+      // We spend 0.1 ETH input
+      await balanceCalculator.ethToSimpSwap(
+        ethers.parseEther('0.1'),
         ethSwapGasUsed
       );
 
@@ -672,8 +661,8 @@ test.describe('AMM Functionality', () => {
     await setupAndConnect();
     await addLiquidity();
     await removeLiquidity();
-    await buySimpWithEth();
-    await buyEthWithSimp();
+    await ethToSimp();
+    await simpToEth();
 
     // Test error handling scenarios
     await testTransactionRejection();

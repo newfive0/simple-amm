@@ -3,6 +3,7 @@ import { parseUnits, formatUnits } from 'ethers';
 import {
   calculateRemoveLiquidityOutput,
   calculateSwapInput,
+  calculateSwapOutput,
   calculateExchangeRate,
 } from './ammCalculations';
 
@@ -31,6 +32,66 @@ export const createRemoveLiquidityOutputCalculator = (
     const tokenAmountFormatted = parseFloat(formatUnits(tokenAmount, 18));
 
     return `${tokenAmountFormatted.toFixed(4)} SIMP + ${ethAmountFormatted.toFixed(4)} ETH`;
+  };
+};
+
+/**
+ * Calculates expected output for swap operations (forward calculation)
+ */
+export const createSwapOutputCalculator = (
+  poolEthReserve: bigint,
+  poolTokenReserve: bigint,
+  inputToken: string,
+  outputToken: string
+) => {
+  const isEthToToken = inputToken === 'ETH';
+
+  const getExchangeRate = (): string => {
+    if (poolEthReserve === 0n || poolTokenReserve === 0n) return '';
+
+    if (isEthToToken) {
+      // Show 1 ETH = x SIMP
+      const rate = calculateExchangeRate(poolEthReserve, poolTokenReserve);
+      return `1 ${inputToken} ≈ ${rate.toFixed(4)} ${outputToken}`;
+    } else {
+      // Show 1 SIMP = x ETH
+      const rate = calculateExchangeRate(poolTokenReserve, poolEthReserve);
+      return `1 ${inputToken} ≈ ${rate.toFixed(4)} ${outputToken}`;
+    }
+  };
+
+  return (inputAmountString: string): string => {
+    if (!inputAmountString || inputAmountString === '0') {
+      return getExchangeRate() || `≈ 0 ${outputToken}`;
+    }
+
+    if (poolEthReserve === 0n || poolTokenReserve === 0n) {
+      return getExchangeRate() || `≈ 0 ${outputToken}`;
+    }
+
+    // Convert input to wei for calculation
+    const inputAmountWei = parseUnits(inputAmountString, 18);
+    let outputAmountWei: bigint;
+
+    if (isEthToToken) {
+      // ETH input -> Token output
+      outputAmountWei = calculateSwapOutput(
+        inputAmountWei,
+        poolEthReserve,
+        poolTokenReserve
+      );
+    } else {
+      // Token input -> ETH output
+      outputAmountWei = calculateSwapOutput(
+        inputAmountWei,
+        poolTokenReserve,
+        poolEthReserve
+      );
+    }
+
+    // Convert back to display format
+    const outputAmount = parseFloat(formatUnits(outputAmountWei, 18));
+    return `≈ ${outputAmount.toFixed(4)} ${outputToken}`;
   };
 };
 
