@@ -18,13 +18,13 @@ COPY . .
 RUN pnpm install --frozen-lockfile
 
 # Build the frontend application
-RUN npx nx build frontend
+RUN npx nx build frontend --prod
 
 # Production stage
 FROM nginx:alpine
 
-# Copy built frontend to nginx
-COPY --from=builder /app/dist/apps/frontend /usr/share/nginx/html
+# Copy built frontend to nginx  
+COPY --from=builder /app/apps/frontend/dist /usr/share/nginx/html
 
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
