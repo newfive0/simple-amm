@@ -41,16 +41,21 @@ jobs:
           --location=${{ env.REGION }} \
           --description="Docker repository for simple-amm"
 
-    - name: Build and Push Container
+    - name: Build Container
       run: |-
         docker build \
           --build-arg VITE_TOKEN_ADDRESS="${{ secrets.VITE_TOKEN_ADDRESS }}" \
           --build-arg VITE_AMM_POOL_ADDRESS="${{ secrets.VITE_AMM_POOL_ADDRESS }}" \
           --build-arg VITE_NETWORK_CHAIN_ID="${{ secrets.VITE_NETWORK_CHAIN_ID }}" \
           -t "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" ./
+
+    - name: Push Container
+      if: github.ref == 'refs/heads/main'
+      run: |-
         docker push "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}"
 
     - name: Deploy to Cloud Run
+      if: github.ref == 'refs/heads/main'
       id: deploy
       uses: google-github-actions/deploy-cloudrun@v2
       with:
@@ -63,4 +68,5 @@ jobs:
           VITE_NETWORK_CHAIN_ID=${{ secrets.VITE_NETWORK_CHAIN_ID }}
 
     - name: Show Output
+      if: github.ref == 'refs/heads/main'
       run: echo ${{ steps.deploy.outputs.url }}
