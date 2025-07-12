@@ -18,9 +18,10 @@ COPY . .
 RUN pnpm install --frozen-lockfile
 
 # Build contracts and copy artifacts to frontend
+ENV NX_DAEMON=false
 RUN npx nx build contracts
 RUN chmod +x libs/contracts/scripts/*.sh
-RUN npx nx copy-artifacts contracts
+RUN ./libs/contracts/scripts/copy-artifacts.sh
 
 # Set build-time environment variables for production
 ARG VITE_TOKEN_ADDRESS
@@ -31,7 +32,7 @@ ENV VITE_AMM_POOL_ADDRESS=$VITE_AMM_POOL_ADDRESS
 ENV VITE_NETWORK_CHAIN_ID=$VITE_NETWORK_CHAIN_ID
 
 # Build the frontend application
-RUN npx nx build frontend --prod
+RUN NX_DAEMON=false npx nx build frontend --prod
 
 # Production stage
 FROM nginx:alpine
