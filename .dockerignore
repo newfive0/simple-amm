@@ -1,0 +1,30 @@
+node_modules
+.git
+.github
+.env
+.env.local
+.env.production
+.env.development
+dist
+coverage
+.nyc_output
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+
+# Hardhat
+libs/contracts/cache
+libs/contracts/artifacts
+libs/contracts/node_modules
+
+# E2E
+apps/e2e/node_modules
+apps/e2e/test-results
+apps/e2e/playwright-report
+
+# Build outputs
+out-tsc
+dist
