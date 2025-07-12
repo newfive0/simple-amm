@@ -17,6 +17,19 @@ COPY . .
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
+# Build contracts and copy artifacts to frontend
+RUN npx nx build contracts
+RUN chmod +x libs/contracts/scripts/*.sh
+RUN npx nx copy-artifacts contracts
+
+# Set build-time environment variables for production
+ARG VITE_TOKEN_ADDRESS
+ARG VITE_AMM_POOL_ADDRESS  
+ARG VITE_NETWORK_CHAIN_ID
+ENV VITE_TOKEN_ADDRESS=$VITE_TOKEN_ADDRESS
+ENV VITE_AMM_POOL_ADDRESS=$VITE_AMM_POOL_ADDRESS
+ENV VITE_NETWORK_CHAIN_ID=$VITE_NETWORK_CHAIN_ID
+
 # Build the frontend application
 RUN npx nx build frontend --prod
 

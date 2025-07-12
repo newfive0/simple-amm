@@ -41,7 +41,11 @@ jobs:
 
     - name: Build and Push Container
       run: |-
-        docker build -t "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" ./
+        docker build \
+          --build-arg VITE_TOKEN_ADDRESS="${{ secrets.VITE_TOKEN_ADDRESS }}" \
+          --build-arg VITE_AMM_POOL_ADDRESS="${{ secrets.VITE_AMM_POOL_ADDRESS }}" \
+          --build-arg VITE_NETWORK_CHAIN_ID="${{ secrets.VITE_NETWORK_CHAIN_ID }}" \
+          -t "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" ./
         docker push "${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}"
 
     - name: Deploy to Cloud Run
