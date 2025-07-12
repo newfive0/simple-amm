@@ -20,8 +20,10 @@ RUN pnpm install --frozen-lockfile
 # Build contracts and copy artifacts to frontend
 ENV NX_DAEMON=false
 RUN npx nx build contracts
-RUN chmod +x libs/contracts/scripts/*.sh
-RUN ./libs/contracts/scripts/copy-artifacts.sh
+
+# Manually copy TypeChain artifacts to frontend
+RUN mkdir -p apps/frontend/artifacts
+RUN cp -r libs/contracts/artifacts/typechain-types apps/frontend/artifacts/typechain-types
 
 # Set build-time environment variables for production
 ARG VITE_TOKEN_ADDRESS
