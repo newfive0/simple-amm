@@ -1,6 +1,15 @@
-# SimpleAmm
+# Simple AMM DApp
 
-This is a simple Automated Market Maker (AMM) DApp built with React frontend and Solidity smart contracts.
+Built with React 19 and Solidity smart contracts. Features comprehensive testing, automated CI/CD, and enterprise-grade code quality standards.
+
+## Key Highlights
+
+- **Full Test Coverage**: Unit tests (Vitest), contract tests (Hardhat), E2E tests (Playwright + Synpress), visual regression testing (Argos CI)
+- **Robust Code Quality**: TypeScript strict mode, ESLint + Prettier, Solidity linting, automated formatting, spell checking
+- **Streamlined CI/CD**: GitHub Actions automate testing, linting, type checking, contract deployment, and Google Cloud Run deployment with Docker
+- **Modern Architecture**: Nx monorepo, TypeChain type generation, React 19, Ethers.js v6, Hardhat Ignition deployment
+
+Built with constant product formula (x * y = k) for ETH/SIMP token swaps, complete MetaMask integration, and responsive UI.
 
 ## Prerequisites
 
@@ -155,26 +164,7 @@ npx playwright show-report
 
 #### Visual Regression Testing with Argos
 
-This project uses [Argos CI](https://argos-ci.com/) for visual regression testing:
-
-- **No local screenshots**: Screenshots are only stored in Argos cloud
-- **CI-first approach**: Baselines are created in CI environment
-- **Cross-platform consistency**: No OS-specific rendering differences
-- **PR integration**: Visual diffs appear directly in GitHub PRs
-
-**Setup:**
-1. Create account at [argos-ci.com](https://argos-ci.com/)
-2. Install Argos GitHub App from [GitHub Marketplace](https://github.com/marketplace/argos-ci)
-3. Connect your GitHub repository in Argos dashboard
-4. Add `ARGOS_TOKEN` secret to GitHub repository settings
-5. Enable branch protection rules:
-   - Go to Repository Settings → Branches
-   - Add rule for `main` branch
-   - Check "Require status checks to pass before merging"
-   - Search for and add "argos" status check
-   - Check "Require branches to be up to date before merging"
-6. Screenshots are automatically captured and compared on each CI run
-7. PRs with visual changes will be blocked until approved in Argos dashboard
+Automated visual testing with [Argos CI](https://argos-ci.com/) - screenshots captured in CI, visual diffs in PRs, no local setup required.
 
 ## Linting
 
