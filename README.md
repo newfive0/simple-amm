@@ -1,5 +1,7 @@
 # Simple AMM DApp
 
+**🚀 [Live Demo on Sepolia](https://simple-amm-995181507457.us-central1.run.app/)**
+
 Built with React 19 and Solidity smart contracts. Features comprehensive testing, automated CI/CD, and enterprise-grade code quality standards.
 
 ## Key Highlights
