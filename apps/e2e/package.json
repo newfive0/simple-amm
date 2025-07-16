@@ -8,11 +8,11 @@
     "test": "playwright test"
   },
   "devDependencies": {
-    "@argos-ci/cli": "^2.5.7",
-    "@argos-ci/playwright": "^5.0.4",
-    "@playwright/test": "^1.36.0",
+    "@argos-ci/cli": "^2.5.8",
+    "@argos-ci/playwright": "^5.0.6",
+    "@playwright/test": "^1.54.1",
     "@synthetixio/synpress": "^4.1.0",
-    "dotenv": "^16.4.5",
+    "dotenv": "^17.2.0",
     "ethers": "^6.15.0"
   }
 }
