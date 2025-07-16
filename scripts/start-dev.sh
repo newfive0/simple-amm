@@ -48,7 +48,7 @@ kill_services
 
 # Start Hardhat
 cd libs/contracts
-npx hardhat node > hardhat.log 2>&1 &
+pnpm exec hardhat node > hardhat.log 2>&1 &
 HARDHAT_PID=$!
 echo "Hardhat started (PID: $HARDHAT_PID)"
 
@@ -59,16 +59,16 @@ fi
 
 # Deploy contracts
 echo "Deploying contracts..."
-npx hardhat ignition deploy ignition/modules/AMMPool.ts --network localhost --reset
+pnpm exec hardhat ignition deploy ignition/modules/AMMPool.ts --network localhost --reset
 
 # Copy artifacts to frontend
 cd ../..
 echo "Copying contract artifacts..."
-nx copy-artifacts contracts
+pnpm exec nx copy-artifacts contracts
 
 # Start frontend
 echo "Starting frontend..."
-nx serve frontend > frontend.log 2>&1 &
+pnpm exec nx serve frontend > frontend.log 2>&1 &
 FRONTEND_PID=$!
 echo "Frontend started (PID: $FRONTEND_PID)"
 

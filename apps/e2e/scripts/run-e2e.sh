@@ -20,7 +20,7 @@ trap cleanup EXIT
 
 # Start synpress setup in parallel
 echo "Setting up synpress..."
-synpress &
+pnpm exec synpress &
 SYNPRESS_PID=$!
 
 # Wait for development environment to be ready
@@ -44,7 +44,7 @@ wait $SYNPRESS_PID
 
 # Run tests
 echo "Running e2e tests..."
-npx playwright test --config=playwright.config.ts "$@"
+pnpm exec playwright test --config=playwright.config.ts "$@"
 TEST_EXIT_CODE=$?
 
 echo "Tests completed"
