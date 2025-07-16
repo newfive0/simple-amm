@@ -18,6 +18,10 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# Install Playwright browsers if needed
+echo "Installing Playwright browsers..."
+pnpm exec playwright install
+
 # Start synpress setup in parallel
 echo "Setting up synpress..."
 pnpm exec synpress &
