@@ -8,11 +8,12 @@
     {
       "files": "*.sol",
       "options": {
-        "printWidth": 120,
+        "printWidth": 80,
         "tabWidth": 4,
         "useTabs": false,
         "singleQuote": false,
-        "bracketSpacing": false
+        "bracketSpacing": false,
+        "compiler": "0.8.27"
       }
     }
   ]

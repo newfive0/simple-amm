@@ -18,9 +18,24 @@ contract AMMPool {
     uint256 public totalLPTokens;
     mapping(address => uint256) public lpTokens;
 
-    event LiquidityAdded(address indexed provider, uint256 amountSimplest, uint256 amountETH, uint256 lpTokenAmount);
-    event LiquidityRemoved(address indexed provider, uint256 amountSimplest, uint256 amountETH, uint256 lpTokenAmount);
-    event Swap(address indexed user, address tokenIn, uint256 amountIn, uint256 amountOut);
+    event LiquidityAdded(
+        address indexed provider,
+        uint256 amountSimplest,
+        uint256 amountETH,
+        uint256 lpTokenAmount
+    );
+    event LiquidityRemoved(
+        address indexed provider,
+        uint256 amountSimplest,
+        uint256 amountETH,
+        uint256 lpTokenAmount
+    );
+    event Swap(
+        address indexed user,
+        address tokenIn,
+        uint256 amountIn,
+        uint256 amountOut
+    );
 
     constructor(address _simplestToken) {
         simplestToken = IERC20(_simplestToken);
@@ -50,7 +65,12 @@ contract AMMPool {
         reserveSimplest += amountSimplest;
         reserveETH += msg.value;
 
-        emit LiquidityAdded(msg.sender, amountSimplest, msg.value, lpTokenAmount);
+        emit LiquidityAdded(
+            msg.sender,
+            amountSimplest,
+            msg.value,
+            lpTokenAmount
+        );
     }
 
     function removeLiquidity(
@@ -58,12 +78,14 @@ contract AMMPool {
         uint256 minAmountSimplest,
         uint256 minAmountETH
     ) external returns (uint256 amountSimplest, uint256 amountETH) {
-        if (lpTokenAmount <= 0 || lpTokens[msg.sender] < lpTokenAmount) revert InsufficientLiquidity();
+        if (lpTokenAmount <= 0 || lpTokens[msg.sender] < lpTokenAmount)
+            revert InsufficientLiquidity();
 
         amountSimplest = (lpTokenAmount * reserveSimplest) / totalLPTokens;
         amountETH = (lpTokenAmount * reserveETH) / totalLPTokens;
 
-        if (amountSimplest < minAmountSimplest || amountETH < minAmountETH) revert InsufficientOutput();
+        if (amountSimplest < minAmountSimplest || amountETH < minAmountETH)
+            revert InsufficientOutput();
 
         lpTokens[msg.sender] -= lpTokenAmount;
         totalLPTokens -= lpTokenAmount;
@@ -73,7 +95,12 @@ contract AMMPool {
         simplestToken.transfer(msg.sender, amountSimplest);
         payable(msg.sender).transfer(amountETH);
 
-        emit LiquidityRemoved(msg.sender, amountSimplest, amountETH, lpTokenAmount);
+        emit LiquidityRemoved(
+            msg.sender,
+            amountSimplest,
+            amountETH,
+            lpTokenAmount
+        );
     }
 
     function swap(
@@ -81,15 +108,19 @@ contract AMMPool {
         uint256 amountIn,
         uint256 minAmountOut
     ) external payable returns (uint256 amountOut) {
-        if (tokenIn == address(simplestToken) && amountIn <= 0) revert InvalidAmount();
+        if (tokenIn == address(simplestToken) && amountIn <= 0)
+            revert InvalidAmount();
         if (tokenIn == address(0) && msg.value <= 0) revert InvalidAmount();
 
         bool isSimplestToken = tokenIn == address(simplestToken);
-        if (!isSimplestToken && tokenIn != address(0)) revert UnsupportedToken();
+        if (!isSimplestToken && tokenIn != address(0))
+            revert UnsupportedToken();
 
         if (isSimplestToken) {
             uint256 amountInWithFee = (amountIn * 997) / 1000;
-            amountOut = (reserveETH * amountInWithFee) / (reserveSimplest + amountInWithFee);
+            amountOut =
+                (reserveETH * amountInWithFee) /
+                (reserveSimplest + amountInWithFee);
 
             if (amountOut > reserveETH) revert InsufficientETHReserve();
             if (amountOut < minAmountOut) revert InsufficientOutput();
@@ -97,7 +128,9 @@ contract AMMPool {
             _swapSimplestForETH(amountIn, amountOut);
         } else {
             uint256 amountInWithFee = (msg.value * 997) / 1000;
-            amountOut = (reserveSimplest * amountInWithFee) / (reserveETH + amountInWithFee);
+            amountOut =
+                (reserveSimplest * amountInWithFee) /
+                (reserveETH + amountInWithFee);
 
             if (amountOut > reserveSimplest) revert InsufficientTokenReserve();
             if (amountOut < minAmountOut) revert InsufficientOutput();
@@ -105,7 +138,12 @@ contract AMMPool {
             _swapETHForSimplest(amountOut);
         }
 
-        emit Swap(msg.sender, tokenIn, isSimplestToken ? amountIn : msg.value, amountOut);
+        emit Swap(
+            msg.sender,
+            tokenIn,
+            isSimplestToken ? amountIn : msg.value,
+            amountOut
+        );
     }
 
     function _swapSimplestForETH(uint256 amountIn, uint256 amountOut) private {
@@ -124,13 +162,20 @@ contract AMMPool {
     }
 
     // View functions for calculating expected outputs (for frontend)
-    function getSwapOutput(address tokenIn, uint256 amountIn) external view returns (uint256 amountOut) {
+    function getSwapOutput(
+        address tokenIn,
+        uint256 amountIn
+    ) external view returns (uint256 amountOut) {
         if (tokenIn == address(simplestToken)) {
             uint256 amountInWithFee = (amountIn * 997) / 1000;
-            amountOut = (reserveETH * amountInWithFee) / (reserveSimplest + amountInWithFee);
+            amountOut =
+                (reserveETH * amountInWithFee) /
+                (reserveSimplest + amountInWithFee);
         } else if (tokenIn == address(0)) {
             uint256 amountInWithFee = (amountIn * 997) / 1000;
-            amountOut = (reserveSimplest * amountInWithFee) / (reserveETH + amountInWithFee);
+            amountOut =
+                (reserveSimplest * amountInWithFee) /
+                (reserveETH + amountInWithFee);
         } else {
             revert UnsupportedToken();
         }
