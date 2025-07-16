@@ -65,14 +65,14 @@
     "test": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx hardhat test",
+        "command": "pnpm exec hardhat test",
         "cwd": "libs/contracts"
       }
     },
     "build": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx hardhat compile",
+        "command": "pnpm exec hardhat compile",
         "cwd": "libs/contracts"
       }
     },
@@ -100,7 +100,7 @@
     "install": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npm install --registry https://registry.npmjs.org/",
+        "command": "pnpm install",
         "cwd": "libs/contracts"
       }
     }

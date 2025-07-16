@@ -19,7 +19,7 @@ Before getting started, ensure you have the following installed:
 
 - **Node.js** (v18 or later) - [Download here](https://nodejs.org/)
 - **pnpm** (package manager) - Install with: `npm install -g pnpm`
-- **Nx CLI** (monorepo toolkit) - Install with: `npm install -g nx`
+- **Nx CLI** (monorepo toolkit) - Install with: `pnpm add -g nx`
 
 ## Installation
 
@@ -59,20 +59,20 @@ To run the dev server for your app, use:
 # Using Nx
 nx serve frontend
 
-# Or using npx
-npx nx serve frontend
+# Or using pnpm exec
+pnpm exec nx serve frontend
 ```
 
 To create a production bundle:
 
 ```sh
-npx nx build frontend
+pnpm exec nx build frontend
 ```
 
 To see all available targets to run for a project, run:
 
 ```sh
-npx nx show project frontend
+pnpm exec nx show project frontend
 ```
 
 ## Deployment
@@ -85,7 +85,7 @@ The project uses Hardhat Ignition for smart contract deployment. You can deploy 
 
 ```sh
 cd libs/contracts
-npx hardhat node
+pnpm exec hardhat node
 ```
 
 This will start a local Ethereum network for testing and development.
@@ -96,21 +96,21 @@ This will start a local Ethereum network for testing and development.
 
 ```sh
 cd libs/contracts
-npx hardhat ignition deploy ignition/modules/AMMPool.ts --network localhost
+pnpm exec hardhat ignition deploy ignition/modules/AMMPool.ts --network localhost
 ```
 
 **Deploy only token:**
 
 ```sh
 cd libs/contracts
-npx hardhat ignition deploy ignition/modules/Token.ts --network localhost
+pnpm exec hardhat ignition deploy ignition/modules/Token.ts --network localhost
 ```
 
 **Deploy complete system:**
 
 ```sh
 cd libs/contracts
-npx hardhat ignition deploy ignition/modules/DeployAll.ts --network localhost
+pnpm exec hardhat ignition deploy ignition/modules/DeployAll.ts --network localhost
 ```
 
 After successful deployment, you'll see the contract addresses output:
@@ -156,10 +156,10 @@ nx show-report e2e
 cd apps/e2e
 
 # Run Playwright tests
-npx playwright test --config=playwright.config.ts
+pnpm exec playwright test --config=playwright.config.ts
 
 # Show report
-npx playwright show-report
+pnpm exec playwright show-report
 ```
 
 **Note**: E2E tests automatically start and stop the development environment (Hardhat node, contract deployment, and frontend server).

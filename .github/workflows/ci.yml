@@ -81,7 +81,7 @@ jobs:
 
       - name: Get Playwright version
         id: playwright-version
-        run: echo "version=$(npx playwright --version | cut -d' ' -f2)" >> $GITHUB_OUTPUT
+        run: echo "version=$(pnpm exec playwright --version | cut -d' ' -f2)" >> $GITHUB_OUTPUT
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
@@ -92,21 +92,21 @@ jobs:
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: npx playwright install --with-deps
+        run: pnpm exec playwright install --with-deps
 
       - name: Install wait-on
-        run: npm install -g wait-on
+        run: pnpm add -g wait-on
 
       - name: Start Hardhat network and wait for readiness
         run: |
           cd libs/contracts
-          npx hardhat node &
+          pnpm exec hardhat node &
           wait-on http://127.0.0.1:8545
         
       - name: Deploy contracts and copy artifacts  
         run: |
           cd libs/contracts
-          npx hardhat ignition deploy ignition/modules/DeployAll.ts --network localhost
+          pnpm exec hardhat ignition deploy ignition/modules/DeployAll.ts --network localhost
           cd ../..
           pnpm exec nx copy-artifacts contracts
 
@@ -121,7 +121,7 @@ jobs:
         if: steps.synpress-cache.outputs.cache-hit != 'true'
         run: |
           cd apps/e2e
-          xvfb-run --auto-servernum --server-args='-screen 0, 1920x1080x24' npx synpress
+          xvfb-run --auto-servernum --server-args='-screen 0, 1920x1080x24' pnpm exec synpress
 
       - name: Start frontend and wait for readiness
         run: |
@@ -131,13 +131,13 @@ jobs:
       - name: Run e2e tests
         run: |
           cd apps/e2e
-          xvfb-run --auto-servernum --server-args='-screen 0, 1920x1080x24' npx playwright test --config=playwright.config.ts
+          xvfb-run --auto-servernum --server-args='-screen 0, 1920x1080x24' pnpm exec playwright test --config=playwright.config.ts
 
       - name: Upload screenshots to Argos
         if: always()
         run: |
           cd apps/e2e
-          npx @argos-ci/cli upload ./screenshots
+          pnpm exec @argos-ci/cli upload ./screenshots
         env:
           ARGOS_TOKEN: ${{ secrets.ARGOS_TOKEN }}
 
