@@ -13,7 +13,8 @@ const TestWrapper = ({ children }: { children: ReactNode }) => (
 
 // Create test component to consume context
 const TestComponent = () => {
-  const { ethereumProvider, signer, account, connectWallet } = useWallet();
+  const { ethereumProvider, signer, account, connectWallet, addTokenToWallet } =
+    useWallet();
   const { errorMessage } = useErrorMessage();
 
   return (
@@ -26,6 +27,9 @@ const TestComponent = () => {
       <div data-testid="errorMessage">{errorMessage || 'null'}</div>
       <button onClick={connectWallet} data-testid="connect-wallet">
         Connect Wallet
+      </button>
+      <button onClick={addTokenToWallet} data-testid="add-token">
+        Add Token
       </button>
     </div>
   );
@@ -558,6 +562,207 @@ describe('WalletContext', () => {
       });
 
       consoleErrorSpy.mockRestore();
+    });
+
+    it('should handle account initialization failure during account change', async () => {
+      render(
+        <TestWrapper>
+          <TestComponent />
+        </TestWrapper>
+      );
+
+      // First connect wallet
+      act(() => {
+        screen.getByTestId('connect-wallet').click();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('account')).toHaveTextContent(
+          '0x1234567890abcdef1234567890abcdef12345678'
+        );
+      });
+
+      // Set up initialization to fail
+      mockBrowserProvider.getSigner.mockRejectedValue(
+        new Error('Initialization failed')
+      );
+
+      const newAddress = '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd';
+      act(() => {
+        getAccountsChangedHandler()([newAddress]);
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('ethereum-provider')).toHaveTextContent(
+          'null'
+        );
+        expect(screen.getByTestId('signer')).toHaveTextContent('null');
+        expect(screen.getByTestId('account')).toHaveTextContent('');
+      });
+    });
+
+    it('should handle ethereum listener setup failure', async () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      // Mock ethereum to throw error on .on method
+      mockEthereum.on.mockImplementation(() => {
+        throw new Error('Listener setup failed');
+      });
+
+      render(
+        <TestWrapper>
+          <TestComponent />
+        </TestWrapper>
+      );
+
+      await waitFor(() => {
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          'Failed to set up account change listener:',
+          expect.any(Error)
+        );
+      });
+
+      consoleErrorSpy.mockRestore();
+    });
+  });
+
+  describe('Add Token to Wallet', () => {
+    beforeEach(() => {
+      // Mock environment variable
+      vi.stubEnv(
+        'VITE_TOKEN_ADDRESS',
+        '0x742d35Cc6634C0532925a3b8D8A7D1f5f4f3e1e8'
+      );
+    });
+
+    it('should add token to wallet successfully', async () => {
+      mockEthereum.request.mockResolvedValue(true);
+
+      render(
+        <TestWrapper>
+          <TestComponent />
+        </TestWrapper>
+      );
+
+      act(() => {
+        screen.getByTestId('add-token').click();
+      });
+
+      await waitFor(() => {
+        expect(mockEthereum.request).toHaveBeenCalledWith({
+          method: 'wallet_watchAsset',
+          params: {
+            type: 'ERC20',
+            options: {
+              address: '0x742d35Cc6634C0532925a3b8D8A7D1f5f4f3e1e8',
+              symbol: 'SIMP',
+              decimals: 18,
+              image: '',
+            },
+          },
+        });
+      });
+
+      expect(screen.getByTestId('errorMessage')).toHaveTextContent('null');
+    });
+
+    it('should handle missing ethereum provider when adding token', async () => {
+      Object.defineProperty(window, 'ethereum', {
+        value: undefined,
+        writable: true,
+      });
+
+      render(
+        <TestWrapper>
+          <TestComponent />
+        </TestWrapper>
+      );
+
+      act(() => {
+        screen.getByTestId('add-token').click();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('errorMessage')).toHaveTextContent(
+          'Ethereum wallet required. Please install a Web3 wallet extension.'
+        );
+      });
+    });
+
+    it('should handle missing token address environment variable', async () => {
+      vi.stubEnv('VITE_TOKEN_ADDRESS', '');
+
+      render(
+        <TestWrapper>
+          <TestComponent />
+        </TestWrapper>
+      );
+
+      act(() => {
+        screen.getByTestId('add-token').click();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('errorMessage')).toHaveTextContent(
+          'Wallet connection failed: Token address not found in environment variables'
+        );
+      });
+    });
+
+    it('should handle token addition rejection', async () => {
+      mockEthereum.request.mockRejectedValue(
+        new Error('User rejected token addition')
+      );
+
+      render(
+        <TestWrapper>
+          <TestComponent />
+        </TestWrapper>
+      );
+
+      act(() => {
+        screen.getByTestId('add-token').click();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('errorMessage')).toHaveTextContent(
+          'Wallet connection failed: User rejected token addition'
+        );
+      });
+    });
+
+    it('should clear error on successful token addition', async () => {
+      // First trigger an error
+      mockEthereum.request.mockRejectedValue(new Error('Previous error'));
+
+      render(
+        <TestWrapper>
+          <TestComponent />
+        </TestWrapper>
+      );
+
+      act(() => {
+        screen.getByTestId('add-token').click();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('errorMessage')).toHaveTextContent(
+          'Wallet connection failed: Previous error'
+        );
+      });
+
+      // Now make it succeed
+      mockEthereum.request.mockResolvedValue(true);
+
+      act(() => {
+        screen.getByTestId('add-token').click();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('errorMessage')).toHaveTextContent('null');
+      });
     });
   });
 });
