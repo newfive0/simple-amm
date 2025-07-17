@@ -15,12 +15,12 @@ export const WalletInfo = ({ account, addTokenToWallet }: WalletInfoProps) => {
   return (
     <div className={styles.walletInfo}>
       <p>
-        <strong>Connected Account:</strong> {account || 'Not Connected'}
+        <strong>Connected Account:</strong> <span className={styles.address}>{account || 'Not Connected'}</span>
       </p>
 
       {tokenAddress && (
         <p>
-          <strong>SIMP Token Address:</strong> {tokenAddress}
+          <strong>SIMP Token Address:</strong> <span className={styles.address}>{tokenAddress}</span>
           <a
             href="#"
             className={styles.addTokenLink}
