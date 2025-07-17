@@ -29,7 +29,7 @@ export const WalletInfo = ({ account, addTokenToWallet }: WalletInfoProps) => {
               onClick={handleAddToken}
               title="Add SIMP token to MetaMask"
             >
-              Add SIMP to Wallet
+              Add to Wallet
             </a>
           </p>
         </div>

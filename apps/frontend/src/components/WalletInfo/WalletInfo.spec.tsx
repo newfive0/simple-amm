@@ -45,7 +45,7 @@ describe('WalletInfo', () => {
       render(<WalletInfo {...defaultProps} />);
 
       const addTokenLink = screen.getByRole('link', {
-        name: /add simp to wallet/i,
+        name: /add to wallet/i,
       });
       expect(addTokenLink).toBeInTheDocument();
     });
@@ -80,7 +80,7 @@ describe('WalletInfo', () => {
       render(<WalletInfo {...defaultProps} account="" />);
 
       const addTokenLink = screen.getByRole('link', {
-        name: /add simp to wallet/i,
+        name: /add to wallet/i,
       });
       expect(addTokenLink).toBeInTheDocument();
     });
@@ -91,7 +91,7 @@ describe('WalletInfo', () => {
       render(<WalletInfo {...defaultProps} />);
 
       const addTokenLink = screen.getByRole('link', {
-        name: /add simp to wallet/i,
+        name: /add to wallet/i,
       });
 
       fireEvent.click(addTokenLink);
