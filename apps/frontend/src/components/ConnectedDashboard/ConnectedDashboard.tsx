@@ -21,7 +21,7 @@ export const ConnectedDashboard = () => {
 };
 
 const DashboardContent = () => {
-  const { account, signer, ethereumProvider } = useWallet();
+  const { account, signer, ethereumProvider, addTokenToWallet } = useWallet();
   const { setErrorMessage } = useErrorMessage();
   const [poolReserves, setPoolReserves] = useState<PoolReserves>({
     ethReserve: 0n,
@@ -83,7 +83,7 @@ const DashboardContent = () => {
         gap: '0',
       }}
     >
-      <WalletInfo account={account} />
+      <WalletInfo account={account} addTokenToWallet={addTokenToWallet} />
 
       <ContractsSection
         poolEthReserve={poolReserves.ethReserve}
