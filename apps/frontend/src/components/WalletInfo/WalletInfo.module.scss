@@ -13,26 +13,9 @@
   }
 }
 
-.tokenInfo {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #e9ecef;
-  
-  p {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-}
 
 .tokenAddress {
-  font-family: 'Courier New', monospace;
-  font-size: 0.9rem;
   color: #6c757d;
-  background-color: #f8f9fa;
-  padding: 4px 8px;
-  border-radius: 4px;
 }
 
 .addTokenLink {

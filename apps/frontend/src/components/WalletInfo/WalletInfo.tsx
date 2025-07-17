@@ -19,20 +19,18 @@ export const WalletInfo = ({ account, addTokenToWallet }: WalletInfoProps) => {
       </p>
 
       {tokenAddress && (
-        <div className={styles.tokenInfo}>
-          <p>
-            <strong>SIMP Token Address:</strong>
-            <span className={styles.tokenAddress}>{tokenAddress}</span>
-            <a
-              href="#"
-              className={styles.addTokenLink}
-              onClick={handleAddToken}
-              title="Add SIMP token to MetaMask"
-            >
-              Add to Wallet
-            </a>
-          </p>
-        </div>
+        <p>
+          <strong>SIMP Token Address:</strong>
+          <span className={styles.tokenAddress}>{tokenAddress}</span>
+          <a
+            href="#"
+            className={styles.addTokenLink}
+            onClick={handleAddToken}
+            title="Add SIMP token to MetaMask"
+          >
+            Add to Wallet
+          </a>
+        </p>
       )}
     </div>
   );
