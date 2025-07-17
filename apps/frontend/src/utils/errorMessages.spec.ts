@@ -76,6 +76,60 @@ describe('errorMessages', () => {
       });
     });
 
+    describe('User rejection errors', () => {
+      it('should handle MetaMask user rejection with code 4001', () => {
+        const error = {
+          code: 4001,
+          message: 'User rejected the request.',
+        };
+
+        const result = getFriendlyMessage(
+          ERROR_OPERATIONS.WALLET_CONNECTION,
+          error
+        );
+
+        expect(result).toBe(
+          'Wallet connection cancelled: You rejected the request in your wallet.'
+        );
+      });
+
+      it('should handle user rejection by message content', () => {
+        const error = new Error('User rejected the request');
+
+        const result = getFriendlyMessage(ERROR_OPERATIONS.SWAP, error);
+
+        expect(result).toBe(
+          'Swap cancelled: You rejected the request in your wallet.'
+        );
+      });
+
+      it('should handle user denied message', () => {
+        const error = new Error('User denied transaction signature');
+
+        const result = getFriendlyMessage(
+          ERROR_OPERATIONS.ADD_LIQUIDITY,
+          error
+        );
+
+        expect(result).toBe(
+          'Add liquidity cancelled: You rejected the request in your wallet.'
+        );
+      });
+
+      it('should handle user cancelled message', () => {
+        const error = new Error('User cancelled the operation');
+
+        const result = getFriendlyMessage(
+          ERROR_OPERATIONS.REMOVE_LIQUIDITY,
+          error
+        );
+
+        expect(result).toBe(
+          'Remove liquidity cancelled: You rejected the request in your wallet.'
+        );
+      });
+    });
+
     describe('Operation types', () => {
       it('should prepend different operation types', () => {
         const error = new Error('Failed');

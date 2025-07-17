@@ -134,6 +134,29 @@ const extractErrorMessage = (error: unknown): string => {
 };
 
 /**
+ * Checks if an error is a user rejection (code 4001)
+ */
+const isUserRejectionError = (error: unknown): boolean => {
+  if (error && typeof error === 'object') {
+    const errorObj = error as { code?: number; message?: string };
+    // Check for MetaMask user rejection error code
+    if (errorObj.code === 4001) {
+      return true;
+    }
+    // Also check message content for user rejection
+    if (errorObj.message && typeof errorObj.message === 'string') {
+      const lowerMessage = errorObj.message.toLowerCase();
+      return (
+        lowerMessage.includes('user rejected') ||
+        lowerMessage.includes('user denied') ||
+        lowerMessage.includes('user cancelled')
+      );
+    }
+  }
+  return false;
+};
+
+/**
  * Formats error messages with user-friendly text and operation context
  * @param operation - The operation that failed (required)
  * @param error - The error object or message
@@ -143,6 +166,11 @@ export const getFriendlyMessage = (
   operation: ErrorOperation,
   error: unknown
 ): string => {
+  // Handle user rejection errors with friendly message
+  if (isUserRejectionError(error)) {
+    return `${operation} cancelled: You rejected the request in your wallet.`;
+  }
+
   let baseMessage = extractErrorMessage(error);
 
   // Handle specific error cases for pending requests

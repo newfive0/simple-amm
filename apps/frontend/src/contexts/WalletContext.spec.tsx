@@ -209,7 +209,7 @@ describe('WalletContext', () => {
         expect(screen.getByTestId('signer')).toHaveTextContent('null');
         expect(screen.getByTestId('account')).toHaveTextContent('');
         expect(screen.getByTestId('errorMessage')).toHaveTextContent(
-          'Wallet connection failed: User rejected the request'
+          'Wallet connection cancelled: You rejected the request in your wallet.'
         );
       });
     });
@@ -474,7 +474,7 @@ describe('WalletContext', () => {
 
       await waitFor(() => {
         expect(screen.getByTestId('errorMessage')).toHaveTextContent(
-          'Wallet connection failed: User rejected the request'
+          'Wallet connection cancelled: You rejected the request in your wallet.'
         );
       });
 
