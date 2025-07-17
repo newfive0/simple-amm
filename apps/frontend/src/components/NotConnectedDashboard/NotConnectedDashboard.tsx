@@ -2,7 +2,7 @@ import { useWallet } from '../../contexts';
 import { WalletInfo, DisabledSwap, DisabledLiquidity } from '../';
 
 export const NotConnectedDashboard = () => {
-  const { account } = useWallet();
+  const { account, addTokenToWallet } = useWallet();
 
   return (
     <div
@@ -12,7 +12,7 @@ export const NotConnectedDashboard = () => {
         gap: '0',
       }}
     >
-      <WalletInfo account={account} />
+      <WalletInfo account={account} addTokenToWallet={addTokenToWallet} />
       <DisabledSwap />
       <DisabledLiquidity />
     </div>

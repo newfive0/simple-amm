@@ -42,9 +42,12 @@ interface MockLiquidityProps {
 }
 
 vi.mock('../WalletInfo/WalletInfo', () => ({
-  WalletInfo: ({ account }: { account: string }) => (
-    <div data-testid="wallet-info">{account || 'Not Connected'}</div>
-  ),
+  WalletInfo: ({
+    account,
+  }: {
+    account: string;
+    addTokenToWallet: () => Promise<void>;
+  }) => <div data-testid="wallet-info">{account || 'Not Connected'}</div>,
 }));
 
 vi.mock('../Swap/Swap', () => ({
@@ -106,6 +109,7 @@ const mockWalletContext = {
   ethereumProvider: mockEthereumProvider,
   errorMessage: '',
   connectWallet: vi.fn(),
+  addTokenToWallet: vi.fn(),
 };
 
 vi.mock('../../contexts', () => ({

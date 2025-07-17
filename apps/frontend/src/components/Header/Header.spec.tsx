@@ -23,6 +23,7 @@ const createMockWalletContext = (account = ''): WalletContextType => ({
   ethereumProvider: null,
   signer: null,
   connectWallet: vi.fn(),
+  addTokenToWallet: vi.fn(),
 });
 
 const createMockErrorContext = (
