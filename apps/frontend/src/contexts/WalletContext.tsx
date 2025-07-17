@@ -26,6 +26,7 @@ export interface WalletContextType {
   signer: ethers.JsonRpcSigner | null;
   account: string;
   connectWallet: () => Promise<void>;
+  addTokenToWallet: () => Promise<void>;
 }
 
 const WalletContext = createContext<WalletContextType | undefined>(undefined);
@@ -90,6 +91,46 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
       account: '',
     });
   }, []);
+
+  // Add SIMP token to MetaMask wallet
+  const addTokenToWallet = useCallback(async () => {
+    // Check if MetaMask is available
+    if (!window.ethereum) {
+      setErrorMessage(WALLET_REQUIRED_ERROR);
+      return;
+    }
+
+    try {
+      const tokenAddress = import.meta.env.VITE_TOKEN_ADDRESS;
+
+      if (!tokenAddress) {
+        throw new Error('Token address not found in environment variables');
+      }
+
+      await window.ethereum.request({
+        method: 'wallet_watchAsset',
+        params: {
+          type: 'ERC20',
+          options: {
+            address: tokenAddress,
+            symbol: 'SIMP',
+            decimals: 18,
+            image: '', // Optional: can add token icon URL here
+          },
+        },
+        // MetaMask's wallet_watchAsset method doesn't have official TypeScript types
+        // so we use 'any' to bypass type checking for this specific wallet interaction
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any);
+
+      // Clear any previous errors on success
+      setErrorMessage('');
+    } catch (error) {
+      setErrorMessage(
+        getFriendlyMessage(ERROR_OPERATIONS.WALLET_CONNECTION, error)
+      );
+    }
+  }, [setErrorMessage]);
 
   const connectWallet = useCallback(async () => {
     // Clear any previous errors before attempting connection
@@ -162,6 +203,7 @@ export const WalletProvider = ({ children }: { children: ReactNode }) => {
     signer: walletState.signer,
     account: walletState.account,
     connectWallet,
+    addTokenToWallet,
   };
 
   return (
