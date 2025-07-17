@@ -175,7 +175,9 @@ describe('RemoveLiquidity', () => {
     });
 
     // Input should be reset
-    expect(lpInput).toHaveDisplayValue('');
+    await waitFor(() => {
+      expect(lpInput).toHaveDisplayValue('');
+    });
   });
 
   it('should cancel transaction when confirmation dialog is cancelled', async () => {
